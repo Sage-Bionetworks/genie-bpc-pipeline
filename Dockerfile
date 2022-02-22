@@ -1,15 +1,9 @@
-FROM ubuntu:22.04
-
-ENV DEBIAN_FRONTEND=noninteractive
-
-RUN apt-get update && apt-get install -y --no-install-recommends build-essential r-base r-cran-randomforest python3.9 python3-pip python3-setuptools python3-dev
+FROM python:3.8
 
 WORKDIR /root/bpc
 
 COPY . .
 
-RUN python3 -m pip install pandas
-RUN Rscript -e "renv::restore()"
+RUN pip install -r requirements.txt
 
-CMD python3 tests/test.py && Rscript tests/test.R
-
+CMD python tests/test.py
