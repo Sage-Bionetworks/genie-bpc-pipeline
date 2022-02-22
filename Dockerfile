@@ -8,7 +8,7 @@ WORKDIR /root/bpc
 
 COPY . .
 
-RUN pip3 install -r requirements.txt
+RUN pip3 install pandas==1.3.5
 RUN Rscript -e "renv::restore()"
 
 CMD python3 tests/test.py && Rscript tests/test.R
