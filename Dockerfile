@@ -1,8 +1,8 @@
-FROM ubuntu:latest
+FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-RUN apt-get update && apt-get install -y --no-install-recommends build-essential r-base r-cran-randomforest python3.8 python3-pip python3-setuptools python3-dev
+RUN apt-get update && apt-get install -y --no-install-recommends build-essential r-base r-cran-randomforest python3.9 python3-pip python3-setuptools python3-dev
 
 WORKDIR /bpc
 
