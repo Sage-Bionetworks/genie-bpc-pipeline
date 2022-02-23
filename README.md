@@ -1,18 +1,20 @@
-# GENIE BPC pipeline scripts
+# GENIE BPC Pipeline
 
 ## Installation
 
-Clone this repository and navigate to the directory:
+1. Clone this repository and navigate to the directory:
 ```
 git clone git@github.com:Sage-Bionetworks/genie-bpc-pipeline.git
 cd genie-bpc-pipeline
 ```
 
-Install Nextflow and Docker.  Instructions are available at the following links: 
+1. Install Nextflow and Docker.  Instructions are available at the following links: 
+
 https://www.nextflow.io/docs/latest/getstarted.html
+
 https://docs.docker.com/get-docker/
 
-Build the Docker container:
+1. Build the Docker container:
 ```
 docker build -t geniebpc .
 ```
