@@ -30,6 +30,6 @@ export SYNAPSE_AUTH_TOKEN={your_personal_access_token_here}
 
 To run the Nextflow pipeline:
 ```
-nextflow run geniebpc.nf
+nextflow run main.nf
 ```
 
