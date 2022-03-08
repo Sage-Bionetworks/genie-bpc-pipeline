@@ -1,0 +1,275 @@
+---
+title: "Drug masking report"
+author: "Haley Hunter-Zinck"
+date: "`r Sys.setenv(TZ='America/Los_Angeles'); format(Sys.time(), '%B %d, %Y at %I:%M %p %Z')`"
+output: html_document
+params:
+  cohort: x
+  site: x
+  date: x
+  auth: x
+---
+
+## Drug masking report
+
+This report checks for potentially unmasked investigational drugs with the following checks:
+
+(@) Investigational drugs should have a duration equal to 1
+(@) For investigational drugs, the other drug name field should be empty
+(@) Investigational drugs should be part of a clinical trial
+(@) Any unmasked drug should have a HemOnc FDA approval date before the supplied index date (date of latest curation)
+(@) Redacted patient records, which may require additional scrutiny
+
+```{r setup, include=FALSE}
+library(synapser)
+library(glue)
+library(yaml)
+library(knitr)
+library(dplyr)
+
+config <- read_yaml("config.yaml")
+
+knitr::opts_chunk$set(echo = F)
+
+```
+
+```{r functions, include = F}
+
+#' Get the name of a Synapse entity. 
+#' 
+#' @param synapse_id Synapse ID string
+#' @return String representing entity name
+#' @example get_synapse_entity_name("syn12345")
+get_synapse_entity_name <- function(synapse_id) {
+  return(synGet(synapse_id, downloadFile = F)$properties$name)
+}
+
+get_synapse_folder_children <- function(synapse_id) {
+  
+  
+  ent <- as.list(synGetChildren(synapse_id))
+  
+  children <- c()
+  for (i in 1:length(ent)) {
+    children[ent[[i]]$name] <- ent[[i]]$id
+  }
+  
+  return(children)
+}
+
+get_synid_report <- function(cohort, site, date, synid_folder_qc, map_cohort = map_cohort) {
+  
+  # get cohort subfolder synapse id
+  synid_children_cohort <- get_synapse_folder_children(synid_folder_qc)
+  synid_folder_cohort <- as.character(synid_children_cohort[map_cohort[[cohort]]])
+  
+  # get synapse ID of folder labeled "qa_drug_review_qa_manager_signoff"
+  synid_children_review <- get_synapse_folder_children(synid_folder_cohort)
+  synid_folder_review <- as.character(synid_children_review["qa_drug_review"])
+  
+  # get synapse ID of folder for most recent previous review
+  synid_children_date <- get_synapse_folder_children(synid_folder_review)
+  synid_folder_date <- as.character(synid_children_date[glue("{date} Reports")])
+  
+  synid_children_report <- get_synapse_folder_children(synid_folder_date)
+  synid_file_report <- as.character(synid_children_report[glue("unmasked_drugs_review_{site}_{cohort}_{date}.csv")])
+  
+  return(synid_file_report)
+}
+
+get_latest_curation_date <- function(synapse_id, cohort) {
+  query <- glue("SELECT MAX(curation_dt) FROM {synapse_id} WHERE cohort = '{cohort}'")
+  dt <- as.character(as.data.frame(synTableQuery(query, includeRowIdAndRowVersion = F))[1])
+  return(dt)
+}
+
+#' Extract personal access token from .synapseConfig
+#' located at a custom path. 
+#' 
+#' @param path Path to .synapseConfig
+#' @return personal acccess token
+get_auth_token <- function(path) {
+  
+  lines <- scan(path, what = "character", sep = "\t", quiet = T)
+  line <- grep(pattern = "^authtoken = ", x = lines, value = T)
+  
+  token <- strsplit(line, split = ' ')[[1]][3]
+  return(token)
+}
+
+#' Override of synapser::synLogin() function to accept 
+#' custom path to .synapseConfig file or personal authentication
+#' token.  If no arguments are supplied, performs standard synLogin().
+#' 
+#' @param auth full path to .synapseConfig file or authentication token
+#' @param silent verbosity control on login
+#' @return TRUE for successful login; F otherwise
+#' Override of synapser::synLogin() function to accept 
+#' custom path to .synapseConfig file or personal authentication
+#' token.  If no arguments are supplied, performs standard synLogin().
+#' 
+#' @param auth full path to .synapseConfig file or authentication token
+#' @param silent verbosity control on login
+#' @return TRUE for successful login; F otherwise
+synLogin <- function(auth = NA, silent = T) {
+  
+  # default synLogin behavior
+  if (is.na(auth)) {
+    syn <- synapser::synLogin(silent = silent)
+    return(T)
+  }
+  
+  token = auth
+  
+  # extract token from .synapseConfig
+  if (grepl(x = auth, pattern = "\\.synapseConfig$")) {
+    token = get_auth_token(auth)
+    
+    if (is.na(token)) {
+      return(F)
+    }
+  }
+  
+  # login
+  syn <- tryCatch({
+    synapser::synLogin(authToken = token, silent = silent)
+  }, error = function(cond) {
+    return(F)
+  })
+  
+  if (is.null(syn)) {
+    return(T)
+  }
+  return(syn)
+}
+
+```
+
+```{r parameters, include = F}
+
+cohort <- params$cohort
+site <- params$site
+date <- params$date   
+auth <- params$auth
+
+msg_pass <- "PASS: no such records found"
+msg_fail <- "WARNING: issue found with {n_record} record(s)"
+
+login_status <- synLogin(auth = auth)
+
+synapse_id <- get_synid_report(cohort = cohort, 
+                                    site = site, 
+                                    date = date, 
+                                    synid_folder_qc = config$synapse$qc$id,
+                                    map_cohort = config$map$cohort_name)
+date_curation <- get_latest_curation_date(synapse_id = config$synapse$curation$id, 
+                                          cohort = cohort)
+```
+
+```{r print params, echo = F}
+print(glue("Cohort: {cohort}"))
+print(glue("Site: {site}"))
+print(glue("Date of upload: {date}"))
+print(glue("Index date (date of latest curation): {date_curation}"))
+print(glue("Report data: {get_synapse_entity_name(synapse_id)} ({synapse_id})"))
+```
+
+```{r read, include = F}
+data <- read.csv(synGet(synapse_id)$path, stringsAsFactors = F)
+```
+
+
+## Investigational drug duration
+
+The following records have administered drugs which are marked as investigational but a duration that is not equal to 1 day:  
+
+```{r duration}
+idx_duration <- which(data[,"investigational_duration"] != "ok")
+if(length(idx_duration)) {
+  n_record <- length(idx_duration)
+  print(glue(msg_fail))
+  capt <- glue("Records with investigational drugs with duration not equal to 1 day (n={n_record})")
+  kable(data[idx_duration,c("cohort", "record_id", "regimen_number")], capt = capt, row.names = F)
+} else {
+  print(msg_pass)
+}
+
+```
+
+## Investigational drug with other name
+
+The following records have administered drugs which are marked as investigational but also a drug notated in the other columns:
+
+```{r other}
+idx_other <- which(data[,"investigational_other"] != "ok")
+if(length(idx_other)) {
+  n_record <- length(idx_other)
+  print(glue(msg_fail))
+  capt <- glue("Records with investigational drugs but other drug noted (n={n_record})")
+  kable(data[idx_other,c("cohort", "record_id", "regimen_number")], capt = capt, row.names = F)
+} else {
+  print(msg_pass)
+}
+```
+
+## Investigational drug not in clinical trial
+
+The following records have administered drugs which are marked as investigational but not noted as being part of a clinical trial:
+
+```{r trials}
+idx_ct <- which(grepl(data[,"drugs_in_regimen"], pattern = "Investigational Drug") & data[,"drugs_ct_yn" ] == "No")
+if(length(idx_ct)) {
+  n_record <- length(idx_ct)
+  print(glue(msg_fail))
+  capt <- glue("Records with investigational drugs but not in clinical trial (n={n_record})")
+  kable(data[idx_ct,c("cohort", "record_id", "regimen_number", "drugs_in_regimen", "drugs_ct_yn")], capt = capt, row.names = F)
+} else {
+  print(msg_pass)
+}
+```
+
+## Unapproved or unknown FDA status for drugs in a regimen
+
+The following records have administered drugs which do not have a valid FDA approval date according to the HemOnc ontology and supplied index date:
+
+```{r fda}
+idx_fda <- which(is.element(data[,"fda_status"], c("unapproved", "unknown")))
+if(length(idx_fda)) {
+  
+  # sort by fda status for easier reading
+  to_kable <- data[idx_fda,c("cohort", "record_id", "regimen_number", "drugs_in_regimen", "drugs_ct_yn", "fda_status")]
+  to_kable <- to_kable %>% 
+    arrange(fda_status)
+  
+  n_record <- length(idx_fda)
+  print(glue(msg_fail))
+  capt <- glue("Records have no FDA approval date (n={n_record})")
+  kable(to_kable, capt = capt, row.names = F)
+} else {
+  print(msg_pass)
+}
+```
+
+## Regimens for patients with redacted data
+
+The following records are associated with redacted patients (age above 89 years) and may require additional scrutiny, especially with regard to the drug duration:
+
+```{r redacted}
+
+idx_redac <- which(data[,"age_greater_89"] == 1)
+
+if(length(idx_redac)) {
+  
+  # sort by fda status for easier reading
+  to_kable <- data[idx_redac,c("cohort", "record_id", "regimen_number", "drugs_in_regimen", "drugs_ct_yn", "fda_status")]
+  to_kable <- to_kable %>% 
+    arrange(fda_status)
+  
+  n_record <- length(idx_redac)
+  print(glue(msg_fail))
+  capt <- glue("Records are redacted (n={n_record})")
+  kable(to_kable, capt = capt, row.names = F)
+} else {
+  print(msg_pass)
+}
+```
