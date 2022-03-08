@@ -1,0 +1,82 @@
+---
+synapse:
+  curation:
+    id: syn21446698
+    name: Curation and QA
+    type: table
+    description: BPC Internal table with curation metadata
+  drugs:
+    id: syn21446703
+    name: Ca Directed Drugs
+    type: table
+    description: BPC Internal table with cancer drug treatment regiments
+  patient:
+    id: syn21446700
+    name: Patient Characteristics
+    type: table
+    description: BPC Internal table with patient characteristic data
+  relationship:
+    id: syn26119155
+    name: hemonc_cc_relationship
+    type: table
+    description: HemOnc ontology relationship table
+  concept:
+    id: syn26119153
+    name: hemonc_cc_concept
+    type: table
+    description: HemOnc concept relationship table
+  map:
+    id: syn26125434
+    name: hemonc_map_bpc
+    type: table
+    description: Table mapping BPC drug names to HemOnc ontology drug names
+  qc:
+    id: syn21652594
+    name: Data QC reports
+    type: folder
+    description: parent QC folder for all QC reports by cohort
+cohort:
+  BrCa:
+    sites:
+    - DFCI
+    - MSK
+    - VICC
+  CRC:
+    sites:
+    - DFCI
+    - MSK
+    - VICC
+  NSCLC:
+    sites:
+    - DFCI
+    - MSK
+    - UHN
+    - VICC
+  PANC:
+    sites:
+    - DFCI
+    - MSK
+    - UHN
+    - VICC
+  Prostate:
+    sites:
+      - DFCI
+      - MSK
+      - UHN
+      - VICC
+  BLADDER:
+    sites:
+      - DFCI
+      - MSK
+      - UHN
+      - VICC
+map:
+  cohort_name:
+    BLADDER: BLADDER
+    BrCa: Breast
+    CRC: CRC
+    NSCLC: NSCLC
+    PANC: Pancreas
+    Prostate: Prostate
+misc:
+  debug: TRUE
