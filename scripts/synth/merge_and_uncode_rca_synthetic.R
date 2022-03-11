@@ -726,7 +726,7 @@ if (!is.null(synid_folder_dest)) {
                   prov_used = c(synid_file_list, 
                                 synid_file_dd,
                                 config$synapse$grs$id),
-                  prov_exec = "https://github.com/Sage-Bionetworks/Genie_processing/tree/synth-bpc/bpc/synth/merge_and_uncode_rca_synthetic.R")
+                  prov_exec = "https://github.com/Sage-Bionetworks/genie-bpc-pipeline/blob/develop/scripts/synth/merge_and_uncode_rca_synthetic.R")
   
   # clean up locally
   file.remove(file_output_pri)
