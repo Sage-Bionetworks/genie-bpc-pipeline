@@ -100,14 +100,16 @@ get_bpc_data_upload <- function(cohort, site, obj) {
   data1 <- read.csv(ent$path, 
                     check.names = F,
                     na.strings = c(""), 
-                    stringsAsFactors = F)
+                    stringsAsFactors = F,
+                    colClasses = "character")
   
   # check for header1
   if (length(obj$header1)) {
     ent <- synGet(obj$header1)
     colnames(data1) <- as.character(read.csv(ent$path, check.names = F,
                                              na.strings = c(""),
-                                             stringsAsFactors = F))
+                                             stringsAsFactors = F,
+                                             colClasses = "character"))
   }
   
   # check for data 2
@@ -115,7 +117,8 @@ get_bpc_data_upload <- function(cohort, site, obj) {
     ent <- synGet(obj$data2)
     data2 <- read.csv(ent$path, check.names = F,
                       na.strings = c(""), 
-                      stringsAsFactors = F)
+                      stringsAsFactors = F,
+                      colClasses = "character")
   }
   
   # check for header2
@@ -123,7 +126,8 @@ get_bpc_data_upload <- function(cohort, site, obj) {
     ent <- synGet(obj$header2)
     colnames(data2) <- as.character(read.csv(ent$path, check.names = F,
                                              na.strings = c(""),
-                                             stringsAsFactors = F))
+                                             stringsAsFactors = F,
+                                             colClasses = "character"))
   }
   
   if (length(obj$data2)) {
