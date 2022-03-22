@@ -1,0 +1,144 @@
+---
+title: "Summary of case selection"
+author: "Haley Hunter-Zinck"
+date: "`r Sys.setenv(TZ='America/Los_Angeles'); format(Sys.time(), '%B %d, %Y at %I:%M %p %Z')`"
+output: html_document
+params:
+  phase: x
+  cohort: x
+  site: x
+---
+
+```{r setup, include=FALSE}
+
+library(synapser)
+synLogin()
+library(yaml)
+library(glue)
+library(dplyr)
+library(RColorBrewer)
+library(RCurl)
+library(jsonlite)
+
+# rmarkdown knit setup
+knitr::opts_chunk$set(echo = F)
+
+# read in all global parameters
+config <- read_yaml("config.yaml")
+
+# user specified parameters
+phase <- params$phase
+cohort <- params$cohort
+site <- params$site
+
+# file names
+file_matrix <- tolower(glue("{cohort}_{site}_phase{phase}_eligibility_matrix.csv"))
+file_selection <- tolower(glue("{cohort}_{site}_phase{phase}_case_selection.csv"))
+```
+
+```{r functions, include = F}
+
+#' Traverse the oncotree hierarchy to get all descendant codes of a root code.
+#' 
+#' @param root Root oncotree code
+#' @param url URL of holding JSON object of oncotree hierarchy
+#' @return All descendant codes of root in a vector of strings.
+#' @example 
+#' traverse(root = "BLADDER")
+traverse <- function(root, oncotree) {
+  
+  desc <- c()
+  
+  children = oncotree$code[which(oncotree$parent == root)]
+  
+  if(!length(children)) {
+    return(root)
+  }
+  
+  for (child in children) {
+    desc <- append(desc, traverse(child, oncotree))
+  }
+  
+  return(c(root, desc))
+}
+```
+
+```{r read, include = F}
+
+eligibility_matrix <- read.csv(file_matrix)
+case_selection <- read.csv(file_selection)
+
+```
+
+# Parameters
+
+**Phase**: `r phase`
+
+**Cohort**: `r cohort`
+
+**Site**: `r site`
+
+# Eligibility
+
+Eligible samples are defined with following criteria:
+
+1. Sample has an allowed OncoTree code
+    * Allowed codes: `r paste0(config$phase[[phase]]$cohort[[cohort]]$oncotree$allowed_codes, collapse = ", ")`
+2. Patient contributing sample was within the allowable age range at the time of sequencing
+    * Minimum age: `r config$default$global$age_min`
+    * Maximum age: `r if (!is.null(config$phase[[1]]$cohort[[cohort]]$age_max)) config$phase[[1]]$cohort$BrCa$age_max else config$default$global$age_max`
+3. Sample was sequenced between allowed date range
+    * Minimum sequencing date: `r config$phase[[phase]]$cohort[[cohort]]$date$seq_min`
+    * Maximum sequencing date: `r config$phase[[phase]]$cohort[[cohort]]$date$seq_max`
+4. Patient was sequenced in the year of death or before
+5. Patient was not already included in the cohort in a previous BPC release.
+6. Patient or sample was not previously excluded for quality control or other reasons.
+
+```{r eligibility}
+
+query <- glue("SELECT COUNT(*) FROM {config$synapse$main_patient$id} WHERE CENTER = '{site}'")
+n_main_genie <- as.integer(as.data.frame(synTableQuery(query, includeRowIdAndRowVersion = T)))
+
+print(glue("Total number of main GENIE cases for site: {n_main_genie}"))
+print(glue("Total number of BPC eligible cases: {nrow(case_selection)}"))
+```
+
+# Identify categories of eligible cases
+
+Eligible cases fall into the following categories:
+
+* production
+    * sdv: cases that undergo source data verification (SDV).  note: all pressure cases undergo SDV and the total number of cases required for SDV includes the pressure cases
+    * pressure: pressure cases that also undergo source data verification (SDV)
+    * irr: cases that undergo double abstraction to calculate inter-rater reliability (IRR) 
+* extra: extra eligible cases not included in the production cohort
+
+```{r categories}
+print(glue("Target number of production cases: {case_selection %>% filter(category == 'production') %>% count()}"))
+print(glue("Target number of SDV cases (including pressure): {case_selection %>% filter(sdv == 'sdv') %>% count()}"))
+print(glue("Target number of pressure cases: {case_selection %>% filter(pressure == 'pressure') %>% count()}"))
+print(glue("Target number of IRR cases: {case_selection %>% filter(irr == 'irr') %>% count()}"))
+print(glue("Extra eligible cases: {case_selection %>% filter(category == 'extra') %>% count()}"))
+```
+
+# Potential codes 
+AACR supplies a list of eligible OncoTree codes.  Here, we traverse the branches to list other potential codes that lie beneath a relevant OncoTree root code but are not included in the list of allowable codes for cohort eligibility.  
+
+```{r potential codes}
+
+oncotree <- fromJSON(getURL("http://oncotree.mskcc.org/api/tumorTypes"), flatten = T)
+root <- config$phase[[phase]]$cohort[[cohort]]$oncotree$root
+descendants <- traverse(root = root,
+                     oncotree = oncotree)
+
+selected <- config$phase[[phase]]$cohort[[cohort]]$oncotree$allowed_codes
+excluded <- setdiff(descendants, selected)
+
+selected_str <- paste0(selected, collapse = ", ")
+excluded_str <- paste0(excluded, collapse = ", ")
+print(glue("Selected codes: {selected_str}"))
+print(glue("Selected codes under root {root}: {paste0(intersect(selected, descendants), collapse = ', ')}"))
+print(glue("Selected codes NOT under root {root}: {paste0(setdiff(selected, descendants), collapse = ', ')}"))
+print(glue("Non-selected codes under root {root}: {excluded_str}"))
+
+```
