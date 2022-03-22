@@ -1,0 +1,335 @@
+---
+synapse:
+  main_patient: 
+    id: syn7517669
+    name: Patient Clinical Database
+    type: table
+    description: main GENIE table of all patients with patient info
+  main_sample: 
+    id: syn7517674
+    name: Sample Clinical Database
+    type: table
+    description: main GENIE table of all samples with sample info
+  bpc_patient:
+    id: syn21446700
+    name: Patient Characteristics
+    type: table
+    description: consolidated BPC patient characteristics info
+  bpc_sample:
+    id: syn21446709
+    name: Cancer Panel Test
+    type: table
+    description: BPC sample table
+  selection:
+    id: syn26228746
+    name: Case Selection Counts
+    type: table
+    description: reference table of case selection counts for GENIE BPC cohorts
+  ids:
+    id: syn20781633
+    name: IDs for export request
+    type: folder
+    description: folder holding IDs for case selection by cohort and site
+  bpc_internal:
+    id: syn21435590
+    name: GENIE BioPharma Collaborative Internal
+    type: project
+    description: BPC internal project space
+  bpc_removal_patient:
+    id: syn25998970
+    name: BPC Patient Retraction
+    type: table
+    description: patients removed from BPC for quality or other reasons
+  bpc_removal_sample:
+    id: syn25779833
+    name: BPC Sample Retraction
+    type: table
+    description: samples removed from BPC for quality or other reasons
+  case_selection:
+    id: syn26228746
+    name: Case Selection Counts
+    type: table
+    description: Case selection counts reference table in BPC Internal project
+default:
+  global:
+    age_min: 18
+    age_max: Inf
+    sdv: 0.2
+    irr: 0.05
+  site:
+    DFCI: 
+      pressure: 15
+      seed: 58029
+    MSK:
+      pressure: 15
+      seed: 7
+    UHN: 
+      pressure: 10
+      seed: 123456
+    VICC:
+      pressure: 10
+      seed: 992
+phase:
+  1:
+    cohort: 
+      BLADDER:
+        name: BLADDER
+        site:
+          DFCI:
+            production: 320
+            adjusted: 320
+          MSK:
+            production: 320
+            adjusted: 320
+          UHN:
+            production: 45
+            adjusted: 47
+            pressure: 3
+            sdv: 9
+            irr: 3
+          VICC:
+            production: 66
+            adjusted: 62
+            pressure: 10
+        date:
+          seq_min: Jan-2013
+          seq_max: Dec-2018
+        oncotree:
+          root: BLADDER
+          allowed_codes: 
+            - BLCA
+            - UTUC
+            - BLAD
+            - SCBC
+            - BLSC
+      BrCa:
+        name: BrCa
+        site:
+          DFCI:
+            production: 428
+            adjusted: 428
+          MSK:
+            production: 529
+            adjusted: 529
+          UHN:
+            production: 0
+            adjusted: 0
+          VICC:
+            production: 169
+            adjusted: 173
+            pressure: 15
+        date:
+          seq_min: Jan-2013
+          seq_max: Apr-2018
+        age_max: 56
+        oncotree:
+          root: Breast
+          allowed_codes: 
+            - BRCA
+            - BRCANOS
+            - BRCNOS
+            - IDC
+            - ILC
+            - MDLC
+            - BA
+            - MPT
+            - MBC
+            - MMBC
+            - MSCC
+      CRC:
+        name: CRC
+        site:
+          DFCI:
+            production: 570
+            adjusted: 570
+          MSK:
+            production: 705
+            adjusted: 705
+          UHN:
+            production: 0
+            adjusted: 0
+          VICC:
+            production: 225
+            adjusted: 226
+        date:
+          seq_min: Jan-2015
+          seq_max: Apr-2018
+        oncotree:
+          root: COADREAD
+          allowed_codes: 
+            - COADREAD
+            - COAD
+            - MACR
+            - SRCCR
+            - READ
+      NSCLC:
+        name: NSCLC
+        site:
+          DFCI:
+            production: 713
+            adjusted: 710
+          MSK:
+            production: 881
+            adjusted: 881
+          UHN:
+            production: 55
+            adjusted: 55
+            pressure: 0
+            sdv: 6
+            irr: 3
+            seq_min: Jan-2014
+          VICC:
+            production: 226
+            adjusted: 227
+        date:
+          seq_min: Jan-2015
+          seq_max: Dec-2017
+        oncotree:
+          root: NSCLC
+          allowed_codes: 
+            - NSCLC
+            - CMPT
+            - LCLC
+            - LUAD
+            - LUPC
+            - LUSC
+            - NSCLCPD
+            - LUAS
+            - LUMEC
+            - LECLC
+            - CCLC
+            - RLCLC
+            - GCLC
+            - BLCLC
+      PANC:
+        name: PANC
+        site:
+          DFCI:
+            production: 444
+            adjusted: 444
+          MSK:
+            production: 545
+            adjusted: 545
+          UHN:
+            production: 70
+            adjusted: 70
+            sdv: 14
+            irr: 4
+          VICC:
+            production: 65
+            adjusted: 64
+        date:
+          seq_min: Jan-2013
+          seq_max: Dec-2018
+        oncotree:
+          root: PANCREAS
+          allowed_codes: 
+            - PAAD
+            - PAASC
+            - PAAC
+            - UCP
+      Prostate:
+        name: Prostate
+        site:
+          DFCI:
+            production: 467
+            adjusted: 467
+          MSK:
+            production: 568
+            adjusted: 568
+          UHN:
+            production: 60
+            adjusted: 60
+            pressure: 3
+            sdv: 12
+            irr: 3
+          VICC:
+            production: 30
+            adjusted: 30
+        date:
+          seq_min: Jan-2013
+          seq_max: Dec-2018
+        oncotree:
+          root: PROSTATE
+          allowed_codes: 
+            - PRAD
+  1_additional: 
+    cohort:
+      NSCLC:
+          name: NSCLC
+          date:
+            seq_min: Jan-2018
+            seq_max: Sep-2021
+          oncotree:
+            root: NSCLC
+            allowed_codes: 
+              - NSCLC
+              - CMPT
+              - LCLC
+              - LUAD
+              - LUPC
+              - LUSC
+              - NSCLCPD
+              - LUAS
+              - LUMEC
+              - LECLC
+              - CCLC
+              - RLCLC
+              - GCLC
+              - BLCLC
+  2:
+    cohort: 
+      NSCLC:
+        name: NSCLC
+        site: 
+          DFCI:
+            production: 410
+            adjusted: 410
+          MSK:
+            production: 615
+            adjusted: 615
+          UHN:
+            production: 35
+            adjusted: 35
+            date: 
+              seq_min: Jan-2017
+              seq_max: Dec-2019
+          VICC:
+            production: 210
+            adjusted: 210
+        date: 
+          seq_min: Jan-2018
+          seq_max: Dec-2019
+        oncotree:
+          root: NSCLC
+          allowed_codes: 
+            - CMPT
+            - SPCC
+            - SGTTL
+            - NUTCL
+            - LCLC
+            - LUAD
+            - LUPC
+            - LUSC
+            - NSCLCPD
+            - LUAS
+            - LUMEC
+            - GCLC
+            - LUACC
+            - NSCLC
+release:
+  cohort:
+    BLADDER: 
+      patient_level_dataset: NA
+    BrCa: 
+      patient_level_dataset: syn26253365
+    CRC:
+      patient_level_dataset: syn26046793
+    NSCLC:
+      patient_level_dataset: syn25985884
+    PANC:
+      patient_level_dataset: NA
+    Prostate:
+      patient_level_dataset: NA
+misc:
+  debug: TRUE
