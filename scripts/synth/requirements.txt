@@ -1,0 +1,3 @@
+pandas >= 1.2.2
+numpy >= 1.18.1
+synapseclient >= 2.5.0
