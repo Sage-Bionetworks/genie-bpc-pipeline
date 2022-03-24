@@ -1,17 +1,17 @@
 #!/usr/bin/env nextflow
 
-syn_token = Channel.value("$SYNAPSE_AUTH_TOKEN")
+synapse_config = Channel.fromPath( 'bin/.synapseConfig' )
 
 process pyTest {
 
    input:
-   env SYNAPSE_AUTH_TOKEN from syn_token
+   file file_synapse_config from synapse_config
 
    output:
    file 'result.txt' 
 
    script:
    """
-   send_email.py > result.txt
+   send_email.py -c ${file_synapse_config} > result.txt
    """
 }
