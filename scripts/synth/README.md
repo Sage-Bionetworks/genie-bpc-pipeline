@@ -1,7 +1,7 @@
 # Synthetic BPC data for pipeline testing
 
 ## Overview
-Creates synthetic REDCap datasets for six cohorts using REDCap data dictionaries.  These datasets are then uncoded and merged by cohort.  Finally, the uncoded cohort datasets are uploaded to Synapse tables.  
+Creates synthetic REDCap datasets for six cohorts using REDCap data dictionaries used in the GENIE BioPharma Collaborative (BPC) project.  These datasets are then uncoded and merged by cohort.  Finally, the uncoded cohort datasets are imported to Synapse tables.  
 
 ## Installation
 
