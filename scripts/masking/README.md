@@ -4,8 +4,8 @@
 
 Clone this repository and navigate to the directory:
 ```
-git clone git@github.com:Sage-Bionetworks/Genie_processing.git
-cd Genie_processing/bpc/masking
+git clone git@github.com:Sage-Bionetworks/genie-bpc-pipeline.git
+cd genie-bpc-pipeline/bpc/masking
 ```
 
 Install all required R packages:
@@ -22,6 +22,14 @@ Instructions on accessing HemOnc Ontology reference files are available here: ht
 Cache your Synapse personal access token (PAT) as an environmental variable:
 ```
 export SYNAPSE_AUTH_TOKEN={your_personal_access_token_here}
+```
+
+or store in ~/.synapseConfig with the following format:
+```
+[authentication]
+
+# either authtoken OR username and password
+authtoken = {your_personal_access_token_here}
 ```
 
 ## Usage: update HemOnc reference tables
