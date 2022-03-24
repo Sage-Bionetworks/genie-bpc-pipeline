@@ -6,8 +6,8 @@ The describe below generate the non-PHI REDCap data dictionaries and import temp
 
 Clone this repository and navigate to the directory:
 ```
-git clone git@github.com:Sage-Bionetworks/Genie_processing.git
-cd Genie_processing/bpc/dd
+git clone git@github.com:Sage-Bionetworks/genie-bpc-pipeline.git
+cd genie-bpc-pipeline/bpc/dd
 ```
 
 Install all required R packages:
@@ -20,6 +20,14 @@ R -e 'renv::restore()'
 Cache your Synapse personal access token (PAT) as an environmental variable:
 ```
 export SYNAPSE_AUTH_TOKEN={your_personal_access_token_here}
+```
+
+or store in ~/.synapseConfig with the following format:
+```
+[authentication]
+
+# either authtoken OR username and password
+authtoken = {your_personal_access_token_here}
 ```
 
 ## Usage: non-PHI data dictionary
