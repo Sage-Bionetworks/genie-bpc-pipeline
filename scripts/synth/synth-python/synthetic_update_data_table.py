@@ -1,4 +1,5 @@
-# !/usr/bin/python
+#!/usr/bin/env python3
+
 """BPC Syapse Table Update
 
 This script updates the primary case tables and irr case tables for BPC.
