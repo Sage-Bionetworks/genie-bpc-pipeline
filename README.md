@@ -2,13 +2,13 @@
 
 ## Overview
 
-This NextFlow pipeline runs a preliminary version of the BPC pipeline formatted for use on a Synthetic representation of the BPC dataset.  
+This NextFlow workflow runs a preliminary version of the BPC pipeline formatted for use on a synthetic representation of the BPC dataset.  
 
-Proceses
-1. Extract SYNAPSE_AUTH_TOKEN from .synapseConfig file.  This is necessary because the second step is a containerized R script that requires Synapse personal access token to be passes as a parameter or an environmental variables.
-2. Run quality assurance checks.  This containered R script returns an exit code corresponding to the number of issues detected.  If the number of issues is 0, the workflow continues.  If the number of issues is greater than 0, the workflow stops with an error. 
-3. Uncode the synthetic REDCap dataset corresponding to the cohort specified in nextflow.config.
-4. Update Synapse tables with the synthetic data.  
+Workflow proceses
+1. Extract SYNAPSE_AUTH_TOKEN from .synapseConfig file.  This is necessary because the second step is a containerized R script that requires Synapse personal access token to be passes as a parameter or an environmental variable.
+2. Run quality assurance checks.  This containerized R script returns an exit code corresponding to the number of issues detected.  If the number of issues is 0, the workflow continues.  If the number of issues is greater than 0, the workflow stops with an error. 
+3. Uncode the synthetic REDCap dataset corresponding to the cohort specified in `nextflow.config` file.
+4. Update Synapse tables with the uncoded synthetic data.  
 
 ## Installation
 
@@ -24,11 +24,11 @@ cd genie-bpc-pipeline
 
 ## Synapse credentials
 
-Cache your Synapse credentials in bin/.synapseConfig with the following format:
+Cache your Synapse credentials in `bin/.synapseConfig` with the following format:
 ```
 [authentication]
 
-# either authtoken OR username and password
+# cache authtoken below
 authtoken = {your_personal_access_token_here}
 ```
 
