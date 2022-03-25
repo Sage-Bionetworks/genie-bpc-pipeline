@@ -20,6 +20,20 @@ waitifnot <- function(cond, msg) {
   }
 }
 
+#' Extract personal access token from .synapseConfig
+#' located at a custom path. 
+#' 
+#' @param path Path to .synapseConfig
+#' @return personal acccess token
+get_auth_token <- function(path) {
+  
+  lines <- scan(path, what = "character", sep = "\t", quiet = T)
+  line <- grep(pattern = "^authtoken = ", x = lines, value = T)
+  
+  token <- strsplit(line, split = ' ')[[1]][3]
+  return(token)
+}
+
 # user input ----------------------------
 
 option_list <- list( 
@@ -33,6 +47,10 @@ option_list <- list(
               help="Perform GENIE BPC specific hacks to merged dataset"),
   make_option(c("-o", "--output_prefix"), type = "character", default = "cohort",
               help="Prefix to append to output file name"),
+  make_option(c("-c", "--file_config"), type = "character", default = "config.yaml",
+              help="path to configuration file"),
+  make_option(c("-a", "--file_synapse_config"), type = "character", default = "~/.synapseConfig",
+              help="path to .synapseConfig file holding Synapse credentials"),            
   make_option(c("-v", "--verbose"), action="store_true", default = FALSE,
               help="Output messaging to user on script progress")
 )
@@ -45,6 +63,8 @@ synid_file_dd <- opt$synid_file_dd
 synid_folder_dest <- opt$synid_folder_dest
 bpc <- opt$bpc
 output_prefix <- opt$output_prefix
+file_config <- opt$file_config
+file_synapse <- opt$file_synapse_config
 verbose <- opt$verbose
 
 # setup ----------------------------
@@ -53,13 +73,14 @@ tic = as.double(Sys.time())
 
 library(glue)
 library(synapser)
-synLogin()
 library(yaml)
 library(dplyr)
 library(lubridate)
 
+synLogin(authToken = get_auth_token(file_synapse))
+
 # configuration
-config <- read_yaml("config.yaml")
+config <- read_yaml(file_config)
 
 # functions ----------------------------
 
