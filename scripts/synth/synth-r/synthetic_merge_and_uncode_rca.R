@@ -1,3 +1,5 @@
+#!/usr/bin/env Rscript
+
 # Description: Merge and uncode synthetic REDCap datasets.
 # Author: Haley Hunter-Zinck
 # Date: 2021-11-29
