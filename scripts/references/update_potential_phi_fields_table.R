@@ -155,7 +155,14 @@ get_sor_inf_to_redact <- function(synid_file_sor) {
   
   # ends in _int, _days, _mos, _yrs
   inf_sor <- sor %>% 
-    filter(grepl(pattern = "_int$", x = VARNAME) | grepl(pattern = "_days$", x = VARNAME) | grepl(pattern = "_mos$", x = VARNAME) | grepl(pattern = "_yrs$", x = VARNAME)) %>%
+    filter(grepl(pattern = "_int$", x = VARNAME) | 
+             grepl(pattern = "_int_[1-5]$", x = VARNAME) |
+             grepl(pattern = "_days$", x = VARNAME) | 
+             grepl(pattern = "_mos$", x = VARNAME) | 
+             grepl(pattern = "_yrs$", x = VARNAME) |
+             grepl(pattern = "_age$", x = VARNAME) |
+             grepl(pattern = "^age_", x = VARNAME) |
+             grepl(pattern = "_age_$", x = VARNAME)) %>%
     mutate(VARNAME_TRIM = trim(VARNAME)) %>%
     select(VARNAME_TRIM, TYPE) %>%
     distinct() %>%
@@ -195,10 +202,14 @@ get_red_table_update <-function(var_add, inf_sor) {
     mat_add <- matrix(NA, nrow = length(var_add), ncol = length(labels), dimnames = list(c(), labels))
     mat_add[,"variable"] <- var_add
     mat_add[,"type"] <- tolower(inf_sor[match(var_add, inf_sor[,"VARNAME"]), "TYPE"])
+    mat_add[grepl(pattern = "_int_[1-5]$", x = mat_add[,"variable"]),"unit"] <- "day"
     mat_add[grepl(pattern = "_int$", x = mat_add[,"variable"]),"unit"] <- "day"
     mat_add[grepl(pattern = "_days$", x = mat_add[,"variable"]),"unit"] <- "day"
     mat_add[grepl(pattern = "_mos$", x = mat_add[,"variable"]),"unit"] <- "month"
     mat_add[grepl(pattern = "_yrs$", x = mat_add[,"variable"]),"unit"] <- "year"
+    mat_add[grepl(pattern = "_age_", x = mat_add[,"variable"]),"unit"] <- "year"
+    mat_add[grepl(pattern = "_age$", x = mat_add[,"variable"]),"unit"] <- "year"
+    mat_add[grepl(pattern = "^age_", x = mat_add[,"variable"]),"unit"] <- "year"
   } 
   
   return(mat_add)
