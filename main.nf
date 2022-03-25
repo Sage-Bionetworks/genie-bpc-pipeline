@@ -40,7 +40,7 @@ out.view()
 
 process uncodeSynthData {
 
-   container 'synth-r'
+   container 'hhunterzinck/synth-r'
 
    input:
    file file_synapse_config from synapse_config1
@@ -78,7 +78,7 @@ process uncodeSynthData {
 
 process updateSynapseTables {
 
-   container 'synth-python'
+   container 'hhunterzinck/synth-python'
 
    input:
    file file_synapse_config from synapse_config2
