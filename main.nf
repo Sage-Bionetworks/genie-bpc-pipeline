@@ -13,11 +13,11 @@ process getSynapseAuthToken {
    file file_synapse_config from synapse_config3
 
    output: 
-   stdout into SYNAPSE_AUTH_TOKEN
+   env x into SYNAPSE_AUTH_TOKEN
 
    script:
    """
-   grep 'authtoken = ' ${file_synapse_config} | cut -f 3 -d ' '
+   x=`grep 'authtoken = ' ${file_synapse_config} | cut -f 3 -d ' '`
    """
 }
 
