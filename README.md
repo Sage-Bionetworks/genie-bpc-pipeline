@@ -18,9 +18,10 @@ git clone git@github.com:Sage-Bionetworks/genie-bpc-pipeline.git
 cd genie-bpc-pipeline
 ```
 
-2. Install Nextflow.  Instructions are available at the following link: 
+2. Install Nextflow and Docker.  Instructions are available at the following links: 
 
 - https://www.nextflow.io/docs/latest/getstarted.html
+- https://docs.docker.com/get-docker/
 
 ## Synapse credentials
 
