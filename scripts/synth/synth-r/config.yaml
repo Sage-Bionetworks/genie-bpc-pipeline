@@ -1,0 +1,43 @@
+synapse:
+  grs: 
+    id: syn24184523
+    name: Global_Response_Set
+    type: file
+    description: BPC REDCap mapping between coded and uncoded values to supplement data dictionaries
+column_name:
+  variable_name: "Variable / Field Name"
+  form_name: "Form Name"
+  field_type: "Field Type"
+  variable_mapping: "Choices, Calculations, OR Slider Labels"
+  variable_type: "Text Validation Type OR Show Slider Number"
+  variable_min: "Text Validation Min"
+  variable_max: "Text Validation Max"
+  rs_label: "Response Set Label"
+  rs_value: "Response Set Values"
+mapping:
+  complete:
+    0: "Not Started"
+    1: "Data Entry Started"
+    2: "Completed"
+    5: "Monitoring Complete"
+    6: "Form Removed"
+    7: "Form Locked"
+    8: "Form Signed"
+  yesno_rcc: 
+    0: "FALSE"
+    1: "true"
+  yesno_rca:
+    0: "No"
+    1: "Yes"
+  instrument:
+    ca_directed_drugs: "Ca Directed Drugs"
+    cancer_diagnosis: "Cancer Diagnosis"
+    cancer_panel_test: "Cancer Panel Test"
+    prissmm_imaging: "Prissmm Imaging"
+    prissmm_med_onc_assessment: "Prissmm Med Onc Assessment"
+    prissmm_pathology: "Prissmm Pathology"
+    prissmm_tumor_marker: "Prissmm Tumor Marker"
+    ca_directed_radtx: "Ca Directed Radtx"
+format:
+  rcc: "rcc"
+  rca: "rca"

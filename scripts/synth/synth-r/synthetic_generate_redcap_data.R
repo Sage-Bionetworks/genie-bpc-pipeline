@@ -1,3 +1,5 @@
+#!/usr/bin/env Rscript
+
 # Description: Generate a synthetic REDCap academic export from a REDCap data dictionary.
 # Author: Haley Hunter-Zinck
 # Date: 2021-11-09
