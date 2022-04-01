@@ -96,3 +96,34 @@ Example run:
 ```
 Rscript update_potential_phi_fields_table.R -v
 ```
+
+## Usage: updating upload tracking table 
+
+To display the command line interface:
+```
+Rscript update_date_tracking_table.R -h
+```
+
+The command line interface will display as follows:
+```
+Usage: update_date_tracking_table.R [options]
+
+
+Options:
+	-c COHORT, --cohort=COHORT
+		BPC cohort
+
+	-d DATE, --date=DATE
+		New current date for cohort
+
+	-s SAVE_COMMENT, --save_comment=SAVE_COMMENT
+		Save table snapshot to Synapse with supplied comment
+
+	-h, --help
+		Show this help message and exit
+```
+
+Example run: 
+```
+Rscript update_date_tracking_table.R -c CRC -d 2022-03-31 -s 'round x update to crc'
+```
