@@ -18,21 +18,39 @@ process getSynapseAuthToken {
    """
 }
 
-process quacUploadReport {
+process quacUploadReportError {
 
    input:
    val SYNAPSE_AUTH_TOKEN
 
    output:
-   stdout into outUploadReport
+   stdout into outUploadReportError
 
    script:
    """
-   docker run -e SYNAPSE_AUTH_TOKEN=$SYNAPSE_AUTH_TOKEN --rm $docker_username/genie-bpc-quac -c $cohort -s all -r upload -l error -v
+   docker run -e SYNAPSE_AUTH_TOKEN=$SYNAPSE_AUTH_TOKEN --rm $docker_username/genie-bpc-quac -c $cohort -s all -r upload -l error -v -u
    """
 }
 
-outUploadReport.view()
+outUploadReportError.view()
+
+process quacUploadReportWarning {
+
+   errorStrategy 'ignore'
+
+   input:
+   val SYNAPSE_AUTH_TOKEN
+
+   output:
+   stdout into outUploadReportWarning
+
+   script:
+   """
+   docker run -e SYNAPSE_AUTH_TOKEN=$SYNAPSE_AUTH_TOKEN --rm $docker_username/genie-bpc-quac -c $cohort -s all -r upload -l warning -v -u
+   """
+}
+
+outUploadReportWarning.view()
 
 process mergeAndUncodeRcaUploads {
 
@@ -69,6 +87,8 @@ process updateDateTrackingTable {
 
 process quacTableReport {
 
+   errorStrategy 'ignore'
+
    input:
    val SYNAPSE_AUTH_TOKEN
 
@@ -77,13 +97,16 @@ process quacTableReport {
 
    script:
    """
-   docker run -e SYNAPSE_AUTH_TOKEN=$SYNAPSE_AUTH_TOKEN --rm $docker_username/genie-bpc-quac -c $cohort -s all -r table -l error -v
+   docker run -e SYNAPSE_AUTH_TOKEN=$SYNAPSE_AUTH_TOKEN --rm $docker_username/genie-bpc-quac -c $cohort -s all -r table -l error -v -u
+   docker run -e SYNAPSE_AUTH_TOKEN=$SYNAPSE_AUTH_TOKEN --rm $docker_username/genie-bpc-quac -c $cohort -s all -r table -l warning -v -u
    """
 }
 
 outTableReport.view()
 
 process quacComparisonReport {
+
+   errorStrategy 'ignore'
 
    input:
    val SYNAPSE_AUTH_TOKEN
@@ -93,7 +116,8 @@ process quacComparisonReport {
 
    script:
    """
-   docker run -e SYNAPSE_AUTH_TOKEN=$SYNAPSE_AUTH_TOKEN --rm $docker_username/genie-bpc-quac -c $cohort -s all -r comparison -l error -v
+   docker run -e SYNAPSE_AUTH_TOKEN=$SYNAPSE_AUTH_TOKEN --rm $docker_username/genie-bpc-quac -c $cohort -s all -r comparison -l error -v -u
+   docker run -e SYNAPSE_AUTH_TOKEN=$SYNAPSE_AUTH_TOKEN --rm $docker_username/genie-bpc-quac -c $cohort -s all -r comparison -l warning -v -u
    """
 }
 
