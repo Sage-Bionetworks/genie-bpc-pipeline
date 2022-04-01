@@ -1,0 +1,16 @@
+{
+    "primary":{
+        "NSCLC": "syn23285494",
+        "CRC": "syn23285418",
+        "BrCa": "syn23286608",
+        "PANC": "syn24175803",
+        "Prostate": "syn25610393",
+        "BLADDER": "syn26721150"
+    },
+    "irr":{
+        "BrCa": "syn24241519",
+        "PANC": "syn25610271",
+        "Prostate": "syn26275497",
+        "BLADDER": "syn26721151"
+    }
+}
