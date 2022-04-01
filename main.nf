@@ -1,7 +1,12 @@
 #!/usr/bin/env nextflow
 
+params.cohort = 'NSCLC'
+params.comment = 'NSCLC public release update'
+
 synapse_config = Channel.fromPath( 'bin/.synapseConfig' )
 SYNAPSE_AUTH_TOKEN = Channel.value()
+cohort = Channel.value(params.cohort)
+comment = Channel.value(params.comment)
 
 process getSynapseAuthToken {
 
@@ -22,6 +27,7 @@ process quacUploadReportError {
 
    input:
    val SYNAPSE_AUTH_TOKEN
+   val cohort
 
    output:
    stdout into outUploadReportError
@@ -40,6 +46,7 @@ process quacUploadReportWarning {
 
    input:
    val SYNAPSE_AUTH_TOKEN
+   val cohort
 
    output:
    stdout into outUploadReportWarning
@@ -56,6 +63,7 @@ process mergeAndUncodeRcaUploads {
 
    input:
    val SYNAPSE_AUTH_TOKEN
+   val cohort
 
    script:
    """
@@ -67,6 +75,7 @@ process updateDataTable {
 
    input:
    val SYNAPSE_AUTH_TOKEN
+   val comment
 
    script:
    """
@@ -78,10 +87,12 @@ process updateDateTrackingTable {
 
    input:
    val SYNAPSE_AUTH_TOKEN
+   val cohort
 
    script:
    """
-   docker run -e SYNAPSE_AUTH_TOKEN=$SYNAPSE_AUTH_TOKEN --rm $docker_username/update-date-tracking-table
+   date_today=$(date +'%Y-%m-%d')
+   docker run -e SYNAPSE_AUTH_TOKEN=$SYNAPSE_AUTH_TOKEN --rm $docker_username/update-date-tracking-table -c $cohort -d $date_today -s
    """
 }
 
@@ -91,6 +102,7 @@ process quacTableReport {
 
    input:
    val SYNAPSE_AUTH_TOKEN
+   val cohort
 
    output:
    stdout into outTableReport
@@ -110,6 +122,7 @@ process quacComparisonReport {
 
    input:
    val SYNAPSE_AUTH_TOKEN
+   val cohort
 
    output:
    stdout into outComparisonReport
@@ -127,6 +140,7 @@ process maskingReport {
 
    input:
    val SYNAPSE_AUTH_TOKEN
+   val cohort
 
    output:
    stdout into outMaskingReport
@@ -144,6 +158,7 @@ process updateCaseCountTable {
 
    input:
    val SYNAPSE_AUTH_TOKEN
+   val comment
 
    output:
    stdout into outCaseCount
@@ -157,9 +172,3 @@ process updateCaseCountTable {
 
 outCaseCount.view()
 
-process deleteSynapseConfigFileFromWorkDir {
-   script:
-   """
-   rm $workDir/.synapseConfig
-   """
-}

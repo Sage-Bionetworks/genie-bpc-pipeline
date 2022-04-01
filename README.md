@@ -43,5 +43,9 @@ authtoken = {your_personal_access_token_here}
 
 To run the Nextflow pipeline:
 ```
-nextflow run main.nf
+nextflow run main.nf --cohort {cohort} --comment {comment}
 ```
+
+Input parameters:
+- cohort: BPC cohort code to process (valid: BLADDER, BrCa, CRC, NSCLC, PANC, Prostate)
+- comment: message to use for Synapse table snapshots regarding the update (e.g. "NSCLC public release")
