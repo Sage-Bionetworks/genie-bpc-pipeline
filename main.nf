@@ -105,7 +105,7 @@ process maskingReport {
    val SYNAPSE_AUTH_TOKEN
 
    output:
-   stdout into outComparisonReport
+   stdout into outMaskingReport
 
    script:
    """
@@ -114,13 +114,15 @@ process maskingReport {
    """
 }
 
+outMaskingReport.view()
+
 process updateCaseCountTable {
 
    input:
    val SYNAPSE_AUTH_TOKEN
 
    output:
-   stdout into outComparisonReport
+   stdout into outCaseCount
 
    script:
    """
@@ -128,6 +130,8 @@ process updateCaseCountTable {
    docker run -e SYNAPSE_AUTH_TOKEN=$SYNAPSE_AUTH_TOKEN --rm $docker_username/update-case-count-table -c $comment -s 
    """
 }
+
+outCaseCount.view()
 
 process deleteSynapseConfigFileFromWorkDir {
    script:
