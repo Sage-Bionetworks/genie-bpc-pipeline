@@ -1,16 +1,12 @@
 #!/usr/bin/env nextflow
 
-synapse_config1 = Channel.fromPath( 'bin/.synapseConfig' )
-synapse_config2 = Channel.fromPath( 'bin/.synapseConfig' )
-synapse_config3 = Channel.fromPath( 'bin/.synapseConfig' )
-
-r_config = Channel.fromPath( 'bin/config.yaml' )
-python_config = Channel.fromPath( 'bin/config.json' )
+synapse_config = Channel.fromPath( 'bin/.synapseConfig' )
+SYNAPSE_AUTH_TOKEN = Channel.value()
 
 process getSynapseAuthToken {
 
    input:
-   file file_synapse_config from synapse_config3
+   file file_synapse_config from synapse_config
 
    output: 
    env x into SYNAPSE_AUTH_TOKEN
@@ -18,75 +14,124 @@ process getSynapseAuthToken {
    script:
    """
    x=`grep 'authtoken = ' ${file_synapse_config} | cut -f 3 -d ' '`
+   rm ${file_synapse_config}
    """
 }
 
-process quacReports {
+process quacUploadReport {
 
    input:
    val SYNAPSE_AUTH_TOKEN
 
    output:
-   stdout into out
+   stdout into outUploadReport
 
    script:
    """
-   #docker run --rm hhunterzinck/genie-bpc-quac -c $cohort -s SAGE -r upload -l error -v -a $SYNAPSE_AUTH_TOKEN
-   docker run --rm hhunterzinck/genie-bpc-quac -c $cohort -s SAGE -r masking -l error -v -a $SYNAPSE_AUTH_TOKEN
+   docker run -e SYNAPSE_AUTH_TOKEN=$SYNAPSE_AUTH_TOKEN --rm $docker_username/genie-bpc-quac -c $cohort -s all -r upload -l error -v
    """
 }
 
-out.view()
+outUploadReport.view()
 
-process uncodeSynthData {
-
-   container 'hhunterzinck/synth-r'
+process mergeAndUncodeRcaUploads {
 
    input:
-   file file_synapse_config from synapse_config1
-   file file_r_config from r_config
+   val SYNAPSE_AUTH_TOKEN
 
    script:
-
-   if ( cohort == 'BLADDER')
-        """
-        synthetic_merge_and_uncode_rca.R -f syn27541023 -d syn26469280 -s syn26469947 -o 'bladder' -b -v -c ${file_r_config} -a ${file_synapse_config}
-        """
-   else if ( cohort == "BrCa") 
-        """
-        synthetic_merge_and_uncode_rca.R -f syn27541444 -d syn22738744 -s syn26469947 -o 'brca' -b -v -c ${file_r_config} -a ${file_synapse_config}
-        """
-   else if (cohort == "CRC") 
-        """
-        synthetic_merge_and_uncode_rca.R -f syn27541444 -d syn22738744 -s syn26469947 -o 'crc' -b -v -c ${file_r_config} -a ${file_synapse_config}
-        """
-   else if (cohort == "NSCLC")
-        """
-        synthetic_merge_and_uncode_rca.R -f syn27542392 -d syn25610053 -s syn26469947 -o 'nsclc' -b -v -c ${file_r_config} -a ${file_synapse_config}
-        """
-   else if (cohort == "PANC") 
-        """
-        synthetic_merge_and_uncode_rca.R -f syn27538210 -d syn25468849 -s syn26469947 -o 'panc' -b -v -c ${file_r_config} -a ${file_synapse_config}
-        """
-   else if (cohort == "Prostate") 
-        """
-        synthetic_merge_and_uncode_rca.R -f syn27542446 -d syn26260844 -s syn26469947 -o 'prostate' -b -v -c ${file_r_config} -a ${file_synapse_config}
-        """
-   else
-        error "Invalid alignment mode: ${cohort}"
+   """
+   docker run -e SYNAPSE_AUTH_TOKEN=$SYNAPSE_AUTH_TOKEN --rm $docker_username/merge-and-uncode-rca-uploads -c $cohort
+   """
 }
 
-process updateSynapseTables {
-
-   container 'hhunterzinck/synth-python'
+process updateDataTable {
 
    input:
-   file file_synapse_config from synapse_config2
-   file file_python_config from python_config
+   val SYNAPSE_AUTH_TOKEN
 
    script:
    """
-   synthetic_update_data_table.py -p ${file_python_config} -s ${file_synapse_config} -m 'synthetic data table update from nextflow' primary
+   docker run -e SYNAPSE_AUTH_TOKEN=$SYNAPSE_AUTH_TOKEN --rm $docker_username/update-data-table -m $comment primary
    """
 }
 
+process updateDateTrackingTable {
+
+   input:
+   val SYNAPSE_AUTH_TOKEN
+
+   script:
+   """
+   docker run -e SYNAPSE_AUTH_TOKEN=$SYNAPSE_AUTH_TOKEN --rm $docker_username/update-date-tracking-table
+   """
+}
+
+process quacTableReport {
+
+   input:
+   val SYNAPSE_AUTH_TOKEN
+
+   output:
+   stdout into outTableReport
+
+   script:
+   """
+   docker run -e SYNAPSE_AUTH_TOKEN=$SYNAPSE_AUTH_TOKEN --rm $docker_username/genie-bpc-quac -c $cohort -s all -r table -l error -v
+   """
+}
+
+outTableReport.view()
+
+process quacComparisonReport {
+
+   input:
+   val SYNAPSE_AUTH_TOKEN
+
+   output:
+   stdout into outComparisonReport
+
+   script:
+   """
+   docker run -e SYNAPSE_AUTH_TOKEN=$SYNAPSE_AUTH_TOKEN --rm $docker_username/genie-bpc-quac -c $cohort -s all -r comparison -l error -v
+   """
+}
+
+outComparisonReport.view()
+
+process maskingReport {
+
+   input:
+   val SYNAPSE_AUTH_TOKEN
+
+   output:
+   stdout into outComparisonReport
+
+   script:
+   """
+   date_today=$(date +'%Y-%m-%d')
+   docker run -e SYNAPSE_AUTH_TOKEN=$SYNAPSE_AUTH_TOKEN --rm $docker_username/masking-report -c $cohort -d $date_today -s 
+   """
+}
+
+process updateCaseCountTable {
+
+   input:
+   val SYNAPSE_AUTH_TOKEN
+
+   output:
+   stdout into outComparisonReport
+
+   script:
+   """
+   date_today=$(date +'%Y-%m-%d')
+   docker run -e SYNAPSE_AUTH_TOKEN=$SYNAPSE_AUTH_TOKEN --rm $docker_username/update-case-count-table -c $comment -s 
+   """
+}
+
+process deleteSynapseConfigFileFromWorkDir {
+   script:
+   """
+   rm $workDir/.synapseConfig
+   """
+}
