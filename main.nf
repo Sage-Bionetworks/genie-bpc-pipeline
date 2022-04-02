@@ -8,6 +8,19 @@ SYNAPSE_AUTH_TOKEN = Channel.value()
 cohort = Channel.value(params.cohort)
 comment = Channel.value(params.comment)
 
+process checkInput {
+    input:
+    val cohort
+
+    output:
+    stdout into status
+
+    script:
+    """
+    echo $cohorts | tr ' ' '\n' | grep -c ^$cohort\$
+    """
+}
+
 process getSynapseAuthToken {
 
    input:
