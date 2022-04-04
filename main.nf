@@ -178,7 +178,6 @@ process updateCaseCountTable {
 
    script:
    """
-   date_today=$(date +'%Y-%m-%d')
    docker run -e SYNAPSE_AUTH_TOKEN=$SYNAPSE_AUTH_TOKEN --rm $docker_username/update-case-count-table -c $comment -s 
    """
 }
