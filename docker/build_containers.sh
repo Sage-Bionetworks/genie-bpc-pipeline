@@ -1,11 +1,13 @@
 #!/bin/sh
 
-# Description: build all docker containers and push to repository.
+# Description: remove cache, build all docker containers, and push to repository.
 # Author: Haley Hunter-Zinck
 # Usage: sh build_containers.sh {docker_username}
 # Date: 2022-04-01
 
 docker_username=$1
+
+docker system prune -a
 
 docker build -t $docker_username/merge-and-uncode-rca-uploads ../scripts/uploads/
 docker push $docker_username/merge-and-uncode-rca-uploads
