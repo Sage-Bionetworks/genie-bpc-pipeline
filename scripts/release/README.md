@@ -64,3 +64,37 @@ Example run:
 ```
 Rscript create_release_files.R -c BLADDER -v
 ```
+
+## Usage: copy release files
+
+To display the command line interface:
+```
+Rscript copy_release_files.R -h
+```
+
+The command line interface will display as follows:
+```
+Usage: copy_release_files.R [options]
+
+
+Options:
+	-i SYNID_FOLDER_INPUT, --synid_folder_input=SYNID_FOLDER_INPUT
+		Synapse ID of input file
+
+	-o SYNID_FOLDER_OUTPUT, --synid_folder_output=SYNID_FOLDER_OUTPUT
+		Synapse ID of output folder
+
+	-v, --verbose
+		Output script messages to the user.
+
+	-a AUTH, --auth=AUTH
+		Synapse personal access token or path to .synapseConfig (default: normal synapse login behavior)
+
+	-h, --help
+		Show this help message and exit
+```
+
+Example run: 
+```
+Rscript create_release_files.R -i syn12345 -o syn54321 -v
+```
