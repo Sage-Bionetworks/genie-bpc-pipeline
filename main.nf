@@ -42,7 +42,7 @@ process quacUploadReportError {
    script:
    """
    R -e 'renv::restore(lockfile = "/usr/local/src/myscripts/renv.lock")'
-   Rscript /usr/local/src/myscripts/genie-bpc-quac.R -a $syn_config -c $cohort -s all -r upload -l error -v
+   Rscript /usr/local/src/myscripts/genie-bpc-quac.R -c $cohort -s all -r upload -l error -v -a $syn_config 
    """
 }
 
@@ -67,7 +67,7 @@ process quacUploadReportWarning {
    script:
    """
    R -e 'renv::restore(lockfile = "/usr/local/src/myscripts/renv.lock")'
-   Rscript /usr/local/src/myscripts/genie-bpc-quac.R -a $syn_config -c $cohort -s all -r upload -l warning -v -u
+   Rscript /usr/local/src/myscripts/genie-bpc-quac.R -c $cohort -s all -r upload -l warning -u -v -a $syn_config 
    """
 }
 
@@ -78,7 +78,7 @@ Merge and uncode REDcap export data files.
 */
 process mergeAndUncodeRcaUploads {
 
-   container 'hhunterzinck/merge-and-uncode-rca-uploads'
+   container 'hhunterzinck/genie-bpc-pipeline-uploads'
 
    input:
    file syn_config   from ch_synapse_config
@@ -90,7 +90,7 @@ process mergeAndUncodeRcaUploads {
    script:
    """
    R -e 'renv::restore(lockfile = "/usr/local/src/myscripts/renv.lock")'
-   Rscript /usr/local/src/myscripts/merge_and_uncode_rca_uploads.R -a $syn_config -c $cohort -s -v
+   Rscript /usr/local/src/myscripts/merge_and_uncode_rca_uploads.R -c $cohort -u -a $syn_config -v
    """
 }
 
@@ -101,7 +101,7 @@ Update Synapse tables with merged and uncoded data.
 */
 process updateDataTable {
 
-   container 'hhunterzinck/update-data-table'
+   container 'hhunterzinck/genie-bpc-pipeline-table-updates'
 
    input:
    file syn_config   from ch_synapse_config
@@ -120,7 +120,7 @@ for later quality assurance checklist reports.s
 */
 process updateDateTrackingTable {
 
-   container 'hhunterzinck/update-date-tracking-table'
+   container 'hhunterzinck/genie-bpc-pipeline-references'
 
    input:
    file syn_config   from ch_synapse_config
@@ -153,8 +153,8 @@ process quacTableReport {
    script:
    """
    R -e 'renv::restore(lockfile = "/usr/local/src/myscripts/renv.lock")'
-   Rscript /usr/local/src/myscripts/genie-bpc-quac.R -a $syn_config -c $cohort -s all -r table -l error -v -u
-   Rscript /usr/local/src/myscripts/genie-bpc-quac.R -a $syn_config -c $cohort -s all -r table -l warning -v -u
+   Rscript /usr/local/src/myscripts/genie-bpc-quac.R -c $cohort -s all -r table -l error -u -v -a $syn_config 
+   Rscript /usr/local/src/myscripts/genie-bpc-quac.R -c $cohort -s all -r table -l warning -u -v -a $syn_config 
    """
 }
 
@@ -179,8 +179,8 @@ process quacComparisonReport {
    script:
    """
    R -e 'renv::restore(lockfile = "/usr/local/src/myscripts/renv.lock")'
-   Rscript /usr/local/src/myscripts/genie-bpc-quac.R -a $syn_config -c $cohort -s all -r comparison -l error -v -u
-   Rscript /usr/local/src/myscripts/genie-bpc-quac.R -a $syn_config -c $cohort -s all -r comparison -l warning -v -u
+   Rscript /usr/local/src/myscripts/genie-bpc-quac.R -c $cohort -s all -r comparison -l error -u -v -a $syn_config 
+   Rscript /usr/local/src/myscripts/genie-bpc-quac.R -c $cohort -s all -r comparison -l warning -u -v -a $syn_config 
    """
 }
 
@@ -191,7 +191,7 @@ Create drug masking report files on most recent Synapse table data.
 */
 process maskingReport {
 
-   container 'hhunterzinck/masking-report'
+   container 'hhunterzinck/genie-bpc-pipeline-masking'
 
    input:
    file syn_config   from ch_synapse_config
@@ -204,7 +204,7 @@ process maskingReport {
    """
    R -e 'renv::restore(lockfile = "/usr/local/src/myscripts/renv.lock")'
    date_today=$(date +'%Y-%m-%d')
-   Rscript /usr/local/src/myscripts/workflow_unmasked_drugs.R -a $syn_config -c $cohort -d $date_today -s 
+   Rscript /usr/local/src/myscripts/workflow_unmasked_drugs.R -c $cohort -d $date_today -s -a $syn_config 
    """
 }
 
@@ -216,7 +216,7 @@ from Synapse tables.
 */
 process updateCaseCountTable {
 
-   container 'hhunterzinck/update-case-count-table'
+   container 'hhunterzinck/genie-bpc-pipeline-case-selection'
 
    input:
    file syn_config   from ch_synapse_config
