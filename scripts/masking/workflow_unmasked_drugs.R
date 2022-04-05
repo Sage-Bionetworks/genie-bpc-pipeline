@@ -14,7 +14,12 @@ library(rmarkdown)
 library(yaml)
 library(synapser)
 
-config <- read_yaml("config.yaml")
+workdir <- "."
+if (!file.exists("config.yaml")) {
+  workdir <- "/usr/local/src/myscripts"
+}
+
+config <- read_yaml(glue("{workdir}/config.yaml"))
 
 # user input ----------------------
 

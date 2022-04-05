@@ -23,7 +23,12 @@ waitifnot <- function(cond, msg) {
 
 # user input ----------------------------
 
-config <- read_yaml("config.yaml")
+workdir <- "."
+if (!file.exists("config.yaml")) {
+  workdir <- "/usr/local/src/myscripts"
+}
+
+config <- read_yaml(glue("{workdir}/config.yaml"))
 cohorts <- names(config$upload)
 cohorts_str <- paste0(cohorts, collapse = ", ")
 

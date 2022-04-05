@@ -54,8 +54,13 @@ library(synapser)
 library(glue)
 library(yaml)
 
+workdir <- "."
+if (!file.exists("config.yaml")) {
+  workdir <- "/usr/local/src/myscripts"
+}
+
 # synapse
-config <- read_yaml("config.yaml")
+config <- read_yaml(glue("{workdir}/config.yaml"))
 synid_table_cur <- config$synapse$curation$id      
 synid_table_drugs <- config$synapse$drugs$id  
 synid_table_pt <- config$synapse$patient$id    

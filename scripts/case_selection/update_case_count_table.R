@@ -5,7 +5,13 @@
 # pre-setup ----------------------
 
 library(optparse)
-source("shared_fxns.R")
+
+workdir <- "."
+if (!file.exists("config.yaml")) {
+  workdir <- "/usr/local/src/myscripts"
+}
+config <- read_yaml(glue("{workdir}/config.yaml"))
+source(glue("{workdir}/shared_fxns.R"))
 
 # user input --------------------------
 
@@ -31,9 +37,6 @@ library(glue)
 library(dplyr)
 library(yaml)
 library(synapser)
-
-# configuration
-config <- read_yaml("config.yaml")
 
 # functions ----------------------------
 

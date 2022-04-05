@@ -26,7 +26,9 @@ option_list <- list(
   make_option(c("-d", "--date"), type = "character",
               help="New current date for cohort"),
   make_option(c("-s", "--save_comment"), type = "character", 
-              help="Save table snapshot to Synapse with supplied comment")
+              help="Save table snapshot to Synapse with supplied comment"),
+  make_option(c("-a", "--synapse_auth"), type = "character", default = "~/.synapseConfig", 
+              help="Path to .synapseConfig file or Synapse PAT (default: '~/.synapseConfig')")
 )
 opt <- parse_args(OptionParser(option_list=option_list))
 waitifnot(!is.null(opt$cohort) && !is.null(opt$date),
@@ -35,6 +37,7 @@ waitifnot(!is.null(opt$cohort) && !is.null(opt$date),
 cohort <- opt$cohort
 date <- opt$date
 save_comment <- opt$save_comment
+auth <- opt$synapse_auth
 
 # setup ----------------------------
 
@@ -43,7 +46,6 @@ tic = as.double(Sys.time())
 library(glue)
 library(dplyr)
 library(synapser)
-synLogin()
 
 # synapse
 synid_table_tracking <- "syn25837005"
@@ -108,6 +110,70 @@ create_new_table_version <- function(table_id, data, comment = "") {
   n_version <- create_synapse_table_snapshot(table_id, comment)
   return(n_version)
 }
+
+#' Extract personal access token from .synapseConfig
+#' located at a custom path. 
+#' 
+#' @param path Path to .synapseConfig
+#' @return personal acccess token
+get_auth_token <- function(path) {
+  
+  lines <- scan(path, what = "character", sep = "\t", quiet = T)
+  line <- grep(pattern = "^authtoken = ", x = lines, value = T)
+  
+  token <- strsplit(line, split = ' ')[[1]][3]
+  return(token)
+}
+
+#' Override of synapser::synLogin() function to accept 
+#' custom path to .synapseConfig file or personal authentication
+#' token.  If no arguments are supplied, performs standard synLogin().
+#' 
+#' @param auth full path to .synapseConfig file or authentication token
+#' @param silent verbosity control on login
+#' @return TRUE for successful login; F otherwise
+#' Override of synapser::synLogin() function to accept 
+#' custom path to .synapseConfig file or personal authentication
+#' token.  If no arguments are supplied, performs standard synLogin().
+#' 
+#' @param auth full path to .synapseConfig file or authentication token
+#' @param silent verbosity control on login
+#' @return TRUE for successful login; F otherwise
+synLogin <- function(auth = NA, silent = T) {
+  
+  # default synLogin behavior
+  if (is.na(auth)) {
+    syn <- synapser::synLogin(silent = silent)
+    return(T)
+  }
+  
+  token = auth
+  
+  # extract token from .synapseConfig
+  if (grepl(x = auth, pattern = "\\.synapseConfig$")) {
+    token = get_auth_token(auth)
+    
+    if (is.na(token)) {
+      return(F)
+    }
+  }
+  
+  # login
+  syn <- tryCatch({
+    synapser::synLogin(authToken = token, silent = silent)
+  }, error = function(cond) {
+    return(F)
+  })
+  
+  if (is.null(syn)) {
+    return(T)
+  }
+  return(syn)
+}
+
+# synapse login -------------------
+
+login_status <- synLogin(auth = auth)
 
 # read ----------------------------
 
