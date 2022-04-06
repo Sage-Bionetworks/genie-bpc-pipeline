@@ -328,7 +328,7 @@ for (site in sites) {
                                     config$synapse$map$id, 
                                     config$synapse$patient$id,
                                     config$synapse$curation$id), 
-                      prov_exec = "https://github.com/Sage-Bionetworks/Genie_processing/blob/main/bpc/masking/qa_unmasked_drugs_hemonc.R")
+                      prov_exec = "https://github.com/Sage-Bionetworks/genie-bpc-pipeline/blob/develop/scripts/masking/qa_unmasked_drugs_hemonc.R")
       
       # clean up locally
       file.remove(file_local)
@@ -368,7 +368,7 @@ for (site in sites) {
                       prov_name = "drug masking report", 
                       prov_desc = glue("drug masking report for the {cohort} cohort from site {site} uploaded on {date}"), 
                       prov_used = prov_used, 
-                      prov_exec = "https://github.com/Sage-Bionetworks/Genie_processing/blob/main/bpc/masking/qa_unmasked_drugs_hemonc.Rmd")
+                      prov_exec = "https://github.com/Sage-Bionetworks/genie-bpc-pipeline/blob/develop/scripts/masking/qa_unmasked_drugs_hemonc.Rmd")
       file.remove(file_local)
     }
   }
