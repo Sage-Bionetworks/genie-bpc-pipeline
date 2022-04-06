@@ -71,6 +71,11 @@ synid_folder_qc <- config$synapse$qc$id
 
 # functions ---------------------------------------------
 
+#' Get all child entities of a synapse folder.
+#' 
+#' @param synapse_id Synapse ID of the folder
+#' @param include_types Types of child entities to return
+#' @return Vector with values as Synapse IDs and names as entity names.
 get_synapse_folder_children <- function(synapse_id, 
                                         include_types=list("folder", "file", "table", "link", "entityview", "dockerrepo")) {
   
@@ -87,7 +92,14 @@ get_synapse_folder_children <- function(synapse_id,
   return(children)
 }
 
-# get Synapse ID of the most recently reviewed drug report
+#' Get Synapse ID of the most recently reviewed drug report
+#' @param synid_root Synapse ID of top-level QA reports folder on Synapse.
+#' @param cohort BPC cohort code
+#' @param site BPC site code
+#' @param date current index date
+#' @param map_cohort Vector with elements indicating folder cohort codes and names indicating
+#' actual BPC cohort codes
+#' @return character with Synapse ID of report file or NA if not found.
 get_synid_drug_signoff_file <- function(synid_root, cohort, site, date, map_cohort) {
   
   # get cohort subfolder synapse id
@@ -124,12 +136,20 @@ get_synid_drug_signoff_file <- function(synid_root, cohort, site, date, map_coho
   return(NA)
 }
 
+#' Get the date of latest curation from the BPC dataset.
+#' 
+#' @param synapse_id Synape ID of the table containing information on curation date.
+#' @param cohort BPC cohort code
+#' @return date of latest curation annotated in the BPC Synapse table. 
 get_latest_curation_date <- function(synapse_id, cohort) {
   query <- glue("SELECT MAX(curation_dt) FROM {synapse_id} WHERE cohort = '{cohort}'")
   dt <- as.character(as.data.frame(synTableQuery(query, includeRowIdAndRowVersion = F))[1])
   return(dt)
 }
 
+#' Remove leading and trailing whitespace from a string.
+#' @param str String
+#' @return String without leading or trailing whitespace
 trim <- function(str) {
   front <- gsub(pattern = "^[[:space:]]+", replacement = "", x = str)
   back <- gsub(pattern = "[[:space:]]+$", replacement = "", x = front)
@@ -137,10 +157,21 @@ trim <- function(str) {
   return(back)
 }
 
+#' Parse BPC drug names to obtain short name.  
+#' @param full_drug_name String containing full BPC drug name as recorded.  
+#' @return String representing formatted short name.
 shorten_drug_names <- function(full_drug_name) {
   return(trim(unlist(lapply(strsplit(x = full_drug_name, split = "(", fixed = T), head, n = 1))))
 }
 
+#' Take regimen formatted data with multiple drugs per row and represent it as one 
+#' drug per row.
+#' 
+#' @param synapse_id Synapse ID of table containing drug information
+#' @param cohort BPC cohort code
+#' @param site BPC site code
+#' @param drug_numbers Drug instance integers used to identify distinct drugs in one row.
+#' @return Data frame containing drug information with one drug per row.
 pivot_drugs <- function(synapse_id, cohort, site, drug_numbers = c(1:5)) {
   
   # read in drug data 
@@ -189,10 +220,17 @@ pivot_drugs <- function(synapse_id, cohort, site, drug_numbers = c(1:5)) {
   return(row_drugs)
 }
 
+#' Sort elements of a vector and paste into a single string.
+#' @param x vector
+#' @param delim delimiter with which to separate vector elements in pasted string
+#' @return String
 sort_and_collapse <- function(x, delim = ", ") {
   return(paste0(sort(x), collapse = delim))
 }
 
+#' Create vector of all drugs in a regimen.
+#' @param df_drug Data Frame representation of all administered drugs, one drug per row.
+#' @return Vector of strings
 get_drugs_by_regimen <- function(df_drug) {
   res <- aggregate(drug_name ~  record_id + regimen_number + drugs_ct_yn, 
                    data = df_drug, 
@@ -201,6 +239,11 @@ get_drugs_by_regimen <- function(df_drug) {
   return(res)
 }
 
+#' Consolidate the FDA status of a regimen according to order of precedence for labels
+#' on individual drugs.
+#' 
+#' @param statuses Vector of string representing inferred FDA status per drug.
+#' @return String 
 consolidate_fda_status <- function(statuses) {
   
   if (length(which(statuses == "unapproved"))) {
@@ -218,6 +261,9 @@ consolidate_fda_status <- function(statuses) {
   return("approved")
 }
 
+#' For each regimen, get the consolidated FDA status.
+#' @param df_drug Data Frame representation of all administered drugs, one drug per row. 
+#' @return Data frame 
 get_fda_status_by_regimen <- function(df_drug) {
   res <- aggregate(fda_status ~  record_id + regimen_number + drugs_ct_yn, 
                    data = df_drug, 
@@ -226,6 +272,11 @@ get_fda_status_by_regimen <- function(df_drug) {
   return(res)
 }
 
+#' Get IDs of patients that are redacted.
+#' @param synapse_id Synapse ID of BPC table containing patient redaction status.
+#' @param cohort BPC cohort code
+#' @param site BPC site code
+#' @return Vector of Strings 
 get_redacted_patients <- function(synapse_id, cohort, site) {
   query <- glue("SELECT record_id 
                 FROM {synapse_id} 
@@ -236,6 +287,12 @@ get_redacted_patients <- function(synapse_id, cohort, site) {
   return(as.character(unlist(res)))
 }
 
+#' Get information onf whether a regimen has been previous reviewed.
+#' @param synapse_id Synapse ID of file associated with previous drug reports reviewed
+#' by the QA managers.
+#' @param site BPC site code
+#' @param values_not_reviewed Vector of string indicating drug regimen not reviewed
+#' @return Data frame with regimen previously reviewed status
 get_previously_reviewed_regimens <- function(synapse_id, site,
                                              values_not_reviewed = c(NA, "pending")) {
   
@@ -251,6 +308,9 @@ get_previously_reviewed_regimens <- function(synapse_id, site,
   return(res)
 }
 
+#' Format drug names for consistency.
+#' @param drug_names_raw Vector of strings with raw drug names
+#' @return Vector of strings
 regularize_drug_names <- function(drug_names_raw) {
   # lower case, remove white space, replace punctuation with white space
   mod <- tolower(drug_names_raw)
