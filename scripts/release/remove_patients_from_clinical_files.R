@@ -237,7 +237,7 @@ now <- function(timeOnly = F, tz = "US/Pacific") {
 
 # synapse login --------------------
 
-synLogin(auth = auth)
+status <- synLogin(auth = auth)
 
 # read ----------------------------
 
@@ -250,7 +250,6 @@ if (cohort == ALL) {
 } else {
   query <- glue("SELECT record_id FROM {synid_table_rm} WHERE cohort = '{cohort}'")
 }
-
 pt_rm <- as.character(unlist(as.data.frame(synTableQuery(query, includeRowIdAndRowVersion = F))))
 
 # main ----------------------------
