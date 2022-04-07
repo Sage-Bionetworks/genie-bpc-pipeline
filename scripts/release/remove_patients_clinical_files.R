@@ -4,7 +4,15 @@
 
 # pre-setup  ---------------------------
 
+tic = as.double(Sys.time())
+
 library(optparse)
+library(glue)
+library(dplyr)
+library(synapser)
+
+# constants
+ALL = "all"
 
 waitifnot <- function(cond, msg) {
   if (!cond) {
@@ -22,23 +30,23 @@ waitifnot <- function(cond, msg) {
 
 option_list <- list( 
   make_option(c("-i", "--synid_folder_input"), type = "character",
-              help="Synapse ID of folder with clinical release files"),
+              help="Synapse ID of folder with clinical release files (required)"),
   make_option(c("-o", "--synid_folder_output"), type = "character", default = NA,
-              help="Synapse ID of output folder for filtered release files"),
+              help="Synapse ID of output folder for filtered release files (default: write locally)"),
   make_option(c("-r", "--synid_table_rm"), type = "character", default = "syn29266682",
-              help="Synapse ID of table with patient IDs to remove"),
-  make_option(c("-c", "--cohort"), type = "character",
-              help="BPC cohort code of patients to remove"),
+              help="Synapse ID of table with patient IDs to remove (default: syn29266682)"),
+  make_option(c("-c", "--cohort"), type = "character", default = ALL,
+              help=glue("BPC cohort code of patients to remove (default: {ALL})")),
   make_option(c("-v", "--verbose"), action="store_true", default = FALSE, 
-              help="Output script messages to the user."),
+              help="Output script messages to the user (default: FALSE)"),
   make_option(c("-a", "--auth"), 
               type = "character",
               default = NA,
               help="Synapse personal access token or path to .synapseConfig (default: normal synapse login behavior)")
 )
 opt <- parse_args(OptionParser(option_list=option_list))
-waitifnot(!is.null(opt$synid_folder_input) && !is.null(opt$cohort),
-          msg = "Rscript template.R -h")
+waitifnot(!is.null(opt$synid_folder_input),
+          msg = "Rscript remove_patients_clinical_files.R -h")
 
 synid_folder_input <- opt$synid_folder_input
 synid_folder_output <- opt$synid_folder_output
@@ -46,14 +54,6 @@ synid_table_rm <- opt$synid_table_rm
 cohort <- opt$cohort
 verbose <- opt$verbose
 auth <- opt$auth
-
-# setup ----------------------------
-
-tic = as.double(Sys.time())
-
-library(glue)
-library(dplyr)
-library(synapser)
 
 # functions ----------------------------
 
@@ -244,7 +244,13 @@ synLogin(auth = auth)
 synid_file_children <- get_synapse_folder_children(synapse_id = synid_folder_input, 
                                                                include_types=list("file"))
 
-query <- glue("SELECT record_id FROM {synid_table_rm} WHERE cohort = '{cohort}'")
+query <- ""
+if (cohort == ALL) {
+  query <- glue("SELECT record_id FROM {synid_table_rm}")
+} else {
+  query <- glue("SELECT record_id FROM {synid_table_rm} WHERE cohort = '{cohort}'")
+}
+
 pt_rm <- as.character(unlist(as.data.frame(synTableQuery(query, includeRowIdAndRowVersion = F))))
 
 # main ----------------------------
