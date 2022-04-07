@@ -3,7 +3,9 @@
 # Author: Haley Hunter-Zinck
 # Date: 2022-04-04
 
-# pre-setup  ---------------------------
+# setup  ---------------------------
+
+tic = as.double(Sys.time())
 
 library(optparse)
 library(glue)
@@ -27,10 +29,10 @@ waitifnot <- function(cond, msg) {
 option_list <- list( 
   make_option(c("-i", "--synid_folder_input"), 
               type = "character",
-              help="Synapse ID of input file"),
+              help="Synapse ID of folder and contents to copy"),
   make_option(c("-o", "--synid_folder_output"), 
               type = "character",
-              help="Synapse ID of output folder"),
+              help="Synapse ID of output folder in which to create the folder copy"),
   make_option(c("-v", "--verbose"), 
               action="store_true", 
               default = FALSE, 
@@ -55,10 +57,6 @@ if (verbose) {
   print(glue("- Synapse ID of destination folder:\t{synid_folder_output}"))
   print(glue("- verbose:\t\t\t\t{verbose}"))
 }
-
-# setup ----------------------------
-
-tic = as.double(Sys.time())
 
 # functions ----------------------------
 
