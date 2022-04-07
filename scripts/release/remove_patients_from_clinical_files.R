@@ -46,7 +46,7 @@ option_list <- list(
 )
 opt <- parse_args(OptionParser(option_list=option_list))
 waitifnot(!is.null(opt$synid_folder_input),
-          msg = "Rscript remove_patients_clinical_files.R -h")
+          msg = "Rscript remove_patients_from_clinical_files.R -h")
 
 synid_folder_input <- opt$synid_folder_input
 synid_folder_output <- opt$synid_folder_output
@@ -283,7 +283,7 @@ for (i in 1:length(synid_file_children)) {
                     prov_name = "filtered clinical files", 
                     prov_desc = "remove redacted patients from clinical files as temporary fix for public release", 
                     prov_used = c(synid_file_child, synid_table_rm), 
-                    prov_exec = "https://github.com/Sage-Bionetworks/genie-bpc-pipeline/blob/develop/scripts/release/remove_patients_clinical_files.R")
+                    prov_exec = "https://github.com/Sage-Bionetworks/genie-bpc-pipeline/blob/develop/scripts/release/remove_patients_from_clinical_files.R")
     file.remove(file_local)
     
     if (verbose) {
