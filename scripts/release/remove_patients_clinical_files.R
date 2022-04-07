@@ -253,13 +253,13 @@ if (verbose) {
   print(glue("{now()}: removing {length(pt_rm)} patients from {length(synid_file_children)} clinical files.."))
 }
 
-for (synid_file_child in synid_file_children) {
+for (i in 1:length(synid_file_children)) {
   
-  file_local <- names(synid_file_child)
-  synid_file_child <- as.character(synid_file_child)
+  file_local <- names(synid_file_children)[i]
+  synid_file_child <- as.character(synid_file_children[i])
   
   if (verbose) {
-    print(glue("{now()}: removing patients from '{file_local}' ({synid_file_child})."))
+    print(glue("{now()}: removing patients from '{file_local}' ({synid_file_child})..."))
   }
   
   raw <- get_synapse_entity_data_in_csv(synid_file_child, na.strings = c(""))
@@ -267,9 +267,17 @@ for (synid_file_child in synid_file_children) {
     filter(!is.element(record_id, pt_rm))
   write.csv(mod, file = file_local, row.names = F, quote = T, na = "")
   
+  if (verbose) {
+    print(glue("{now()}: {nrow(raw) - nrow(mod)} rows removed from '{file_local}' ({synid_file_child})."))
+  }
+  
   if (!is.na(synid_folder_output)) {
     synid_file_dest <- save_to_synapse(path = file_local, 
-                    parent_id = synid_folder_output)
+                    parent_id = synid_folder_output,
+                    prov_name = "filtered clinical files", 
+                    prov_desc = "remove redacted patients from clinical files as temporary fix for public release", 
+                    prov_used = c(synid_file_child, synid_table_rm), 
+                    prov_exec = "https://github.com/Sage-Bionetworks/genie-bpc-pipeline/blob/develop/scripts/release/remove_patients_clinical_files.R")
     file.remove(file_local)
     
     if (verbose) {
