@@ -137,5 +137,5 @@ Options:
 
 Example run: 
 ```
-Rscript create_release_files.R -i syn27245047 -r syn29266682 -v
+Rscript remove_patients_from_clinical_files.R -i syn27245047 -r syn29266682 -v
 ```
