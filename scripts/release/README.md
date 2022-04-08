@@ -98,3 +98,44 @@ Example run:
 ```
 Rscript create_release_files.R -i syn12345 -o syn54321 -v
 ```
+
+## Usage: remove patients from clinical files
+
+To display the command line interface:
+```
+Rscript remove_patients_from_clinical_files.R -h
+```
+
+The command line interface will display as follows:
+```
+Usage: remove_patients_from_clinical_files.R [options]
+
+
+Options:
+	-i SYNID_FOLDER_INPUT, --synid_folder_input=SYNID_FOLDER_INPUT
+		Synapse ID of folder with clinical release files (required)
+
+	-o SYNID_FOLDER_OUTPUT, --synid_folder_output=SYNID_FOLDER_OUTPUT
+		Synapse ID of output folder for filtered release files (default: write locally)
+
+	-r SYNID_TABLE_RM, --synid_table_rm=SYNID_TABLE_RM
+		Synapse ID of table with patient IDs to remove (default: syn29266682)
+
+	-c COHORT, --cohort=COHORT
+		BPC cohort code of patients to remove (default: all)
+
+	-v, --verbose
+		Output script messages to the user (default: FALSE)
+
+	-a AUTH, --auth=AUTH
+		Synapse personal access token or path to .synapseConfig (default: normal synapse login behavior)
+
+	-h, --help
+		Show this help message and exit
+
+```
+
+Example run: 
+```
+Rscript remove_patients_from_clinical_files.R -i syn27245047 -r syn29266682 -v
+```

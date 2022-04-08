@@ -30,7 +30,7 @@ or store in ~/.synapseConfig with the following format:
 authtoken = {your_personal_access_token_here}
 ```
 
-## Usage
+## Usage: merging and uncoding REDCap Academic exports
 
 To display the command line interface:
 ```
@@ -59,4 +59,44 @@ Options:
 Example run: 
 ```
 Rscript merge_and_uncode_rca_uploads.R -c NSCLC -u -a $SYNAPSE_AUTH_TOKEN
+```
+
+## Usage: remove patient IDs from a REDCap formatted file
+
+To display the command line interface:
+```
+Rscript remove_patients_from_merged.R -h
+```
+
+The command line interface will display as follows:
+```
+Usage: remove_patients_from_merged.R [options]
+
+
+Options:
+	-i SYNID_FILE_INPUT, --synid_file_input=SYNID_FILE_INPUT
+		Synapse ID of file with merged and uncoded redcap export data (required)
+
+	-c COHORT, --cohort=COHORT
+		BPC cohort code of patients to remove (required)
+
+	-o SYNID_FOLDER_OUTPUT, --synid_folder_output=SYNID_FOLDER_OUTPUT
+		Synapse ID of output folder for filtered release files (default: write locally)
+
+	-r SYNID_TABLE_RM, --synid_table_rm=SYNID_TABLE_RM
+		Synapse ID of table with patient IDs to remove (default: syn29266682)
+
+	-v, --verbose
+		Output script messages to the user (default: FALSE)
+
+	-a AUTH, --auth=AUTH
+		Synapse personal access token or path to .synapseConfig (default: normal synapse login behavior)
+
+	-h, --help
+		Show this help message and exit
+```
+
+Example run: 
+```
+Rscript remove_patients_from_merged.R -i syn23285494 -c NSCLC -r syn29266682 -v
 ```
