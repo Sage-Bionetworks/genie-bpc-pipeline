@@ -16,7 +16,7 @@ process checkCohortCode {
     val cohort from ch_cohort
 
     output:
-    stdout into status
+    stdout into outCheckCohortCode
 
     script:
     """
@@ -33,6 +33,7 @@ process quacUploadReportError {
    container 'hhunterzinck/genie-bpc-quac'
 
    input:
+   val previous from outCheckCohortCode
    file syn_config   from ch_synapse_config
    val cohort        from ch_cohort
 
@@ -58,6 +59,7 @@ process quacUploadReportWarning {
    errorStrategy 'ignore'
 
    input:
+   val previous from outUploadReportError
    file syn_config   from ch_synapse_config
    val cohort        from ch_cohort
 
@@ -81,6 +83,7 @@ process mergeAndUncodeRcaUploads {
    container 'hhunterzinck/genie-bpc-pipeline-uploads'
 
    input:
+   val previous from outUploadReportWarning
    file syn_config   from ch_synapse_config
    val cohort        from ch_cohort
 
@@ -104,8 +107,12 @@ process updateDataTable {
    container 'hhunterzinck/genie-bpc-pipeline-table-updates'
 
    input:
+   val previous from outMergeAndUncodeRcaUploads
    file syn_config   from ch_synapse_config
    val comment       from ch_comment
+
+   output:
+   stdout into outUpdateDataTable
 
    script:
    """
@@ -113,6 +120,8 @@ process updateDataTable {
    python /root/scripts/update_data_table.py -s $syn_config -p /root/scripts/config.json -m $comment primary
    """
 }
+
+outUpdateDataTable.view()
 
 /*
 Update reference table storing the date of current and previous Synapse table updates
@@ -123,9 +132,13 @@ process updateDateTrackingTable {
    container 'hhunterzinck/genie-bpc-pipeline-references'
 
    input:
+   val previous from outUpdateDataTable
    file syn_config   from ch_synapse_config
    val cohort        from ch_cohort
    val comment       from ch_comment
+
+   output:
+   stdout into outUpdateDateTrackingTable
 
    script:
    """
@@ -133,6 +146,8 @@ process updateDateTrackingTable {
    Rscript /usr/local/src/myscripts/update_date_tracking_table.R -c $cohort -d `date +'%Y-%m-%d'` -s $comment -a $syn_config 
    """
 }
+
+outUpdateDateTrackingTable.view()
 
 /*
 Run quality asssurance checklist for the table report at error and warning level.  
@@ -144,6 +159,7 @@ process quacTableReport {
    errorStrategy 'ignore'
 
    input:
+   val previous from outUpdateDateTrackingTable
    file syn_config   from ch_synapse_config
    val cohort        from ch_cohort
 
@@ -170,6 +186,7 @@ process quacComparisonReport {
    errorStrategy 'ignore'
 
    input:
+   val previous from outTableReport
    file syn_config   from ch_synapse_config
    val cohort        from ch_cohort
 
@@ -194,6 +211,7 @@ process maskingReport {
    container 'hhunterzinck/genie-bpc-pipeline-masking'
 
    input:
+   val previous from outComparisonReport
    file syn_config   from ch_synapse_config
    val cohort        from ch_cohort
 
@@ -218,6 +236,7 @@ process updateCaseCountTable {
    container 'hhunterzinck/genie-bpc-pipeline-case-selection'
 
    input:
+   val previous from outMaskingReport
    file syn_config   from ch_synapse_config
    val comment       from ch_comment
 
