@@ -679,7 +679,7 @@ save_output_synapse <- function(cohort) {
                   parent_id = parent_id,
                   prov_name = "BPC non-IRR upload data",
                   prov_desc = "Merged and uncoded BPC upload data from sites academic REDCap instances with IRR cases removed",
-                  prov_used = c(as.character(unlist(config$upload$BrCa)), 
+                  prov_used = c(as.character(unlist(config$upload[[cohort]])), 
                                 synid_dd,
                                 config$synapse$grs$id),
                   prov_exec = "https://github.com/Sage-Bionetworks/Genie_processing/blob/master/bpc/uploads/merge_and_uncode_rca_uploads.R")
@@ -690,7 +690,7 @@ save_output_synapse <- function(cohort) {
                     parent_id = parent_id,
                     prov_name = "BPC IRR upload data",
                     prov_desc = "Merged and uncoded BPC upload IRR case data from sites academic REDCap instances",
-                    prov_used = c(as.character(unlist(config$upload$BrCa)), 
+                    prov_used = c(as.character(unlist(config$upload[[cohort]])), 
                                   synid_dd,
                                   config$synapse$grs$id),
                     prov_exec = "https://github.com/Sage-Bionetworks/Genie_processing/blob/master/bpc/uploads/merge_and_uncode_rca_uploads.R")
