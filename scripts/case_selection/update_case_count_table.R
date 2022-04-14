@@ -2,9 +2,15 @@
 # Author: Haley Hunter-Zinck
 # Date: 2021-09-22
 
-# pre-setup ----------------------
+# setup ----------------------
+
+tic = as.double(Sys.time())
 
 library(optparse)
+library(glue)
+library(dplyr)
+library(yaml)
+library(synapser)
 
 workdir <- "."
 if (!file.exists("config.yaml")) {
@@ -28,15 +34,6 @@ opt <- parse_args(OptionParser(option_list=option_list))
 save_synapse <- opt$save_synapse
 comment <- opt$comment
 auth <- opt$synapse_auth
-
-# setup ----------------------------
-
-tic = as.double(Sys.time())
-
-library(glue)
-library(dplyr)
-library(yaml)
-library(synapser)
 
 # functions ----------------------------
 
