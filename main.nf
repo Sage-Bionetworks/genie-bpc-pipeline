@@ -110,7 +110,7 @@ process updateDataTable {
    script:
    """
    pip install -r /root/scripts/requirements.txt
-   python /root/scripts/update_data_table.py -s $syn_config -m $comment primary
+   python /root/scripts/update_data_table.py -s $syn_config -p /root/scripts/config.json -m $comment primary
    """
 }
 
@@ -130,7 +130,7 @@ process updateDateTrackingTable {
    """
    R -e 'renv::restore(lockfile = "/usr/local/src/myscripts/renv.lock")'
    date_today=$(date +'%Y-%m-%d')
-   Rscript /usr/local/src/myscripts/update_date_tracking_table.R -a $syn_config -c $cohort -d $date_today -s
+   Rscript /usr/local/src/myscripts/update_date_tracking_table.R -c $cohort -d $date_today -s $comment -a $syn_config 
    """
 }
 
@@ -228,7 +228,7 @@ process updateCaseCountTable {
    script:
    """
    R -e 'renv::restore(lockfile = "/usr/local/src/myscripts/renv.lock")'
-   Rscript /usr/local/src/myscripts/update_case_count_table.R -a $syn_config -c $comment -s 
+   Rscript /usr/local/src/myscripts/update_case_count_table.R -s -c $comment -a $syn_config
    """
 }
 
