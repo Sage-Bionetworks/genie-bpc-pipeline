@@ -125,12 +125,12 @@ process updateDateTrackingTable {
    input:
    file syn_config   from ch_synapse_config
    val cohort        from ch_cohort
+   val comment       from ch_comment
 
    script:
    """
    R -e 'renv::restore(lockfile = "/usr/local/src/myscripts/renv.lock")'
-   date_today=$(date +'%Y-%m-%d')
-   Rscript /usr/local/src/myscripts/update_date_tracking_table.R -c $cohort -d $date_today -s $comment -a $syn_config 
+   Rscript /usr/local/src/myscripts/update_date_tracking_table.R -c $cohort -d `date +'%Y-%m-%d'` -s $comment -a $syn_config 
    """
 }
 
@@ -203,8 +203,7 @@ process maskingReport {
    script:
    """
    R -e 'renv::restore(lockfile = "/usr/local/src/myscripts/renv.lock")'
-   date_today=$(date +'%Y-%m-%d')
-   Rscript /usr/local/src/myscripts/workflow_unmasked_drugs.R -c $cohort -d $date_today -s -a $syn_config 
+   Rscript /usr/local/src/myscripts/workflow_unmasked_drugs.R -c $cohort -d `date +'%Y-%m-%d'` -s -a $syn_config 
    """
 }
 
