@@ -2,7 +2,7 @@
 
 params.cohort = 'NSCLC'
 params.comment = 'NSCLC public release update'
-params.synapse_config = '.synapseConfig'
+params.synapse_config = 'bin/.synapseConfig'
 
 ch_cohort = Channel.value(params.cohort)
 ch_comment = Channel.value(params.comment)
