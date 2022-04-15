@@ -217,7 +217,7 @@ if (save_synapse) {
 # close out ----------------------------
 
 if (save_synapse) {
-  print(glue("Table saved to Synapse as 'Case Selection Counts' ({config$synapse$bpc_internal$id}), version {n_version}"))
+  print(glue("Table saved to Synapse as 'Case Selection Counts' ({config$synapse$case_selection$id}), version {n_version}"))
 } else {
   print(glue("Table saved locally to 'case_selection_counts.csv'"))
 }

@@ -305,7 +305,7 @@ for (site in sites) {
   # generate report data and save to Synapse
   if (flag_run_analysis) {
     
-    system(glue("Rscript {workdir}/qa_unmasked_drugs_hemonc.R --args -c {cohort} -s {site} -d {date} -a {auth}"))
+    system(glue("Rscript {workdir}/qa_unmasked_drugs_hemonc.R -c {cohort} -s {site} -d {date} -a {auth}"))
     
     if (save_synapse) {
       
@@ -343,7 +343,7 @@ for (site in sites) {
     }
     
     file_local <- glue("unmasked_drugs_review_{site}_{cohort}_{date}.html")
-    rmarkdown::render(glue("{workdir}/qa_unmasked_drugs_hemonc.Rmd", 
+    rmarkdown::render(glue("{workdir}/qa_unmasked_drugs_hemonc.Rmd"), 
                       params = list(cohort = cohort, site = site, date = date, auth = auth), 
                       output_file = file_local)
     
