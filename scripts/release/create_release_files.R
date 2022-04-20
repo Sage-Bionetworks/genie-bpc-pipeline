@@ -270,7 +270,7 @@ if('PRISSMM Tumor Marker level dataset' %in% unique(sor_df_filtered$dataset)){
                                                    sor_df_filtered = sor_df_filtered)
 }
 if('Cancer-Directed Radiation Therapy dataset' %in% unique(sor_df_filtered$dataset)){
-  ca_radtx_derived_release <- filter_for_release(prissmm_tm_derived_redacted, 
+  ca_radtx_derived_release <- filter_for_release(ca_radtx_derived_redacted, 
                                                  'Cancer-Directed Radiation Therapy dataset',
                                                  selected_cohort,
                                                  sor_df_filtered = sor_df_filtered)
