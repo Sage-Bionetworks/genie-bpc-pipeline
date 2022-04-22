@@ -42,8 +42,8 @@ process quacUploadReportError {
 
    script:
    """
-   R -e 'renv::restore(lockfile = "/usr/local/src/myscripts/renv.lock")'
-   Rscript /usr/local/src/myscripts/genie-bpc-quac.R -c $cohort -s all -r upload -l error -v -a $syn_config 
+   cd /usr/local/src/myscripts/
+   Rscript genie-bpc-quac.R -c $cohort -s all -r upload -l error -v -a $syn_config 
    """
 }
 
@@ -68,8 +68,8 @@ process quacUploadReportWarning {
 
    script:
    """
-   R -e 'renv::restore(lockfile = "/usr/local/src/myscripts/renv.lock")'
-   Rscript /usr/local/src/myscripts/genie-bpc-quac.R -c $cohort -s all -r upload -l warning -u -v -a $syn_config 
+   cd /usr/local/src/myscripts/
+   Rscript genie-bpc-quac.R -c $cohort -s all -r upload -l warning -u -v -a $syn_config 
    """
 }
 
@@ -92,8 +92,8 @@ process mergeAndUncodeRcaUploads {
 
    script:
    """
-   R -e 'renv::restore(lockfile = "/usr/local/src/myscripts/renv.lock")'
-   Rscript /usr/local/src/myscripts/merge_and_uncode_rca_uploads.R -c $cohort -u -a $syn_config -v
+   cd /usr/local/src/myscripts/
+   Rscript merge_and_uncode_rca_uploads.R -c $cohort -u -a $syn_config -v
    """
 }
 
@@ -116,8 +116,8 @@ process updateDataTable {
 
    script:
    """
-   pip install -r /root/scripts/requirements.txt
-   python /root/scripts/update_data_table.py -s $syn_config -p /root/scripts/config.json -m $comment primary
+   cd /root/scripts/
+   python update_data_table.py -s $syn_config -p /root/scripts/config.json -m $comment primary
    """
 }
 
@@ -142,8 +142,8 @@ process updateDateTrackingTable {
 
    script:
    """
-   R -e 'renv::restore(lockfile = "/usr/local/src/myscripts/renv.lock")'
-   Rscript /usr/local/src/myscripts/update_date_tracking_table.R -c $cohort -d `date +'%Y-%m-%d'` -s $comment -a $syn_config 
+   cd /usr/local/src/myscripts/
+   Rscript update_date_tracking_table.R -c $cohort -d `date +'%Y-%m-%d'` -s $comment -a $syn_config 
    """
 }
 
@@ -168,9 +168,9 @@ process quacTableReport {
 
    script:
    """
-   R -e 'renv::restore(lockfile = "/usr/local/src/myscripts/renv.lock")'
-   Rscript /usr/local/src/myscripts/genie-bpc-quac.R -c $cohort -s all -r table -l error -u -v -a $syn_config 
-   Rscript /usr/local/src/myscripts/genie-bpc-quac.R -c $cohort -s all -r table -l warning -u -v -a $syn_config 
+   cd /usr/local/src/myscripts/
+   Rscript genie-bpc-quac.R -c $cohort -s all -r table -l error -u -v -a $syn_config 
+   Rscript genie-bpc-quac.R -c $cohort -s all -r table -l warning -u -v -a $syn_config 
    """
 }
 
@@ -195,9 +195,9 @@ process quacComparisonReport {
 
    script:
    """
-   R -e 'renv::restore(lockfile = "/usr/local/src/myscripts/renv.lock")'
-   Rscript /usr/local/src/myscripts/genie-bpc-quac.R -c $cohort -s all -r comparison -l error -u -v -a $syn_config 
-   Rscript /usr/local/src/myscripts/genie-bpc-quac.R -c $cohort -s all -r comparison -l warning -u -v -a $syn_config 
+   cd /usr/local/src/myscripts/
+   Rscript genie-bpc-quac.R -c $cohort -s all -r comparison -l error -u -v -a $syn_config 
+   Rscript genie-bpc-quac.R -c $cohort -s all -r comparison -l warning -u -v -a $syn_config 
    """
 }
 
@@ -220,8 +220,8 @@ process maskingReport {
 
    script:
    """
-   R -e 'renv::restore(lockfile = "/usr/local/src/myscripts/renv.lock")'
-   Rscript /usr/local/src/myscripts/workflow_unmasked_drugs.R -c $cohort -d `date +'%Y-%m-%d'` -s -a $syn_config 
+   cd /usr/local/src/myscripts/
+   Rscript workflow_unmasked_drugs.R -c $cohort -d `date +'%Y-%m-%d'` -s -a $syn_config 
    """
 }
 
@@ -245,8 +245,8 @@ process updateCaseCountTable {
 
    script:
    """
-   R -e 'renv::restore(lockfile = "/usr/local/src/myscripts/renv.lock")'
-   Rscript /usr/local/src/myscripts/update_case_count_table.R -s -c $comment -a $syn_config
+   cd /usr/local/src/myscripts/
+   Rscript update_case_count_table.R -s -c $comment -a $syn_config
    """
 }
 
