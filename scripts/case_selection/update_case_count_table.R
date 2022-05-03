@@ -2,10 +2,22 @@
 # Author: Haley Hunter-Zinck
 # Date: 2021-09-22
 
-# pre-setup ----------------------
+# setup ----------------------
+
+tic = as.double(Sys.time())
 
 library(optparse)
-source("shared_fxns.R")
+library(glue)
+library(dplyr)
+library(yaml)
+library(synapser)
+
+workdir <- "."
+if (!file.exists("config.yaml")) {
+  workdir <- "/usr/local/src/myscripts"
+}
+config <- read_yaml(glue("{workdir}/config.yaml"))
+source(glue("{workdir}/shared_fxns.R"))
 
 # user input --------------------------
 
@@ -22,18 +34,6 @@ opt <- parse_args(OptionParser(option_list=option_list))
 save_synapse <- opt$save_synapse
 comment <- opt$comment
 auth <- opt$synapse_auth
-
-# setup ----------------------------
-
-tic = as.double(Sys.time())
-
-library(glue)
-library(dplyr)
-library(yaml)
-library(synapser)
-
-# configuration
-config <- read_yaml("config.yaml")
 
 # functions ----------------------------
 
@@ -217,7 +217,7 @@ if (save_synapse) {
 # close out ----------------------------
 
 if (save_synapse) {
-  print(glue("Table saved to Synapse as 'Case Selection Counts' ({config$synapse$bpc_internal$id}), version {n_version}"))
+  print(glue("Table saved to Synapse as 'Case Selection Counts' ({config$synapse$case_selection$id}), version {n_version}"))
 } else {
   print(glue("Table saved locally to 'case_selection_counts.csv'"))
 }

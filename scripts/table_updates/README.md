@@ -9,6 +9,8 @@ Installation and Setup
 ### Synapse Credential
 Please make sure you have the [.synapseConfig file](https://help.synapse.org/docs/Client-Configuration.1985446156.html)
 
+### Service catalog instance
+Use a t3.2xlarge ec2 instance for large memory requirement.
 
 Usage
 -----

@@ -14,7 +14,12 @@ library(rmarkdown)
 library(yaml)
 library(synapser)
 
-config <- read_yaml("config.yaml")
+workdir <- "."
+if (!file.exists("config.yaml")) {
+  workdir <- "/usr/local/src/myscripts"
+}
+
+config <- read_yaml(glue("{workdir}/config.yaml"))
 
 # user input ----------------------
 
@@ -300,7 +305,7 @@ for (site in sites) {
   # generate report data and save to Synapse
   if (flag_run_analysis) {
     
-    system(glue("R -f qa_unmasked_drugs_hemonc.R --args -c {cohort} -s {site} -d {date} -a {auth}"))
+    system(glue("Rscript {workdir}/qa_unmasked_drugs_hemonc.R -c {cohort} -s {site} -d {date} -a {auth}"))
     
     if (save_synapse) {
       
@@ -323,7 +328,7 @@ for (site in sites) {
                                     config$synapse$map$id, 
                                     config$synapse$patient$id,
                                     config$synapse$curation$id), 
-                      prov_exec = "https://github.com/Sage-Bionetworks/Genie_processing/blob/main/bpc/masking/qa_unmasked_drugs_hemonc.R")
+                      prov_exec = "https://github.com/Sage-Bionetworks/genie-bpc-pipeline/blob/develop/scripts/masking/qa_unmasked_drugs_hemonc.R")
       
       # clean up locally
       file.remove(file_local)
@@ -338,7 +343,7 @@ for (site in sites) {
     }
     
     file_local <- glue("unmasked_drugs_review_{site}_{cohort}_{date}.html")
-    rmarkdown::render("qa_unmasked_drugs_hemonc.Rmd", 
+    rmarkdown::render(glue("{workdir}/qa_unmasked_drugs_hemonc.Rmd"), 
                       params = list(cohort = cohort, site = site, date = date, auth = auth), 
                       output_file = file_local)
     
@@ -363,7 +368,7 @@ for (site in sites) {
                       prov_name = "drug masking report", 
                       prov_desc = glue("drug masking report for the {cohort} cohort from site {site} uploaded on {date}"), 
                       prov_used = prov_used, 
-                      prov_exec = "https://github.com/Sage-Bionetworks/Genie_processing/blob/main/bpc/masking/qa_unmasked_drugs_hemonc.Rmd")
+                      prov_exec = "https://github.com/Sage-Bionetworks/genie-bpc-pipeline/blob/develop/scripts/masking/qa_unmasked_drugs_hemonc.Rmd")
       file.remove(file_local)
     }
   }
