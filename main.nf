@@ -3,11 +3,10 @@
 params.cohort = 'NSCLC'
 params.comment = 'NSCLC public release update'
 params.synapse_config = false  // Default
-ch_synapse_config = params.synapse_config ? Channel.value(file(params.synapse_config)) : "null"
 
 ch_cohort = Channel.value(params.cohort)
 ch_comment = Channel.value(params.comment)
-ch_synapse_config = Channel.value(file(params.synapse_config))
+ch_synapse_config = params.synapse_config ? Channel.value(file(params.synapse_config)) : "null"
 
 /*
 Check cohort code is one of the valid values.
