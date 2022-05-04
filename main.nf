@@ -31,7 +31,6 @@ Stop the workflow if any errors are detected.
 process quacUploadReportError {
 
    container 'hhunterzinck/genie-bpc-quac'
-
    secret 'SYNAPSE_AUTH_TOKEN'
 
    input:
