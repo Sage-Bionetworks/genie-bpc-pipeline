@@ -2,7 +2,8 @@
 
 params.cohort = 'NSCLC'
 params.comment = 'NSCLC public release update'
-params.synapse_config = 'bin/.synapseConfig'
+params.synapse_config = false  // Default
+ch_synapse_config = params.synapse_config ? Channel.value(file(params.synapse_config)) : "null"
 
 ch_cohort = Channel.value(params.cohort)
 ch_comment = Channel.value(params.comment)
@@ -32,6 +33,8 @@ process quacUploadReportError {
 
    container 'hhunterzinck/genie-bpc-quac'
 
+   secret 'SYNAPSE_AUTH_TOKEN'
+
    input:
    val previous from outCheckCohortCode
    file syn_config   from ch_synapse_config
@@ -41,10 +44,17 @@ process quacUploadReportError {
    stdout into outUploadReportError
 
    script:
-   """
-   cd /usr/local/src/myscripts/
-   Rscript genie-bpc-quac.R -c $cohort -s all -r upload -l error -v -a $syn_config 
-   """
+   if ( params.synapse_config ) {
+      """
+      cd /usr/local/src/myscripts/
+      Rscript genie-bpc-quac.R -c $cohort -s all -r upload -l error -v -a $syn_config
+      """
+   } else {
+      """
+      cd /usr/local/src/myscripts/
+      Rscript genie-bpc-quac.R -c $cohort -s all -r upload -l error -v
+      """
+   }
 }
 
 outUploadReportError.view()
@@ -57,6 +67,7 @@ process quacUploadReportWarning {
 
    container 'hhunterzinck/genie-bpc-quac'
    errorStrategy 'ignore'
+   secret 'SYNAPSE_AUTH_TOKEN'
 
    input:
    val previous from outUploadReportError
@@ -67,10 +78,17 @@ process quacUploadReportWarning {
    stdout into outUploadReportWarning
 
    script:
-   """
-   cd /usr/local/src/myscripts/
-   Rscript genie-bpc-quac.R -c $cohort -s all -r upload -l warning -u -v -a $syn_config 
-   """
+   if ( params.synapse_config ) {
+      """
+      cd /usr/local/src/myscripts/
+      Rscript genie-bpc-quac.R -c $cohort -s all -r upload -l warning -u -v -a $syn_config
+      """
+   } else {
+      """
+      cd /usr/local/src/myscripts/
+      Rscript genie-bpc-quac.R -c $cohort -s all -r upload -l warning -u -v
+      """
+   }
 }
 
 outUploadReportWarning.view()
@@ -81,6 +99,7 @@ Merge and uncode REDcap export data files.
 process mergeAndUncodeRcaUploads {
 
    container 'hhunterzinck/genie-bpc-pipeline-uploads'
+   secret 'SYNAPSE_AUTH_TOKEN'
 
    input:
    val previous from outUploadReportWarning
@@ -91,10 +110,17 @@ process mergeAndUncodeRcaUploads {
    stdout into outMergeAndUncodeRcaUploads
 
    script:
-   """
-   cd /usr/local/src/myscripts/
-   Rscript merge_and_uncode_rca_uploads.R -c $cohort -u -a $syn_config -v
-   """
+   if ( params.synapse_config ) {
+      """
+      cd /usr/local/src/myscripts/
+      Rscript merge_and_uncode_rca_uploads.R -c $cohort -u -a $syn_config -v
+      """
+   } else {
+      """
+      cd /usr/local/src/myscripts/
+      Rscript merge_and_uncode_rca_uploads.R -c $cohort -u -v
+      """
+   }
 }
 
 outMergeAndUncodeRcaUploads.view()
@@ -105,6 +131,7 @@ Update Synapse tables with merged and uncoded data.
 process updateDataTable {
 
    container 'hhunterzinck/genie-bpc-pipeline-table-updates'
+   secret 'SYNAPSE_AUTH_TOKEN'
 
    input:
    val previous from outMergeAndUncodeRcaUploads
@@ -115,10 +142,17 @@ process updateDataTable {
    stdout into outUpdateDataTable
 
    script:
-   """
-   cd /root/scripts/
-   python update_data_table.py -s $syn_config -p /root/scripts/config.json -m $comment primary
-   """
+   if ( params.synapse_config ) {
+      """
+      cd /root/scripts/
+      python update_data_table.py -s $syn_config -p /root/scripts/config.json -m $comment primary
+      """
+   } else {
+      """
+      cd /root/scripts/
+      python update_data_table.py -p /root/scripts/config.json -m $comment primary
+      """
+   }
 }
 
 outUpdateDataTable.view()
@@ -130,6 +164,7 @@ for later quality assurance checklist reports.s
 process updateDateTrackingTable {
 
    container 'hhunterzinck/genie-bpc-pipeline-references'
+   secret 'SYNAPSE_AUTH_TOKEN'
 
    input:
    val previous from outUpdateDataTable
@@ -141,10 +176,17 @@ process updateDateTrackingTable {
    stdout into outUpdateDateTrackingTable
 
    script:
-   """
-   cd /usr/local/src/myscripts/
-   Rscript update_date_tracking_table.R -c $cohort -d `date +'%Y-%m-%d'` -s $comment -a $syn_config 
-   """
+   if ( params.synapse_config ) {
+      """
+      cd /usr/local/src/myscripts/
+      Rscript update_date_tracking_table.R -c $cohort -d `date +'%Y-%m-%d'` -s $comment -a $syn_config
+      """
+   } else {
+      """
+      cd /usr/local/src/myscripts/
+      Rscript update_date_tracking_table.R -c $cohort -d `date +'%Y-%m-%d'` -s $comment
+      """
+   }
 }
 
 outUpdateDateTrackingTable.view()
@@ -157,6 +199,7 @@ process quacTableReport {
 
    container 'hhunterzinck/genie-bpc-quac'
    errorStrategy 'ignore'
+   secret 'SYNAPSE_AUTH_TOKEN'
 
    input:
    val previous from outUpdateDateTrackingTable
@@ -167,11 +210,19 @@ process quacTableReport {
    stdout into outTableReport
 
    script:
-   """
-   cd /usr/local/src/myscripts/
-   Rscript genie-bpc-quac.R -c $cohort -s all -r table -l error -u -v -a $syn_config 
-   Rscript genie-bpc-quac.R -c $cohort -s all -r table -l warning -u -v -a $syn_config 
-   """
+   if ( params.synapse_config ) {
+      """
+      cd /usr/local/src/myscripts/
+      Rscript genie-bpc-quac.R -c $cohort -s all -r table -l error -u -v -a $syn_config
+      Rscript genie-bpc-quac.R -c $cohort -s all -r table -l warning -u -v -a $syn_config
+      """
+   } else {
+      """
+      cd /usr/local/src/myscripts/
+      Rscript genie-bpc-quac.R -c $cohort -s all -r table -l error -u -v
+      Rscript genie-bpc-quac.R -c $cohort -s all -r table -l warning -u -v
+      """
+   }
 }
 
 outTableReport.view()
@@ -184,6 +235,7 @@ process quacComparisonReport {
 
    container 'hhunterzinck/genie-bpc-quac'
    errorStrategy 'ignore'
+   secret 'SYNAPSE_AUTH_TOKEN'
 
    input:
    val previous from outTableReport
@@ -194,11 +246,19 @@ process quacComparisonReport {
    stdout into outComparisonReport
 
    script:
-   """
-   cd /usr/local/src/myscripts/
-   Rscript genie-bpc-quac.R -c $cohort -s all -r comparison -l error -u -v -a $syn_config 
-   Rscript genie-bpc-quac.R -c $cohort -s all -r comparison -l warning -u -v -a $syn_config 
-   """
+   if ( params.synapse_config ) {
+      """
+      cd /usr/local/src/myscripts/
+      Rscript genie-bpc-quac.R -c $cohort -s all -r comparison -l error -u -v -a $syn_config
+      Rscript genie-bpc-quac.R -c $cohort -s all -r comparison -l warning -u -v -a $syn_config
+      """
+   } else {
+      """
+      cd /usr/local/src/myscripts/
+      Rscript genie-bpc-quac.R -c $cohort -s all -r comparison -l error -u -v
+      Rscript genie-bpc-quac.R -c $cohort -s all -r comparison -l warning -u -v
+      """
+   }
 }
 
 outComparisonReport.view()
@@ -209,6 +269,7 @@ Create drug masking report files on most recent Synapse table data.
 process maskingReport {
 
    container 'hhunterzinck/genie-bpc-pipeline-masking'
+   secret 'SYNAPSE_AUTH_TOKEN'
 
    input:
    val previous from outComparisonReport
@@ -219,10 +280,17 @@ process maskingReport {
    stdout into outMaskingReport
 
    script:
-   """
-   cd /usr/local/src/myscripts/
-   Rscript workflow_unmasked_drugs.R -c $cohort -d `date +'%Y-%m-%d'` -s -a $syn_config 
-   """
+   if ( params.synapse_config ) {
+      """
+      cd /usr/local/src/myscripts/
+      Rscript workflow_unmasked_drugs.R -c $cohort -d `date +'%Y-%m-%d'` -s -a $syn_config
+      """
+   } else {
+      """
+      cd /usr/local/src/myscripts/
+      Rscript workflow_unmasked_drugs.R -c $cohort -d `date +'%Y-%m-%d'` -s
+      """
+   }
 }
 
 outMaskingReport.view()
@@ -234,6 +302,7 @@ from Synapse tables.
 process updateCaseCountTable {
 
    container 'hhunterzinck/genie-bpc-pipeline-case-selection'
+   secret 'SYNAPSE_AUTH_TOKEN'
 
    input:
    val previous from outMaskingReport
@@ -244,10 +313,17 @@ process updateCaseCountTable {
    stdout into outCaseCount
 
    script:
-   """
-   cd /usr/local/src/myscripts/
-   Rscript update_case_count_table.R -s -c $comment -a $syn_config
-   """
+   if ( params.synapse_config ) {
+      """
+      cd /usr/local/src/myscripts/
+      Rscript update_case_count_table.R -s -c $comment -a $syn_config
+      """
+   } else {
+      """
+      cd /usr/local/src/myscripts/
+      Rscript update_case_count_table.R -s -c $comment
+      """
+   }
 }
 
 outCaseCount.view()
