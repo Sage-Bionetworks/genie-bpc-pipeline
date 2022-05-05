@@ -180,15 +180,27 @@ if (verbose) {
 }
 
 # download release info
-release_info <- synTableQuery(glue("SELECT cohort, release_version, clinical_file_folder FROM {syn_id_release_info} WHERE current is true"))$asDataFrame()
+release_info <- synTableQuery(glue("SELECT cohort, release_version, release_type, clinical_file_folder, sor_column FROM {syn_id_release_info} WHERE current is true"))$asDataFrame()
 syn_id_release_folder <- release_info[release_info$cohort==selected_cohort,]$clinical_file_folder
-release_version <- release_info[release_info$cohort==selected_cohort,]$release_version
-if(release_version == "1.1"){
-  release_version <- "1"
-}
+clinical_column <- release_info[release_info$cohort==selected_cohort,]$sor_column
 
 if (verbose) {
   print(glue("{now(timeOnly = T)}: loading derived variable file data from '{synGet(syn_id_rdata)$properties$name}' ({syn_id_rdata})..."))
+}
+
+# read scope of release
+sor_df <- readxl::read_excel(synGet(syn_id_sor)$path, sheet = "Data Dictionary")
+
+# check that column name exists in the SOR
+if (!is.element(clinical_column, colnames(sor_df))) {
+  message(glue("Column '{clinical_column}' does not exist in the SOR.  Check the column name in the release info table ({syn_id_release_info}) and the SOR ({syn_id_sor}). Quitting..."))
+  stop()
+}
+
+if (verbose) {
+  release_version <- release_info[release_info$cohort==selected_cohort,]$release_version
+  release_type <- release_info[release_info$cohort==selected_cohort,]$release_type
+  print(glue("{now(timeOnly = T)}: extracting release status for {selected_cohort} {release_version}-{release_type} from SOR column '{clinical_column}'..."))
 }
 
 # load Rdata of derived variable
@@ -198,9 +210,6 @@ if (verbose) {
   print(glue("{now(timeOnly = T)}: reading scope of release from '{synGet(syn_id_sor)$properties$name}' ({syn_id_sor})..."))
 }
 
-# read scope of release
-sor_df <- readxl::read_excel(synGet(syn_id_sor)$path, sheet = "Data Dictionary")
-
 # main -----------------
 
 if (verbose) {
@@ -208,7 +217,6 @@ if (verbose) {
 }
 
 # use the scope of release to determine which variables to release
-clinical_column <- colnames(sor_df)[grepl(glue("Shared for ",str_cohort,".+",release_version,".+"),colnames(sor_df))]
 cols_to_use <- c('VARNAME','Dataset',clinical_column)
 cols_to_use_name <- c('variable','dataset','sor')
 sor_df_filtered <- sor_df[,cols_to_use]
