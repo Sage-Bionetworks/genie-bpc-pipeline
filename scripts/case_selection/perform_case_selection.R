@@ -50,6 +50,10 @@ waitifnot(is.element(phase, names(config$phase)),
           msg = c(glue("Error: site {site} is not valid for phase {phase} and cohort {cohort}.  Valid values: {site_str}"),
                   "Usage: Rscript perform_case_selection.R -h"))
 
+if (get_production(config, phase, cohort, site) == 0) {
+  stop(glue("Production target is 0 for phase {phase} {site} {cohort}.  Please revise eligibility criteria."))
+}
+
 # setup ----------------------------
 
 tic = as.double(Sys.time())
@@ -247,18 +251,22 @@ get_eligible_cohort <- function(x, randomize = T) {
     group_by(PATIENT_ID) %>%
     summarize(SAMPLE_IDS = paste0(SAMPLE_ID, collapse = ";")) %>%
     select(PATIENT_ID, SAMPLE_IDS))
+  
+  if (nrow(eligible) == 0) {
+    stop(glue("Number of eligible samples for phase {phase} {site} {cohort} is 0.  Please revise eligibility criteria."))
+  }
 
   # randomize cohort
   final <- list()
   if (randomize) {
     final <- eligible %>%
-      sample_n(size = nrow(eligible)) %>%
-      mutate(order = c(1:nrow(eligible))) %>%
-      select(order, PATIENT_ID, SAMPLE_IDS)
+        sample_n(size = nrow(eligible)) %>%
+        mutate(order = c(1:nrow(eligible))) %>%
+        select(order, PATIENT_ID, SAMPLE_IDS)
   } else {
     final <- eligible %>%
-      mutate(order = c(1:nrow(eligible))) %>%
-      select(order, PATIENT_ID, SAMPLE_IDS) 
+        mutate(order = c(1:nrow(eligible))) %>%
+        select(order, PATIENT_ID, SAMPLE_IDS) 
   }
   
   return(final)
@@ -269,8 +277,7 @@ create_selection_matrix <- function(eligible_cohort, n_prod, n_pressure, n_sdv, 
   n_eligible <- nrow(eligible_cohort)
   
   if (n_eligible < n_prod) {
-    message(glue("Warning: not enough eligible patients for production target ({n_eligible} < {n_prod}).  Please revise eligibility criteria."))
-    return(NULL)
+    stop(glue("not enough eligible patients for production target ({n_eligible} < {n_prod}) for phase {phase} {site} {cohort}.  Please revise eligibility criteria."))
   }
   
   # randomly disperse additional SDV cases among non-pressure
@@ -312,7 +319,8 @@ exclude_patient_id <- c()
 exclude_sample_id <- c()
 seq_dates <- get_seq_dates(config, phase, cohort, site)
 
-if (phase == 2) {
+flag_prev_release <- (config$release$cohort[[cohort]]$patient_level_dataset != "NA")
+if (phase == 2 && flag_prev_release) {
   exclude_patient_id <- get_patient_ids_in_release(synid_file_release = config$release$cohort[[cohort]]$patient_level_dataset)
   exclude_patient_id <- append(exclude_patient_id, 
                                get_patient_ids_bpc_removed(synid_table_patient_removal = config$synapse$bpc_removal_patient$id, 
