@@ -401,7 +401,7 @@ phase:
             production: 71
             adjusted: 71
         date: 
-          seq_min: Jan-2013
+          seq_min: Jan-2018
           seq_max: Jun-2020
         oncotree:
           root: RCC
@@ -471,7 +471,7 @@ phase:
             production: 103
             adjusted: 103
         date: 
-          seq_min: Jan-2013
+          seq_min: Jan-2018
           seq_max: Jun-2021
         oncotree:
           root: MEL
@@ -502,7 +502,7 @@ phase:
             production: 80
             adjusted: 80
         date: 
-          seq_min: Jan-2013
+          seq_min: Jan-2018
           seq_max: Dec-2021
         oncotree:
           root: EGC
