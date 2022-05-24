@@ -410,6 +410,8 @@ phase:
             - RCC
             - PRCC
             - NCCRCC
+            - SCCRCC
+            - CCPRC
       OVARIAN:
         name: OVARIAN
         site: 
@@ -446,6 +448,7 @@ phase:
             - EOV
             - HGSFT
             - OVT
+            - LGSOC
       MELANOMA:
         name: MELANOMA
         site: 
@@ -513,6 +516,15 @@ phase:
             - EGC
             - SPDAC
             - SSRCC
+            - ESCC
+            - EPDCA
+            - DSTAD
+            - ISTAD
+            - TSTAD
+            - MSTAD
+            - USTAD
+            - PSTAD
+            - GRC
 release:
   cohort:
     BLADDER: 
