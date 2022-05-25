@@ -1,5 +1,5 @@
-# Description: Copy BPC release folders plus contents to new folder on Synapse 
-#   without annotations, provenance, or previous versions. 
+# Description: Copy BPC clinical and cBioPortal release folders plus contents 
+#   to new folder on Synapse without annotations, provenance, or previous versions. 
 # Author: Haley Hunter-Zinck
 # Date: 2022-04-04
 
@@ -29,10 +29,10 @@ waitifnot <- function(cond, msg) {
 option_list <- list( 
   make_option(c("-i", "--synid_folder_input"), 
               type = "character",
-              help="Synapse ID of folder and contents to copy"),
+              help="Synapse ID of folder containing clinical and cbioportal folders to copy"),
   make_option(c("-o", "--synid_folder_output"), 
               type = "character",
-              help="Synapse ID of output folder in which to create the folder copy"),
+              help="Synapse ID of output folder to which to copy the clinical and cbioportal folders"),
   make_option(c("-v", "--verbose"), 
               action="store_true", 
               default = FALSE, 
