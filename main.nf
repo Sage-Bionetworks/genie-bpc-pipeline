@@ -30,7 +30,7 @@ Stop the workflow if any errors are detected.
 */
 process quacUploadReportError {
 
-   container 'hhunterzinck/genie-bpc-quac'
+   container 'sagebionetworks/genie-bpc-quac'
    secret 'SYNAPSE_AUTH_TOKEN'
 
    input:
@@ -63,7 +63,7 @@ Do not stop the workflow if any issues are detected.
 */
 process quacUploadReportWarning {
 
-   container 'hhunterzinck/genie-bpc-quac'
+   container 'sagebionetworks/genie-bpc-quac'
    errorStrategy 'ignore'
    secret 'SYNAPSE_AUTH_TOKEN'
 
@@ -96,7 +96,7 @@ Merge and uncode REDcap export data files.
 */
 process mergeAndUncodeRcaUploads {
 
-   container 'hhunterzinck/genie-bpc-pipeline-uploads'
+   container 'sagebionetworks/genie-bpc-pipeline-uploads'
    secret 'SYNAPSE_AUTH_TOKEN'
 
    input:
@@ -128,7 +128,7 @@ Update Synapse tables with merged and uncoded data.
 */
 process updateDataTable {
 
-   container 'hhunterzinck/genie-bpc-pipeline-table-updates'
+   container 'sagebionetworks/genie-bpc-pipeline-table-updates'
    secret 'SYNAPSE_AUTH_TOKEN'
 
    input:
@@ -161,7 +161,7 @@ for later quality assurance checklist reports.s
 */
 process updateDateTrackingTable {
 
-   container 'hhunterzinck/genie-bpc-pipeline-references'
+   container 'sagebionetworks/genie-bpc-pipeline-references'
    secret 'SYNAPSE_AUTH_TOKEN'
 
    input:
@@ -195,7 +195,7 @@ Do not stop the workflow if any issues are detected.
 */
 process quacTableReport {
 
-   container 'hhunterzinck/genie-bpc-quac'
+   container 'sagebionetworks/genie-bpc-quac'
    errorStrategy 'ignore'
    secret 'SYNAPSE_AUTH_TOKEN'
 
@@ -231,7 +231,7 @@ Do not stop the workflow if any issues are detected.
 */
 process quacComparisonReport {
 
-   container 'hhunterzinck/genie-bpc-quac'
+   container 'sagebionetworks/genie-bpc-quac'
    errorStrategy 'ignore'
    secret 'SYNAPSE_AUTH_TOKEN'
 
@@ -266,7 +266,7 @@ Create drug masking report files on most recent Synapse table data.
 */
 process maskingReport {
 
-   container 'hhunterzinck/genie-bpc-pipeline-masking'
+   container 'sagebionetworks/genie-bpc-pipeline-masking'
    secret 'SYNAPSE_AUTH_TOKEN'
 
    input:
@@ -299,7 +299,7 @@ from Synapse tables.
 */
 process updateCaseCountTable {
 
-   container 'hhunterzinck/genie-bpc-pipeline-case-selection'
+   container 'sagebionetworks/genie-bpc-pipeline-case-selection'
    secret 'SYNAPSE_AUTH_TOKEN'
 
    input:
