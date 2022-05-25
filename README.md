@@ -50,3 +50,12 @@ Input parameters:
 - `cohort`: BPC cohort code (for valid cohort codes see `nextflow.config`)
 - `comment`: message to use for Synapse table snapshots regarding the update (e.g. "NSCLC public release")
 - `synapseConfig`: (optional) path to `.synapseConfig` file.  If not specified, program uses `SYNAPSE_AUTH_TOKEN` secret.
+
+## DockerHub builds
+The docker images built through this repo are automatically built everytime a change to pushed into the `develop` branch.  This is automatically set up via the automated build feature on DockerHub.
+
+- sagebionetworks/genie-bpc-pipeline-case-selection
+- sagebionetworks/genie-bpc-pipeline-references
+- sagebionetworks/genie-bpc-pipeline-table-updates
+- sagebionetworks/genie-bpc-pipeline-uploads
+- sagebionetworks/genie-bpc-pipeline-masking
