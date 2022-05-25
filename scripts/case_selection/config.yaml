@@ -298,8 +298,8 @@ phase:
             production: 210
             adjusted: 210
             date: 
-              seq_min: Jan-2018
-              seq_max: Dec-2020
+              seq_min: Jan-2017
+              seq_max: Dec-2019
           MSK:
             production: 615
             adjusted: 615
@@ -310,8 +310,8 @@ phase:
             production: 100
             adjusted: 100
             date: 
-              seq_min: Jan-2018
-              seq_max: Dec-2020
+              seq_min: Jan-2017
+              seq_max: Dec-2019
           UHN:
             production: 35
             adjusted: 35
@@ -480,6 +480,7 @@ phase:
           root: MEL
           allowed_codes: 
             - SKCM
+            - MEL
       ESOPHAGO:
         name: ESOPHAGO
         site: 
