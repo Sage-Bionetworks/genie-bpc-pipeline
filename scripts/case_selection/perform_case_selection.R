@@ -136,6 +136,18 @@ get_sample_ids_bpc_removed <- function(synid_table_sample_removal, cohort) {
   return(res)
 }
 
+#' Hack to deal with consolidating site codes in main GENIE>
+#' 
+#' @param site main GENIE site code
+#' @return site codes corresponding to site code in current release.
+get_site_list <- function(site) {
+  if (site == "PROV") {
+    return(c("PROV", "SCI"))
+  }
+  
+  return(site)
+}
+
 #' Create data matrix with all necessary information to determine 
 #' eligibility for BPC cohort case selection. 
 #' 
@@ -163,10 +175,12 @@ get_eligibility_data <- function(synid_table_patient, synid_table_sample, site) 
                                                                   FROM {synid_table_sample}"),
                                               includeRowIdAndRowVersion = F)) 
   
+  sites <- get_site_list(site)
+  
   # merge and filter
   data <- patient_data %>% 
     inner_join(sample_data, by = "PATIENT_ID") %>%  
-    filter(CENTER == site) %>%
+    filter(is.element(CENTER, sites)) %>%
     select(PATIENT_ID, 
            SAMPLE_ID, 
            ONCOTREE_CODE, 
