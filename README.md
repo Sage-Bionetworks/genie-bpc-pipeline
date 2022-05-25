@@ -50,3 +50,31 @@ Input parameters:
 - `cohort`: BPC cohort code (for valid cohort codes see `nextflow.config`)
 - `comment`: message to use for Synapse table snapshots regarding the update (e.g. "NSCLC public release")
 - `synapseConfig`: (optional) path to `.synapseConfig` file.  If not specified, program uses `SYNAPSE_AUTH_TOKEN` secret.
+
+## DockerHub builds
+The docker images built through this repo are automatically built everytime a change to pushed into the `develop` branch.  This is automatically set up via the automated build feature on DockerHub.
+
+- [sagebionetworks/genie-bpc-pipeline-case-selection](https://hub.docker.com/repository/docker/sagebionetworks/genie-bpc-pipeline-case-selection)
+
+    [![automated](https://img.shields.io/docker/cloud/automated/sagebionetworks/genie-bpc-pipeline-case-selection)](https://hub.docker.com/r/sagebionetworks/genie-bpc-pipeline-case-selection)
+    ![status](https://img.shields.io/docker/cloud/build/sagebionetworks/genie-bpc-pipeline-case-selection)
+
+- [sagebionetworks/genie-bpc-pipeline-references](https://hub.docker.com/repository/docker/sagebionetworks/genie-bpc-pipeline-references)
+
+    [![automated](https://img.shields.io/docker/cloud/automated/sagebionetworks/genie-bpc-pipeline-references)](https://hub.docker.com/r/sagebionetworks/genie-bpc-pipeline-references)
+    ![status](https://img.shields.io/docker/cloud/build/sagebionetworks/genie-bpc-pipeline-references)
+
+- [sagebionetworks/genie-bpc-pipeline-table-updates](https://hub.docker.com/repository/docker/sagebionetworks/genie-bpc-pipeline-table-updates)
+
+    [![automated](https://img.shields.io/docker/cloud/automated/sagebionetworks/genie-bpc-pipeline-table-updates)](https://hub.docker.com/r/sagebionetworks/genie-bpc-pipeline-table-updates)
+    ![status](https://img.shields.io/docker/cloud/build/sagebionetworks/genie-bpc-pipeline-table-updates)
+
+- [sagebionetworks/genie-bpc-pipeline-uploads](https://hub.docker.com/repository/docker/sagebionetworks/genie-bpc-pipeline-uploads)
+
+    [![automated](https://img.shields.io/docker/cloud/automated/sagebionetworks/genie-bpc-pipeline-uploads)](https://hub.docker.com/r/sagebionetworks/genie-bpc-pipeline-uploads)
+    ![status](https://img.shields.io/docker/cloud/build/sagebionetworks/genie-bpc-pipeline-uploads)
+
+- [sagebionetworks/genie-bpc-pipeline-masking](https://hub.docker.com/repository/docker/sagebionetworks/genie-bpc-pipeline-masking)
+
+    [![automated](https://img.shields.io/docker/cloud/automated/sagebionetworks/genie-bpc-pipeline-masking)](https://hub.docker.com/r/sagebionetworks/genie-bpc-pipeline-masking)
+    ![status](https://img.shields.io/docker/cloud/build/sagebionetworks/genie-bpc-pipeline-masking)
