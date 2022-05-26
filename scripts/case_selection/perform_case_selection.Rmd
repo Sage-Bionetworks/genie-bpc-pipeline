@@ -27,7 +27,7 @@ knitr::opts_chunk$set(echo = F)
 config <- read_yaml("config.yaml")
 
 # user specified parameters
-phase <- params$phase
+phase <- as.character(params$phase)
 cohort <- params$cohort
 site <- params$site
 
