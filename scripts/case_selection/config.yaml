@@ -297,9 +297,6 @@ phase:
           DUKE:
             production: 210
             adjusted: 210
-            date: 
-              seq_min: Jan-2017
-              seq_max: Dec-2019
           MSK:
             production: 615
             adjusted: 615
@@ -309,9 +306,6 @@ phase:
           UCSF:
             production: 100
             adjusted: 100
-            date: 
-              seq_min: Jan-2017
-              seq_max: Dec-2019
           UHN:
             production: 35
             adjusted: 35
