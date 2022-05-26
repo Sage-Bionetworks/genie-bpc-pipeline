@@ -297,6 +297,9 @@ phase:
           DUKE:
             production: 210
             adjusted: 210
+            date:
+              seq_min: Jul-2017
+              seq_max: Dec-2019
           MSK:
             production: 615
             adjusted: 615
@@ -306,6 +309,9 @@ phase:
           UCSF:
             production: 100
             adjusted: 100
+            date:
+              seq_min: Oct-2016
+              seq_max: Dec-2019
           UHN:
             production: 35
             adjusted: 35
@@ -356,9 +362,15 @@ phase:
           UHN:
             production: 110
             adjusted: 110
+            date:
+              seq_min: Jul-2017
+              seq_max: Dec-2020
           VICC:
             production: 135
-            adjusted: 135 
+            adjusted: 135
+            date: 
+              seq_min: Apr-2014
+              seq_max: Dec-2020
         date: 
           seq_min: Jan-2018
           seq_max: Dec-2020
@@ -386,16 +398,16 @@ phase:
             production: 45
             adjusted: 45
           UCSF:
-            production: 62
-            adjusted: 62
+            production: 46
+            adjusted: 46
           UHN:
-            production: 42
-            adjusted: 42
+            production: 40
+            adjusted: 40
           VICC:
-            production: 71
-            adjusted: 71
+            production: 56
+            adjusted: 56
         date: 
-          seq_min: Jan-2018
+          seq_min: Apr-2012
           seq_max: Jun-2020
         oncotree:
           root: RCC
@@ -431,7 +443,7 @@ phase:
             production: 75
             adjusted: 75
         date: 
-          seq_min: Jan-2013
+          seq_min: Jan-2014
           seq_max: Dec-2020
         oncotree:
           root: OVARY
@@ -468,7 +480,7 @@ phase:
             production: 103
             adjusted: 103
         date: 
-          seq_min: Jan-2018
+          seq_min: Oct-2017
           seq_max: Jun-2021
         oncotree:
           root: MEL
@@ -497,10 +509,10 @@ phase:
             production: 100
             adjusted: 100
           VICC:
-            production: 80
-            adjusted: 80
+            production: 79
+            adjusted: 79
         date: 
-          seq_min: Jan-2018
+          seq_min: Apr-2012
           seq_max: Dec-2021
         oncotree:
           root: EGC
