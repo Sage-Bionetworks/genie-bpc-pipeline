@@ -73,6 +73,100 @@ upload:
       data1: syn26250084
     VICC:
       data1: syn26250085
+  NSCLC2:
+    DFCI:
+      data1: syn27351603
+      header1: syn27351608
+    DUKE:
+      data1: syn30821503
+    MSK:
+      data1: syn27351615
+    PROV:
+      data1: syn30821505
+    UCSF:
+      data1: syn30821507
+    UHN:
+      data1: syn27351619
+    VICC:
+      data1: syn27351623
+  CRC2:
+    DFCI:
+      data1: syn29418170
+      header1: syn29418169
+    DUKE:
+      data1: syn30821496
+    MSK:
+      data1: syn29418172
+    PROV:
+      data1: syn30821498
+    UCSF:
+      data1: syn30821500
+    UHN:
+      data1: syn29418174
+    VICC:
+      data1: syn29418176
+  RENAL:
+    DFCI:
+      data1: syn29418122
+      header1: syn29418121
+    DUKE:
+      data1: syn30821482
+    MSK:
+      data1: syn29418128
+    PROV:
+      data1: syn30821484
+    UCSF:
+      data1: syn30821486
+    UHN:
+      data1: syn29418131
+    VICC:
+      data1: syn29418134
+  MELANOMA:
+    DFCI:
+      data1: syn29418138
+      header1: syn29418137
+    MSK:
+      data1: syn29418140
+    PROV:
+      data1: syn30821491
+    UCSF:
+      data1: syn30821493
+    UHN:
+      data1: syn29418143
+    VICC:
+      data1: syn29418146
+  OVARIAN:
+    DFCI:
+      data1: syn29418091
+      header1: syn29418089
+    DUKE:
+      data1: syn30821466
+    MSK:
+      data1: syn29418095
+    PROV:
+      data1: syn30821470
+    UCSF:
+      data1: syn30821472
+    UHN:
+      data1: syn29418098
+    VICC:
+      data1: syn29418100
+  ESOPHAGO:
+    DFCI:
+      data1: syn29418106
+      header1: syn29418105
+    DUKE:
+      data1: syn30821475
+    MSK:
+      data1: syn29418110
+    PROV:
+      data1: syn30821477
+    UCSF:
+      data1: syn30821479
+    UHN:
+      data1: syn29418113
+    VICC:
+      data1: syn29418117
 column_name:
   variable_name: "Variable / Field Name"
   form_name: "Form Name"
