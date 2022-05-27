@@ -28,8 +28,8 @@ waitifnot <- function(cond, msg) {
 option_list <- list( 
   make_option(c("-c", "--cohort"), type = "character",
               help=glue("BPC cohort code of patients to remove (required)")),
-  make_option(c("-i", "--synid_file_input"), type = "character", default = "syn23286928",
-              help="Synapse ID of file with merged and uncoded redcap export data (default: syn23286928)"),
+  make_option(c("-i", "--synid_folder_input"), type = "character", default = "syn23286928",
+              help="Synapse ID of folder with merged and uncoded redcap export data (default: syn23286928)"),
   make_option(c("-o", "--synid_folder_output"), type = "character", default = "syn23286928",
               help="Synapse ID of output folder for filtered data (default: syn23286928).  Use 'NA' to write locally instead."),
   make_option(c("-r", "--synid_table_rm"), type = "character", default = "syn29266682",
@@ -45,7 +45,7 @@ opt <- parse_args(OptionParser(option_list=option_list))
 waitifnot(!is.null(opt$cohort),
           msg = "Rscript remove_patients_from_merged.R -h")
 
-synid_file_input <- opt$synid_file_input
+synid_folder_input <- opt$synid_folder_input
 synid_folder_output <- opt$synid_folder_output
 synid_table_rm <- opt$synid_table_rm
 cohort <- opt$cohort
@@ -252,6 +252,8 @@ pt_rm <- as.character(unlist(as.data.frame(synTableQuery(query, includeRowIdAndR
 
 # main ----------------------------
 
+synid_folder_children <- get_synapse_folder_children(synid_folder_input)
+synid_file_input <- as.character(synid_folder_children[glue("{cohort}BPCIntake_data")])
 file_local <- tail(strsplit(split = "/", x = synGet(synid_file_input)$path)[[1]], n = 1)
 entity_name <- get_synapse_entity_name(synid_file_input)
 
@@ -268,7 +270,7 @@ if (verbose) {
   print(glue("{now()}: {nrow(raw) - nrow(mod)} rows removed from '{file_local}' ({synid_file_input})."))
 }
 
-if (!is.na(synid_folder_output)) {
+if (grepl(pattern = "^syn[0-9]+$", x = synid_folder_output)) {
   synid_file_dest <- save_to_synapse(path = file_local, 
                   file_name = entity_name,
                   parent_id = synid_folder_output,
