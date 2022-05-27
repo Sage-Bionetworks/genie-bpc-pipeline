@@ -125,6 +125,39 @@ Example run:
 Rscript update_case_count_table.R -s -c 'nsclc phase 2 update' -a $SYNAPSE_AUTH_TOKEN
 ```
 
+## Usage: update table with case selection criteria
+
+To display the command line interface:
+```
+Rscript update_case_criteria_table.R -h
+```
+
+The command line interface will display as follows:
+```
+Usage: update_case_criteria_table.R [options]
+
+
+Options:
+        -s, --save_synapse
+                Save updated counts on Synapse (default: FALSE)
+
+        -c COMMENT, --comment=COMMENT
+                Comment for new table snapshot version (default: 'update to case selection criteria')
+
+        -v, --verbose
+                Output script messages to the user (default: FALSE)
+
+        -a AUTH, --auth=AUTH
+                Synapse personal access token or path to .synapseConfig (default: normal synapse login behavior)
+
+        -h, --help
+                Show this help message and exit```
+
+Example run: 
+```
+Rscript update_case_criteria_table.R -s  -c 'example run' -v
+```
+
 ## Configuration
 
 ### Case selection for a new cohort

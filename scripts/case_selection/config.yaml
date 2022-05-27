@@ -50,6 +50,11 @@ synapse:
     name: Case Selection Counts
     type: table
     description: Case selection counts reference table in BPC Internal project
+  selection_criteria:
+    id: syn31003441
+    name: Case Selection Criteria
+    type: table
+    description: Case selection criteria reference table in BPC Internal project
 default:
   global:
     age_min: 18

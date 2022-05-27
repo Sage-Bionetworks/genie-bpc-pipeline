@@ -16,10 +16,10 @@ library(synapser)
 # user input ----------------------------
 
 option_list <- list( 
-  make_option(c("-o", "--synid_table_output"), type = "character", default = NA,
-              help="Synapse ID of project in which to create table (default: write locally to csv)"),
+  make_option(c("-s", "--save_synapse"), action="store_true", default = FALSE, 
+              help="Save updated counts on Synapse (default: FALSE)"),
   make_option(c("-c", "--comment"), type = "character", default = "update to case selection criteria",
-              help="Comment to store with Synapse table version update (default: 'update to case selection criteria')"),
+              help="Comment for new table snapshot version (default: 'update to case selection criteria')"),
   make_option(c("-v", "--verbose"), action="store_true", default = FALSE, 
               help="Output script messages to the user (default: FALSE)"),
   make_option(c("-a", "--auth"), 
@@ -29,7 +29,7 @@ option_list <- list(
 )
 opt <- parse_args(OptionParser(option_list=option_list))
 
-synid_table_output <- opt$synid_table_output
+save_synapse <- opt$save_synapse
 comment <- opt$comment
 verbose <- opt$verbose
 auth <- opt$auth
@@ -285,12 +285,12 @@ for (phase in phases) {
   }
 }
 
-if (!is.na(synid_table_output)) {
+if (save_synapse) {
   
   if (verbose) {
     print(glue("Update case selection criteria table ({synid_table_output})..."))
   }
-  n_version <- create_synapse_table_version(table_id = synid_table_output, 
+  n_version <- create_synapse_table_version(table_id = config$synapse$selection_criteria$id, 
                                             data = as.data.frame(tab), 
                                             comment = comment, 
                                             append = F)
