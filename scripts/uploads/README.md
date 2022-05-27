@@ -74,26 +74,26 @@ Usage: remove_patients_from_merged.R [options]
 
 
 Options:
-	-i SYNID_FILE_INPUT, --synid_file_input=SYNID_FILE_INPUT
-		Synapse ID of file with merged and uncoded redcap export data (required)
+        -c COHORT, --cohort=COHORT
+                BPC cohort code of patients to remove (required)
 
-	-c COHORT, --cohort=COHORT
-		BPC cohort code of patients to remove (required)
+        -i SYNID_FOLDER_INPUT, --synid_folder_input=SYNID_FOLDER_INPUT
+                Synapse ID of folder with merged and uncoded redcap export data (default: syn23286928)
 
-	-o SYNID_FOLDER_OUTPUT, --synid_folder_output=SYNID_FOLDER_OUTPUT
-		Synapse ID of output folder for filtered release files (default: write locally)
+        -o SYNID_FOLDER_OUTPUT, --synid_folder_output=SYNID_FOLDER_OUTPUT
+                Synapse ID of output folder for filtered data (default: syn23286928).  Use 'NA' to write locally instead.
 
-	-r SYNID_TABLE_RM, --synid_table_rm=SYNID_TABLE_RM
-		Synapse ID of table with patient IDs to remove (default: syn29266682)
+        -r SYNID_TABLE_RM, --synid_table_rm=SYNID_TABLE_RM
+                Synapse ID of table with patient IDs to remove (default: syn29266682)
 
-	-v, --verbose
-		Output script messages to the user (default: FALSE)
+        -v, --verbose
+                Output script messages to the user (default: FALSE)
 
-	-a AUTH, --auth=AUTH
-		Synapse personal access token or path to .synapseConfig (default: normal synapse login behavior)
+        -a AUTH, --auth=AUTH
+                Synapse personal access token or path to .synapseConfig (default: normal synapse login behavior)
 
-	-h, --help
-		Show this help message and exit
+        -h, --help
+                Show this help message and exit
 ```
 
 Example run: 

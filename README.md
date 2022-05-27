@@ -9,6 +9,7 @@ Workflow proceses
 1. Run the upload QA report to detect error level issues.  Note: this containerized R script returns an exit code corresponding to the number of issues detected.  If the number of issues is 0, the workflow continues.  If the number of issues is greater than 0, the workflow stops with an error. 
 1. Run the upload QA report to detect warning level issues.  
 1. Merge and uncode the REDCap dataset corresponding to the cohort.
+1. Remove patient IDs in the temporary retraction table.  These IDs mostly correspond to redacted patients for which PHI redaction issues are still being resolved pending decision from the stats team.  
 1. Update Synapse tables with the merged and uncoded data.  
 1. Update a Synapse table with references important for running the table QA reports.
 1. Run the table QA report, which checks the newly updated Synapse tables.
