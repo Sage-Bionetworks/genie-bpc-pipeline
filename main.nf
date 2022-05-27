@@ -141,12 +141,12 @@ process tmpRemovePatientsFromMerged {
    if ( params.synapse_config ) {
       """
       cd /usr/local/src/myscripts/
-      Rscript remove_patients_from_merged.R -c $cohort -u -a $syn_config -v
+      Rscript remove_patients_from_merged.R -c $cohort -a $syn_config -v
       """
    } else {
       """
       cd /usr/local/src/myscripts/
-      Rscript remove_patients_from_merged.R -c $cohort -u -v
+      Rscript remove_patients_from_merged.R -c $cohort -v
       """
    }
 }
