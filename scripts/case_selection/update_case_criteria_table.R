@@ -288,7 +288,7 @@ for (phase in phases) {
 if (save_synapse) {
   
   if (verbose) {
-    print(glue("Update case selection criteria table ({synid_table_output})..."))
+    print(glue("Update case selection criteria table ({config$synapse$selection_criteria$id})..."))
   }
   n_version <- create_synapse_table_version(table_id = config$synapse$selection_criteria$id, 
                                             data = as.data.frame(tab), 
