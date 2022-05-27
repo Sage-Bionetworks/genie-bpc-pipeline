@@ -50,6 +50,11 @@ synapse:
     name: Case Selection Counts
     type: table
     description: Case selection counts reference table in BPC Internal project
+  selection_criteria:
+    id: syn31003441
+    name: Case Selection Criteria
+    type: table
+    description: Case selection criteria reference table in BPC Internal project
 default:
   global:
     age_min: 18
@@ -60,9 +65,18 @@ default:
     DFCI: 
       pressure: 15
       seed: 58029
+    DUKE:
+      pressure: 10
+      seed: 37383
     MSK:
       pressure: 15
       seed: 7
+    PROV:
+      pressure: 10
+      seed: 88830
+    UCSF:
+      pressure: 10
+      seed: 65379
     UHN: 
       pressure: 10
       seed: 123456
@@ -123,7 +137,7 @@ phase:
           seq_max: Apr-2018
         age_max: 56
         oncotree:
-          root: Breast
+          root: BREAST
           allowed_codes: 
             - BRCA
             - BRCANOS
@@ -285,9 +299,24 @@ phase:
           DFCI:
             production: 410
             adjusted: 410
+          DUKE:
+            production: 210
+            adjusted: 210
+            date:
+              seq_min: Jul-2017
+              seq_max: Dec-2019
           MSK:
             production: 615
             adjusted: 615
+          PROV:
+            production: 210
+            adjusted: 210
+          UCSF:
+            production: 100
+            adjusted: 100
+            date:
+              seq_min: Oct-2016
+              seq_max: Dec-2019
           UHN:
             production: 35
             adjusted: 35
@@ -317,6 +346,197 @@ phase:
             - GCLC
             - LUACC
             - NSCLC
+      CRC:
+        name: CRC
+        site: 
+          DFCI:
+            production: 300
+            adjusted: 300
+          DUKE:
+            production: 135
+            adjusted: 135
+          MSK:
+            production: 500
+            adjusted: 500
+          PROV:
+            production: 135
+            adjusted: 135
+          UCSF:
+            production: 60
+            adjusted: 60
+          UHN:
+            production: 110
+            adjusted: 110
+            date:
+              seq_min: Jul-2017
+              seq_max: Dec-2020
+          VICC:
+            production: 135
+            adjusted: 135
+            date: 
+              seq_min: Apr-2014
+              seq_max: Dec-2020
+        date: 
+          seq_min: Jan-2018
+          seq_max: Dec-2020
+        oncotree:
+          root: BOWEL
+          allowed_codes: 
+            - COAD
+            - COADREAD
+            - READ
+            - MACR
+            - SRCCR
+      RENAL:
+        name: RENAL
+        site: 
+          DFCI:
+            production: 400
+            adjusted: 400
+          DUKE:
+            production: 30
+            adjusted: 30
+          MSK:
+            production: 600
+            adjusted: 600
+          PROV:
+            production: 45
+            adjusted: 45
+          UCSF:
+            production: 46
+            adjusted: 46
+          UHN:
+            production: 40
+            adjusted: 40
+          VICC:
+            production: 56
+            adjusted: 56
+        date: 
+          seq_min: Apr-2012
+          seq_max: Jun-2020
+        oncotree:
+          root: RCC
+          allowed_codes: 
+            - CCRCC
+            - RCC
+            - PRCC
+            - NCCRCC
+            - SCCRCC
+            - CCPRC
+      OVARIAN:
+        name: OVARIAN
+        site: 
+          DFCI:
+            production: 300
+            adjusted: 300
+          DUKE:
+            production: 80
+            adjusted: 80
+          MSK:
+            production: 500
+            adjusted: 500
+          PROV:
+            production: 65
+            adjusted: 65
+          UCSF:
+            production: 80
+            adjusted: 80
+          UHN:
+            production: 80
+            adjusted: 80
+          VICC:
+            production: 75
+            adjusted: 75
+        date: 
+          seq_min: Jan-2014
+          seq_max: Dec-2020
+        oncotree:
+          root: OVARY
+          allowed_codes: 
+            - HGSOC
+            - SOC
+            - CCOV
+            - EOV
+            - HGSFT
+            - OVT
+            - LGSOC
+      MELANOMA:
+        name: MELANOMA
+        site: 
+          DFCI:
+            production: 300
+            adjusted: 300
+          DUKE:
+            production: 0
+            adjusted: 0
+          MSK:
+            production: 500
+            adjusted: 500
+          PROV:
+            production: 103
+            adjusted: 103
+          UCSF:
+            production: 103
+            adjusted: 103
+          UHN:
+            production: 40
+            adjusted: 40
+          VICC:
+            production: 103
+            adjusted: 103
+        date: 
+          seq_min: Oct-2017
+          seq_max: Jun-2021
+        oncotree:
+          root: MEL
+          allowed_codes: 
+            - SKCM
+            - MEL
+      ESOPHAGO:
+        name: ESOPHAGO
+        site: 
+          DFCI:
+            production: 315
+            adjusted: 315
+          DUKE:
+            production: 90
+            adjusted: 90
+          MSK:
+            production: 515
+            adjusted: 515
+          PROV:
+            production: 60
+            adjusted: 60
+          UCSF:
+            production: 45
+            adjusted: 45
+          UHN:
+            production: 100
+            adjusted: 100
+          VICC:
+            production: 79
+            adjusted: 79
+        date: 
+          seq_min: Apr-2012
+          seq_max: Dec-2021
+        oncotree:
+          root: EGC
+          allowed_codes: 
+            - ESCA
+            - STAD
+            - GEJ
+            - EGC
+            - SPDAC
+            - SSRCC
+            - ESCC
+            - EPDCA
+            - DSTAD
+            - ISTAD
+            - TSTAD
+            - MSTAD
+            - USTAD
+            - PSTAD
+            - GRC
 release:
   cohort:
     BLADDER: 
@@ -325,11 +545,19 @@ release:
       patient_level_dataset: syn26253365
     CRC:
       patient_level_dataset: syn26046793
+    ESOPHAGO:
+      patient_level_dataset: NA
+    MELANOMA:
+      patient_level_dataset: NA
     NSCLC:
       patient_level_dataset: syn25985884
+    OVARIAN:
+      patient_level_dataset: NA
     PANC:
       patient_level_dataset: NA
     Prostate:
+      patient_level_dataset: NA
+    RENAL:
       patient_level_dataset: NA
 misc:
   debug: TRUE
