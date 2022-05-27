@@ -26,12 +26,12 @@ waitifnot <- function(cond, msg) {
 # user input ----------------------------
 
 option_list <- list( 
-  make_option(c("-i", "--synid_file_input"), type = "character",
-              help="Synapse ID of file with merged and uncoded redcap export data (required)"),
   make_option(c("-c", "--cohort"), type = "character",
               help=glue("BPC cohort code of patients to remove (required)")),
-  make_option(c("-o", "--synid_folder_output"), type = "character", default = NA,
-              help="Synapse ID of output folder for filtered release files (default: write locally)"),
+  make_option(c("-i", "--synid_file_input"), type = "character", default = "syn23286928",
+              help="Synapse ID of file with merged and uncoded redcap export data (default: syn23286928)"),
+  make_option(c("-o", "--synid_folder_output"), type = "character", default = "syn23286928",
+              help="Synapse ID of output folder for filtered data (default: syn23286928).  Use 'NA' to write locally instead."),
   make_option(c("-r", "--synid_table_rm"), type = "character", default = "syn29266682",
               help="Synapse ID of table with patient IDs to remove (default: syn29266682)"),
   make_option(c("-v", "--verbose"), action="store_true", default = FALSE, 
@@ -42,7 +42,7 @@ option_list <- list(
               help="Synapse personal access token or path to .synapseConfig (default: normal synapse login behavior)")
 )
 opt <- parse_args(OptionParser(option_list=option_list))
-waitifnot(!is.null(opt$synid_file_input) && !is.null(opt$cohort),
+waitifnot(!is.null(opt$cohort),
           msg = "Rscript remove_patients_from_merged.R -h")
 
 synid_file_input <- opt$synid_file_input

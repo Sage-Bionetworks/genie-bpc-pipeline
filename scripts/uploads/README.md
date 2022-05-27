@@ -74,14 +74,14 @@ Usage: remove_patients_from_merged.R [options]
 
 
 Options:
-	-i SYNID_FILE_INPUT, --synid_file_input=SYNID_FILE_INPUT
-		Synapse ID of file with merged and uncoded redcap export data (required)
-
 	-c COHORT, --cohort=COHORT
 		BPC cohort code of patients to remove (required)
 
+	-i SYNID_FILE_INPUT, --synid_file_input=SYNID_FILE_INPUT
+		Synapse ID of file with merged and uncoded redcap export data (default: syn23286928)
+
 	-o SYNID_FOLDER_OUTPUT, --synid_folder_output=SYNID_FOLDER_OUTPUT
-		Synapse ID of output folder for filtered release files (default: write locally)
+		Synapse ID of output folder for filtered data (default: syn23286928).  Use 'NA' to write locally instead.
 
 	-r SYNID_TABLE_RM, --synid_table_rm=SYNID_TABLE_RM
 		Synapse ID of table with patient IDs to remove (default: syn29266682)

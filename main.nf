@@ -59,12 +59,10 @@ outUploadReportError.view()
 
 /*
 Run quality asssurance checklist for the upload report at warning level.  
-Do not stop the workflow if any issues are detected.
 */
 process quacUploadReportWarning {
 
    container 'sagebionetworks/genie-bpc-quac'
-   errorStrategy 'ignore'
    secret 'SYNAPSE_AUTH_TOKEN'
 
    input:
@@ -124,6 +122,38 @@ process mergeAndUncodeRcaUploads {
 outMergeAndUncodeRcaUploads.view()
 
 /*
+Remove temporarily retracted (redacted) patients from merged upload file.
+*/
+process tmpRemovePatientsFromMerged {
+
+   container 'sagebionetworks/genie-bpc-pipeline-uploads'
+   secret 'SYNAPSE_AUTH_TOKEN'
+
+   input:
+   val previous from outMergeAndUncodeRcaUploads
+   file syn_config   from ch_synapse_config
+   val cohort        from ch_cohort
+
+   output:
+   stdout into outTmpRemovePatientsFromMerged
+
+   script:
+   if ( params.synapse_config ) {
+      """
+      cd /usr/local/src/myscripts/
+      Rscript remove_patients_from_merged.R -c $cohort -u -a $syn_config -v
+      """
+   } else {
+      """
+      cd /usr/local/src/myscripts/
+      Rscript remove_patients_from_merged.R -c $cohort -u -v
+      """
+   }
+}
+
+outTmpRemovePatientsFromMerged.view()
+
+/*
 Update Synapse tables with merged and uncoded data.
 */
 process updateDataTable {
@@ -132,7 +162,7 @@ process updateDataTable {
    secret 'SYNAPSE_AUTH_TOKEN'
 
    input:
-   val previous from outMergeAndUncodeRcaUploads
+   val previous from outTmpRemovePatientsFromMerged
    file syn_config   from ch_synapse_config
    val comment       from ch_comment
 
@@ -196,7 +226,6 @@ Do not stop the workflow if any issues are detected.
 process quacTableReport {
 
    container 'sagebionetworks/genie-bpc-quac'
-   errorStrategy 'ignore'
    secret 'SYNAPSE_AUTH_TOKEN'
 
    input:
@@ -227,12 +256,10 @@ outTableReport.view()
 
 /*
 Run quality asssurance checklist for the comparison report at error and warning level.  
-Do not stop the workflow if any issues are detected.
 */
 process quacComparisonReport {
 
    container 'sagebionetworks/genie-bpc-quac'
-   errorStrategy 'ignore'
    secret 'SYNAPSE_AUTH_TOKEN'
 
    input:
