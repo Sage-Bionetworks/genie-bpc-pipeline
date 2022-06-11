@@ -2,3 +2,4 @@ work/
 .nextflow.log*
 .nextflow/
 bin/.synapseConfig
+.Rproj.user
