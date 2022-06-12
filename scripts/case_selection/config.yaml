@@ -62,6 +62,12 @@ default:
     sdv: 0.2
     irr: 0.05
   site:
+    CHOP:
+      pressure: 10
+      seed: 44342
+    COLU:
+      pressure: 10
+      seed: 342
     DFCI: 
       pressure: 15
       seed: 58029
@@ -295,7 +301,13 @@ phase:
     cohort: 
       NSCLC:
         name: NSCLC
-        site: 
+        site:
+          CHOP:
+            production: 0
+            adjusted: 0
+          COLU:
+            production: 410
+            adjusted: 410
           DFCI:
             production: 410
             adjusted: 410
