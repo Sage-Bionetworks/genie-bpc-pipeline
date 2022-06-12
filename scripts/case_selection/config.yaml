@@ -506,14 +506,14 @@ phase:
         name: MELANOMA
         site:
           CHOP:
-            production: 10
-            adjusted: 10
+            production: 0
+            adjusted: 0
           COLU:
-            production: 410
-            adjusted: 410
+            production: 151
+            adjusted: 151
           CRUK:
-            production: 10
-            adjusted: 10
+            production: 0
+            adjusted: 0
           DFCI:
             production: 300
             adjusted: 300
@@ -521,11 +521,12 @@ phase:
             production: 0
             adjusted: 0
           GRCC:
-            production: 102
-            adjusted: 102
+            production: 2
+            adjusted: 2
+            pressure: 1
           JHU:
-            production: 462
-            adjusted: 462
+            production: 139
+            adjusted: 139
           MSK:
             production: 500
             adjusted: 500
@@ -533,8 +534,8 @@ phase:
             production: 103
             adjusted: 103
           UCHI:
-            production: 10
-            adjusted: 10
+            production: 0
+            adjusted: 0
           UCSF:
             production: 103
             adjusted: 103
@@ -542,8 +543,9 @@ phase:
             production: 40
             adjusted: 40
           VHIO:
-            production: 51
-            adjusted: 51
+            production: 3
+            adjusted: 3
+            pressure: 1
           VICC:
             production: 103
             adjusted: 103
