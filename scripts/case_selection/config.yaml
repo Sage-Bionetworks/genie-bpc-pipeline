@@ -68,18 +68,30 @@ default:
     COLU:
       pressure: 10
       seed: 342
+    CRUK:
+      pressure: 10
+      seed: 23425
     DFCI: 
       pressure: 15
       seed: 58029
     DUKE:
       pressure: 10
       seed: 37383
+    GRCC:
+      pressure: 10
+      seed: 943321
+    JHU:
+      pressure: 10
+      seed: 83782
     MSK:
       pressure: 15
       seed: 7
     PROV:
       pressure: 10
       seed: 88830
+    UCHI:
+      pressure: 10
+      seed: 717112
     UCSF:
       pressure: 10
       seed: 65379
@@ -89,6 +101,9 @@ default:
     VICC:
       pressure: 10
       seed: 992
+    VHIO:
+      pressure: 10
+      seed: 5509
 phase:
   1:
     cohort: 
