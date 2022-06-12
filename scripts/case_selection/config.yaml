@@ -362,12 +362,12 @@ phase:
             date: 
               seq_min: Jan-2017
               seq_max: Dec-2019
-          VICC:
-            production: 210
-            adjusted: 210
           VHIO:
             production: 51
             adjusted: 51
+          VICC:
+            production: 210
+            adjusted: 210
         date: 
           seq_min: Jan-2018
           seq_max: Dec-2019
@@ -504,25 +504,46 @@ phase:
             - LGSOC
       MELANOMA:
         name: MELANOMA
-        site: 
+        site:
+          CHOP:
+            production: 10
+            adjusted: 10
+          COLU:
+            production: 410
+            adjusted: 410
+          CRUK:
+            production: 10
+            adjusted: 10
           DFCI:
             production: 300
             adjusted: 300
           DUKE:
             production: 0
             adjusted: 0
+          GRCC:
+            production: 102
+            adjusted: 102
+          JHU:
+            production: 462
+            adjusted: 462
           MSK:
             production: 500
             adjusted: 500
           PROV:
             production: 103
             adjusted: 103
+          UCHI:
+            production: 10
+            adjusted: 10
           UCSF:
             production: 103
             adjusted: 103
           UHN:
             production: 40
             adjusted: 40
+          VHIO:
+            production: 51
+            adjusted: 51
           VICC:
             production: 103
             adjusted: 103
