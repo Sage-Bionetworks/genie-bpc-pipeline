@@ -536,25 +536,47 @@ phase:
             - MEL
       ESOPHAGO:
         name: ESOPHAGO
-        site: 
+        site:
+          CHOP:
+            production: 0
+            adjusted: 0
+          COLU:
+            production: 50
+            adjusted: 50
+          CRUK:
+            production: 0
+            adjusted: 0
           DFCI:
             production: 315
             adjusted: 315
           DUKE:
             production: 90
             adjusted: 90
+          GRCC:
+            production: 52
+            adjusted: 52
+          JHU:
+            production: 31
+            adjusted: 31
           MSK:
             production: 515
             adjusted: 515
           PROV:
             production: 60
             adjusted: 60
+          UCHI:
+            production: 1
+            adjusted: 1
+            pressure: 0
           UCSF:
             production: 45
             adjusted: 45
           UHN:
             production: 100
             adjusted: 100
+          VHIO:
+            production: 90
+            adjusted: 90
           VICC:
             production: 79
             adjusted: 79
