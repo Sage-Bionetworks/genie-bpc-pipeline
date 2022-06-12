@@ -390,19 +390,38 @@ phase:
             - NSCLC
       CRC:
         name: CRC
-        site: 
+        site:
+          CHOP:
+            production: 0
+            adjusted: 0
+          COLU:
+            production: 492
+            adjusted: 492
+          CRUK:
+            production: 0
+            adjusted: 0
           DFCI:
             production: 300
             adjusted: 300
           DUKE:
             production: 135
             adjusted: 135
+          GRCC:
+            pressure: 2
+            production: 12
+            adjusted: 12
+          JHU:
+            production: 286
+            adjusted: 286
           MSK:
             production: 500
             adjusted: 500
           PROV:
             production: 135
             adjusted: 135
+          UCHI:
+            production: 0
+            adjusted: 0
           UCSF:
             production: 60
             adjusted: 60
@@ -418,6 +437,9 @@ phase:
             date: 
               seq_min: Apr-2014
               seq_max: Dec-2020
+          VHIO:
+            production: 234
+            adjusted: 234
         date: 
           seq_min: Jan-2018
           seq_max: Dec-2020
