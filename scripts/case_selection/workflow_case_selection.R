@@ -68,6 +68,13 @@ file_add <- tolower(glue("{cohort}_{site}_phase{phase}_samples.csv"))
 # synapse
 synid_folder_output <- get_folder_synid_from_path(synid_folder_root = config$synapse$ids$id, 
                                                   path = glue("{cohort}/{site}"))
+# Create cohort center folder if the folder doesn't exist
+if (is.na(synid_folder_output)) {
+  cohort_folder_synid = get_folder_synid_from_path(synid_folder_root = config$synapse$ids$id,
+                                                   path = cohort)
+  ent_folder = synStore(Folder(site, parentId=cohort_folder_synid))
+  synid_folder_output = ent_folder$properties$id
+}
 
 # provenance exec
 prov_exec_selection <- "https://github.com/Sage-Bionetworks/Genie_processing/blob/master/bpc/case_selection/perform_case_selection.R"
