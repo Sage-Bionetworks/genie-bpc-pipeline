@@ -323,6 +323,9 @@ phase:
           COLU:
             production: 410
             adjusted: 410
+          CRUK:
+            production: 0
+            adjusted: 0
           DFCI:
             production: 410
             adjusted: 410
@@ -332,12 +335,21 @@ phase:
             date:
               seq_min: Jul-2017
               seq_max: Dec-2019
+          GRCC:
+            production: 102
+            adjusted: 102
+          JHU:
+            production: 462
+            adjusted: 462
           MSK:
             production: 615
             adjusted: 615
           PROV:
             production: 210
             adjusted: 210
+          UCHI:
+            production: 0
+            adjusted: 0
           UCSF:
             production: 100
             adjusted: 100
@@ -353,6 +365,9 @@ phase:
           VICC:
             production: 210
             adjusted: 210
+          VHIO:
+            production: 51
+            adjusted: 51
         date: 
           seq_min: Jan-2018
           seq_max: Dec-2019
