@@ -431,25 +431,49 @@ phase:
             - SRCCR
       RENAL:
         name: RENAL
-        site: 
+        site:
+          CHOP:
+            production: 0
+            adjusted: 0
+          COLU:
+            production: 3
+            adjusted: 3
+            pressure: 1
+          CRUK:
+            production: 0
+            adjusted: 0
           DFCI:
             production: 400
             adjusted: 400
           DUKE:
             production: 30
             adjusted: 30
+          GRCC:
+            production: 19
+            adjusted: 19
+          JHU:
+            production: 1
+            adjusted: 1
+            pressure: 0
           MSK:
             production: 600
             adjusted: 600
           PROV:
             production: 45
             adjusted: 45
+          UCHI:
+            production: 4
+            adjusted: 4
+            pressure: 1
           UCSF:
             production: 46
             adjusted: 46
           UHN:
             production: 40
             adjusted: 40
+          VHIO:
+            production: 14
+            adjusted: 14
           VICC:
             production: 56
             adjusted: 56
