@@ -467,23 +467,45 @@ phase:
             - CCPRC
       OVARIAN:
         name: OVARIAN
-        site: 
+        site:
+          CHOP:
+            production: 0
+            adjusted: 0
+          COLU:
+            production: 0
+            adjusted: 0
+          CRUK:
+            production: 0
+            adjusted: 0
           DFCI:
             production: 300
             adjusted: 300
           DUKE:
             production: 80
             adjusted: 80
+          GRCC:
+            production: 16
+            adjusted: 16
+          JHU:
+            production: 2
+            adjusted: 2
+            pressure: 1
           MSK:
             production: 500
             adjusted: 500
           PROV:
             production: 65
             adjusted: 65
+          UCHI:
+            production: 0
+            adjusted: 0
           UCSF:
             production: 80
             adjusted: 80
           UHN:
+            production: 80
+            adjusted: 80
+          VHIO:
             production: 80
             adjusted: 80
           VICC:
