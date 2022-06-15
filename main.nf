@@ -12,16 +12,19 @@ ch_synapse_config = params.synapse_config ? Channel.value(file(params.synapse_co
 Check cohort code is one of the valid values.
 */
 process checkCohortCode {
-    input:
-    val cohort from ch_cohort
 
-    output:
-    stdout into outCheckCohortCode
+   container 'alpine:3.16.0'
 
-    script:
-    """
-    echo $cohorts | tr ' ' '\n' | grep -c ^$cohort\$
-    """
+   input:
+   val cohort from ch_cohort
+
+   output:
+   stdout into outCheckCohortCode
+
+   script:
+   """
+   echo $cohorts | tr ' ' '\n' | grep -c ^$cohort\$
+   """
 }
 
 /*
