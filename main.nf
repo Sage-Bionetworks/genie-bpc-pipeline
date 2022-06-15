@@ -8,24 +8,25 @@ ch_cohort = Channel.value(params.cohort)
 ch_comment = Channel.value(params.comment)
 ch_synapse_config = params.synapse_config ? Channel.value(file(params.synapse_config)) : "null"
 
+// TODO: Use groovy to validate
 /*
 Check cohort code is one of the valid values.
 */
-process checkCohortCode {
+// process checkCohortCode {
 
-   container 'debian:buster-slim'
+//    container 'debian:buster-slim'
 
-   input:
-   val cohort from ch_cohort
+//    input:
+//    val cohort from ch_cohort
 
-   output:
-   stdout into outCheckCohortCode
+//    output:
+//    stdout into outCheckCohortCode
 
-   script:
-   """
-   echo $cohorts | tr ' ' '\n' | grep -c ^$cohort\$
-   """
-}
+//    script:
+//    """
+//    echo $cohorts | tr ' ' '\n' | grep -c ^$cohort\$
+//    """
+// }
 
 /*
 Run quality asssurance checklist for the upload report at error level.  
@@ -37,7 +38,7 @@ process quacUploadReportError {
    secret 'SYNAPSE_AUTH_TOKEN'
 
    input:
-   val previous from outCheckCohortCode
+   // val previous from outCheckCohortCode
    file syn_config   from ch_synapse_config
    val cohort        from ch_cohort
 
