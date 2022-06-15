@@ -13,7 +13,7 @@ Check cohort code is one of the valid values.
 */
 process checkCohortCode {
 
-   container 'alpine:3.16.0'
+   container 'debian:buster-slim'
 
    input:
    val cohort from ch_cohort
