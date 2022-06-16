@@ -4,29 +4,13 @@ params.cohort = 'NSCLC'
 params.comment = 'NSCLC public release update'
 params.synapse_config = false  // Default
 
+// Check if cohort is part of allowed cohort list
+def allowed_cohorts = ["BLADDER", "BrCa", "CRC", "NSCLC", "PANC", "Prostate"]
+if (!allowed_cohorts.contains(params.cohort)) {exit 1, 'Invalid cohort name'}
+
 ch_cohort = Channel.value(params.cohort)
 ch_comment = Channel.value(params.comment)
 ch_synapse_config = params.synapse_config ? Channel.value(file(params.synapse_config)) : "null"
-
-// TODO: Use groovy to validate
-/*
-Check cohort code is one of the valid values.
-*/
-// process checkCohortCode {
-
-//    container 'debian:buster-slim'
-
-//    input:
-//    val cohort from ch_cohort
-
-//    output:
-//    stdout into outCheckCohortCode
-
-//    script:
-//    """
-//    echo $cohorts | tr ' ' '\n' | grep -c ^$cohort\$
-//    """
-// }
 
 /*
 Run quality asssurance checklist for the upload report at error level.  
