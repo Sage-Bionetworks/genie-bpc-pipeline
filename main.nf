@@ -32,10 +32,12 @@ process quacUploadReportError {
    script:
    if ( params.synapse_config ) {
       """
+      cd /usr/local/src/myscripts/
       Rscript genie-bpc-quac.R -c $cohort -s all -r upload -l error -v -a $syn_config
       """
    } else {
       """
+      cd /usr/local/src/myscripts/
       Rscript genie-bpc-quac.R -c $cohort -s all -r upload -l error -v
       """
    }
@@ -62,10 +64,12 @@ process quacUploadReportWarning {
    script:
    if ( params.synapse_config ) {
       """
+      cd /usr/local/src/myscripts/
       Rscript genie-bpc-quac.R -c $cohort -s all -r upload -l warning -u -v -a $syn_config
       """
    } else {
       """
+      cd /usr/local/src/myscripts/
       Rscript genie-bpc-quac.R -c $cohort -s all -r upload -l warning -u -v
       """
    }
@@ -92,10 +96,12 @@ process mergeAndUncodeRcaUploads {
    script:
    if ( params.synapse_config ) {
       """
+      cd /usr/local/src/myscripts/
       Rscript merge_and_uncode_rca_uploads.R -c $cohort -u -a $syn_config -v
       """
    } else {
       """
+      cd /usr/local/src/myscripts/
       Rscript merge_and_uncode_rca_uploads.R -c $cohort -u -v
       """
    }
@@ -122,10 +128,12 @@ process tmpRemovePatientsFromMerged {
    script:
    if ( params.synapse_config ) {
       """
+      cd /usr/local/src/myscripts/
       Rscript remove_patients_from_merged.R -c $cohort -a $syn_config -v
       """
    } else {
       """
+      cd /usr/local/src/myscripts/
       Rscript remove_patients_from_merged.R -c $cohort -v
       """
    }
@@ -152,10 +160,12 @@ process updateDataTable {
    script:
    if ( params.synapse_config ) {
       """
+      cd /root/scripts/
       python update_data_table.py -s $syn_config -p /root/scripts/config.json -m $comment primary
       """
    } else {
       """
+      cd /root/scripts/
       python update_data_table.py -p /root/scripts/config.json -m $comment primary
       """
    }
@@ -184,10 +194,12 @@ process updateDateTrackingTable {
    script:
    if ( params.synapse_config ) {
       """
+      cd /usr/local/src/myscripts/
       Rscript update_date_tracking_table.R -c $cohort -d `date +'%Y-%m-%d'` -s $comment -a $syn_config
       """
    } else {
       """
+      cd /usr/local/src/myscripts/
       Rscript update_date_tracking_table.R -c $cohort -d `date +'%Y-%m-%d'` -s $comment
       """
    }
@@ -215,11 +227,13 @@ process quacTableReport {
    script:
    if ( params.synapse_config ) {
       """
+      cd /usr/local/src/myscripts/
       Rscript genie-bpc-quac.R -c $cohort -s all -r table -l error -u -v -a $syn_config
       Rscript genie-bpc-quac.R -c $cohort -s all -r table -l warning -u -v -a $syn_config
       """
    } else {
       """
+      cd /usr/local/src/myscripts/
       Rscript genie-bpc-quac.R -c $cohort -s all -r table -l error -u -v
       Rscript genie-bpc-quac.R -c $cohort -s all -r table -l warning -u -v
       """
@@ -247,11 +261,13 @@ process quacComparisonReport {
    script:
    if ( params.synapse_config ) {
       """
+      cd /usr/local/src/myscripts/
       Rscript genie-bpc-quac.R -c $cohort -s all -r comparison -l error -u -v -a $syn_config
       Rscript genie-bpc-quac.R -c $cohort -s all -r comparison -l warning -u -v -a $syn_config
       """
    } else {
       """
+      cd /usr/local/src/myscripts/
       Rscript genie-bpc-quac.R -c $cohort -s all -r comparison -l error -u -v
       Rscript genie-bpc-quac.R -c $cohort -s all -r comparison -l warning -u -v
       """
@@ -279,11 +295,12 @@ process maskingReport {
    script:
    if ( params.synapse_config ) {
       """
+      cd /usr/local/src/myscripts/
       Rscript workflow_unmasked_drugs.R -c $cohort -d `date +'%Y-%m-%d'` -s -a $syn_config
       """
    } else {
       """
-
+      cd /usr/local/src/myscripts/
       Rscript workflow_unmasked_drugs.R -c $cohort -d `date +'%Y-%m-%d'` -s
       """
    }
@@ -311,10 +328,12 @@ process updateCaseCountTable {
    script:
    if ( params.synapse_config ) {
       """
+      cd /usr/local/src/myscripts/
       Rscript update_case_count_table.R -s -c $comment -a $syn_config
       """
    } else {
       """
+      cd /usr/local/src/myscripts/
       Rscript update_case_count_table.R -s -c $comment
       """
    }
