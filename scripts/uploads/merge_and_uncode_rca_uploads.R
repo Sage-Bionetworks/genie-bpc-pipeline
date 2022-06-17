@@ -37,8 +37,8 @@ option_list <- list(
               help=glue("BPC cohort (choices: {cohorts_str}, {config$misc$all})")),
   make_option(c("-u", "--save_synapse"), action="store_true", default = FALSE, 
               help="Save output to Synapse"),
-  make_option(c("-a", "--synapse_auth"), type = "character", default = "~/.synapseConfig", 
-              help="Path to .synapseConfig file or Synapse PAT (default: '~/.synapseConfig')"),
+  make_option(c("-a", "--synapse_auth"), type = "character", default = NA,
+              help="Path to .synapseConfig file or Synapse PAT (default: normal synapse login behavior)"),
   make_option(c("-v", "--verbose"), action="store_true", default = FALSE, 
               help="Print out verbose output on script progress")
 )

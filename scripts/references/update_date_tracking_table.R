@@ -27,8 +27,8 @@ option_list <- list(
               help="New current date for cohort"),
   make_option(c("-s", "--save_comment"), type = "character", 
               help="Save table snapshot to Synapse with supplied comment"),
-  make_option(c("-a", "--synapse_auth"), type = "character", default = "~/.synapseConfig", 
-              help="Path to .synapseConfig file or Synapse PAT (default: '~/.synapseConfig')")
+  make_option(c("-a", "--synapse_auth"), type = "character", default = NA,
+              help="Path to .synapseConfig file or Synapse PAT (default: normal synapse login behavior)")
 )
 opt <- parse_args(OptionParser(option_list=option_list))
 waitifnot(!is.null(opt$cohort) && !is.null(opt$date),

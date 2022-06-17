@@ -26,8 +26,8 @@ option_list <- list(
               help="Save updated counts on Synapse"),
   make_option(c("-c", "--comment"), type = "character",
               help="Comment for new table snapshot version"),
-  make_option(c("-a", "--synapse_auth"), type = "character", default = "~/.synapseConfig", 
-              help="Path to .synapseConfig file or Synapse PAT (default: '~/.synapseConfig')")
+  make_option(c("-a", "--synapse_auth"), type = "character", default = NA,
+              help="Path to .synapseConfig file or Synapse PAT (default: normal synapse login behavior")
 )
 opt <- parse_args(OptionParser(option_list=option_list))
 

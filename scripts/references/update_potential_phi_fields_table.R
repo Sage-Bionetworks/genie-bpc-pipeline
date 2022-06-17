@@ -15,7 +15,7 @@ option_list <- list(
   make_option(c("-t", "--synid_table_red"), type = "character",
               help="Synapse ID of table listing variables to redact (default: syn23281483)", default = "syn23281483"),
   make_option(c("-a", "--auth"), type = "character",
-              help="path to .synapseConfig or Synapse PAT (default: standard login precedence)", default = NA)
+              help="path to .synapseConfig or Synapse PAT (default: normal synapse login behavior)", default = NA)
 )
 opt <- parse_args(OptionParser(option_list=option_list))
 

@@ -47,8 +47,8 @@ option_list <- list(
               help="Upload date for folder labels"),
   make_option(c("-s", "--save_synapse"), action="store_true", default=FALSE,
               help="Save output to Synapse"),
-  make_option(c("-a", "--synapse_auth"), type = "character", default = "~/.synapseConfig", 
-              help="Path to .synapseConfig file or Synapse PAT (default: '~/.synapseConfig')")
+  make_option(c("-a", "--synapse_auth"), type = "character", default = NA,
+              help="Path to .synapseConfig file or Synapse PAT (default: normal synapse login behavior")
 )
 
 # user arguments
