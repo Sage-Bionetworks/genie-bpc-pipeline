@@ -18,3 +18,4 @@ RUN R -e "remotes::install_github('rstudio/renv@${RENV_VERSION}')"
 
 COPY . .
 
+RUN R -e "renv::restore()"
