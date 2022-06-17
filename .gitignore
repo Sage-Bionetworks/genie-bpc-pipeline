@@ -3,3 +3,4 @@ work/
 .nextflow/
 bin/.synapseConfig
 .Rproj.user
+*/renv/library
