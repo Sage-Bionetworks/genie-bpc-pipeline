@@ -480,7 +480,8 @@ synLogin <- function(auth = NA, silent = T) {
 
 # synapse login -------------------
 
-login_status <- synLogin(auth = auth)
+#login_status <- synLogin(auth = auth)
+synapser::synLogin()
 
 # query and compute -------------------------------------------------
 
