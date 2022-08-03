@@ -7,7 +7,7 @@ The describe below generate the non-PHI REDCap data dictionaries and import temp
 Clone this repository and navigate to the directory:
 ```
 git clone git@github.com:Sage-Bionetworks/genie-bpc-pipeline.git
-cd genie-bpc-pipeline/bpc/dd
+cd genie-bpc-pipeline/scripts/dd
 ```
 
 Install all required R packages:
