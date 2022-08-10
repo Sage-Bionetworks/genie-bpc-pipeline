@@ -297,8 +297,8 @@ phase:
         name: NSCLC
         site: 
           DFCI:
-            production: 410
-            adjusted: 410
+            production: 775
+            adjusted: 775
           DUKE:
             production: 210
             adjusted: 210
@@ -306,8 +306,8 @@ phase:
               seq_min: Jul-2017
               seq_max: Dec-2019
           MSK:
-            production: 615
-            adjusted: 615
+            production: 980
+            adjusted: 980
           PROV:
             production: 210
             adjusted: 210
