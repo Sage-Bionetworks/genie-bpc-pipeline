@@ -29,7 +29,7 @@ TABLE_INFO = {"primary": ('syn23285911',"data_type='data'"),
 
 def _store_data(syn, table_id, label_data, table_type, logger, dry_run):
     table_schema = syn.get(table_id)
-    logger.info("Updating table: %s " % table_schema.name)
+    logger.info(f"Updating table: {table_schema.name} {table_id}")
     form_label = table_schema.form_label[0]
     table_columns = syn.getColumns(table_schema.columnIds)
     table_columns = [col['name'] for col in list(table_columns)]
