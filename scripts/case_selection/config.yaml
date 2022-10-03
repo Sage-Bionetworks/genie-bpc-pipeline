@@ -155,10 +155,10 @@ phase:
         site:
           DFCI:
             production: 570
-            adjusted: 570
+            adjusted: 568
           MSK:
             production: 705
-            adjusted: 705
+            adjusted: 704
           UHN:
             production: 0
             adjusted: 0
@@ -181,7 +181,7 @@ phase:
         site:
           DFCI:
             production: 713
-            adjusted: 710
+            adjusted: 711
           MSK:
             production: 881
             adjusted: 881
@@ -297,23 +297,23 @@ phase:
         name: NSCLC
         site: 
           DFCI:
-            production: 410
-            adjusted: 410
+            production: 760
+            adjusted: 760
           DUKE:
-            production: 210
-            adjusted: 210
+            production: 0
+            adjusted: 0
             date:
               seq_min: Jul-2017
               seq_max: Dec-2019
           MSK:
-            production: 615
-            adjusted: 615
+            production: 965
+            adjusted: 965
           PROV:
-            production: 210
-            adjusted: 210
+            production: 0
+            adjusted: 0
           UCSF:
-            production: 100
-            adjusted: 100
+            production: 0
+            adjusted: 0
             date:
               seq_min: Oct-2016
               seq_max: Dec-2019
@@ -350,20 +350,20 @@ phase:
         name: CRC
         site: 
           DFCI:
-            production: 300
-            adjusted: 300
+            production: 532
+            adjusted: 532
           DUKE:
-            production: 135
-            adjusted: 135
+            production: 0
+            adjusted: 0
           MSK:
-            production: 500
-            adjusted: 500
+            production: 733
+            adjusted: 733
           PROV:
-            production: 135
-            adjusted: 135
+            production: 0
+            adjusted: 0
           UCSF:
-            production: 60
-            adjusted: 60
+            production: 0
+            adjusted: 0
           UHN:
             production: 110
             adjusted: 110
@@ -403,14 +403,14 @@ phase:
             production: 45
             adjusted: 45
           UCSF:
-            production: 46
-            adjusted: 46
+            production: 62
+            adjusted: 62
           UHN:
-            production: 40
-            adjusted: 40
+            production: 42
+            adjusted: 42
           VICC:
-            production: 56
-            adjusted: 56
+            production: 71
+            adjusted: 71
         date: 
           seq_min: Apr-2012
           seq_max: Jun-2020
@@ -514,8 +514,8 @@ phase:
             production: 100
             adjusted: 100
           VICC:
-            production: 79
-            adjusted: 79
+            production: 80
+            adjusted: 80
         date: 
           seq_min: Apr-2012
           seq_max: Dec-2021
