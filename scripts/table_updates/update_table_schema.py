@@ -6,9 +6,9 @@ from functools import reduce
 
 from utilities import *
 
-TABLE_INFO = {"sage": ('syn23285911',"data_type='data'"),
-              "bpc": ('syn21446696',"double_curated is false"),
-              "irr": ('syn21446696',"double_curated is true")}
+TABLE_INFO = {"sage": ('syn23285911',"table_type='data'"),
+              "bpc": ('syn21446696',"table_type='data' and double_curated is false"),
+              "irr": ('syn21446696',"table_type='data' and double_curated is true")}
 
 def copy_table_schema(syn, from_table_id, to_table_id):
     """
