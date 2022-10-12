@@ -24,8 +24,8 @@ import numpy
 
 from utilities import *
 
-TABLE_INFO = {"primary": ('syn23285911',"data_type='data'"),
-              "irr": ('syn21446696',"double_curated is true")}
+TABLE_INFO = {"primary": ('syn23285911',"table_type='data'"),
+              "irr": ('syn21446696',"table_type='data' and double_curated is true")}
 
 def _store_data(syn, table_id, label_data, table_type, logger, dry_run):
     table_schema = syn.get(table_id)
@@ -295,7 +295,7 @@ def main():
     # get master table
     table_id, condition = list(TABLE_INFO[table_type])
     master_table = download_synapse_table(syn, table_id, condition)
-    TABLE_INFO["redacted"] = ('syn21446696',"double_curated is false")
+    TABLE_INFO["redacted"] = ('syn21446696',"table_type='data' and double_curated is false")
     
    # download data files 
    # TODO: find the cohort that has new data
