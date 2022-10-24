@@ -1,7 +1,7 @@
 # Description: Perform BPC case selection by first constructing an eligibility matrix
 #   and then returning all records that fit the eligibility criteria.  Also, sample
 #   the requested number of SDV and IRR cases.  
-# Author: Haley Hunter-Zinck
+# Author: Haley Hunter-Zinck, Xindi Guo
 # Date: 2021-09-22
 
 # pre-setup --------------------------
@@ -68,7 +68,8 @@ synLogin()
 # set random seed
 default_site_seed <- config$default$site[[site]]$seed
 cohort_site_seed <- config$phase[[phase]]$cohort[[cohort]]$site[[site]]$seed
-set.seed(seed = if (!is.null(cohort_site_seed)) cohort_site_seed else default_site_seed)
+site_seed <- if (!is.null(cohort_site_seed)) cohort_site_seed else default_site_seed
+set.seed(site_seed)
 
 # output files
 file_matrix <- tolower(glue("{cohort}_{site}_phase{phase}_eligibility_matrix.csv"))
@@ -163,7 +164,8 @@ get_eligibility_data <- function(synid_table_patient, synid_table_sample, site) 
   # read table data
   patient_data <- as.data.frame(synTableQuery(query = glue("SELECT PATIENT_ID, 
                                                                   CENTER,
-                                                                  YEAR_DEATH
+                                                                  YEAR_DEATH,
+                                                                  INT_CONTACT
                                                                   FROM {synid_table_patient}"),
                                              includeRowIdAndRowVersion = F)) 
   sample_data <- as.data.frame(synTableQuery(query = glue("SELECT PATIENT_ID, 
@@ -187,7 +189,8 @@ get_eligibility_data <- function(synid_table_patient, synid_table_sample, site) 
            SEQ_DATE, 
            AGE_AT_SEQ_REPORT,
            SEQ_YEAR,
-           YEAR_DEATH)
+           YEAR_DEATH,
+           INT_CONTACT)
   
   return(data)
 }
@@ -223,7 +226,9 @@ create_eligibility_matrix <- function(data,
     mutate(FLAG_SEQ_DATE = my(SEQ_DATE) >= my(seq_min) & my(SEQ_DATE) <= my(seq_max)) %>%
     
     # patient was alive at sequencing
-    mutate(FLAG_SEQ_ALIVE = !is_double(YEAR_DEATH) | YEAR_DEATH >= SEQ_YEAR)  %>% 
+    mutate(FLAG_SEQ_ALIVE_YR = !is_double(YEAR_DEATH) | YEAR_DEATH >= SEQ_YEAR)  %>% 
+
+    mutate(SEQ_ALIVE_INT = !is_double(INT_CONTACT) | INT_CONTACT >= AGE_AT_SEQ_REPORT) %>%
     
     # patient not explicitly excluded
     mutate(FLAG_NOT_EXCLUDED = !is.element(PATIENT_ID, exclude_patient_id) & !is.element(SAMPLE_ID, exclude_sample_id))  %>% 
@@ -232,13 +237,15 @@ create_eligibility_matrix <- function(data,
            SAMPLE_ID, 
            ONCOTREE_CODE, 
            AGE_AT_SEQ_REPORT,
+           INT_CONTACT,
            SEQ_DATE,
            SEQ_YEAR,
            YEAR_DEATH,
+           SEQ_ALIVE_INT,
            FLAG_ALLOWED_CODE, 
            FLAG_ADULT, 
            FLAG_SEQ_DATE, 
-           FLAG_SEQ_ALIVE,
+           FLAG_SEQ_ALIVE_YR,
            FLAG_NOT_EXCLUDED)         
   
   return(mat)
@@ -263,8 +270,9 @@ get_eligible_cohort <- function(x, randomize = T) {
   eligible <- as.data.frame(mod %>%
     filter(flag_eligible) %>% 
     group_by(PATIENT_ID) %>%
-    summarize(SAMPLE_IDS = paste0(SAMPLE_ID, collapse = ";")) %>%
-    select(PATIENT_ID, SAMPLE_IDS))
+    summarize(SAMPLE_IDS = paste0(SAMPLE_ID, collapse = ";"), 
+              review = !all(SEQ_ALIVE_INT))%>%
+    select(PATIENT_ID, SAMPLE_IDS, review))
   
   if (nrow(eligible) == 0) {
     stop(glue("Number of eligible samples for phase {phase} {site} {cohort} is 0.  Please revise eligibility criteria."))
@@ -276,11 +284,11 @@ get_eligible_cohort <- function(x, randomize = T) {
     final <- eligible %>%
         sample_n(size = nrow(eligible)) %>%
         mutate(order = c(1:nrow(eligible))) %>%
-        select(order, PATIENT_ID, SAMPLE_IDS)
+        select(order, PATIENT_ID, SAMPLE_IDS, review)
   } else {
     final <- eligible %>%
         mutate(order = c(1:nrow(eligible))) %>%
-        select(order, PATIENT_ID, SAMPLE_IDS) 
+        select(order, PATIENT_ID, SAMPLE_IDS, review) 
   }
   
   return(final)
@@ -296,12 +304,14 @@ create_selection_matrix <- function(eligible_cohort, n_prod, n_pressure, n_sdv, 
   
   # randomly disperse additional SDV cases among non-pressure
   col_sdv <- rep("", n_eligible)
+  set.seed(site_seed)
   idx_sdv <- sample((n_pressure+1):n_prod, n_sdv)
   col_sdv[1:n_pressure] <- "sdv"
   col_sdv[idx_sdv] <- "sdv"
   
   # randomly disperse addition IRR cases among non-pressure and non-sdv
   col_irr <- rep("", n_eligible)
+  set.seed(site_seed)
   idx_irr <- sample(setdiff((n_pressure+1):n_prod, idx_sdv), n_irr)
   col_irr[idx_irr] <- "irr"
   
@@ -310,7 +320,7 @@ create_selection_matrix <- function(eligible_cohort, n_prod, n_pressure, n_sdv, 
     mutate(sdv = col_sdv) %>%
     mutate(irr = col_irr) %>%
     mutate(category = c(rep("production", n_prod), rep("extra", n_eligible - n_prod))) %>%
-    select(order, PATIENT_ID, SAMPLE_IDS, pressure, sdv, irr, category)
+    select(order, PATIENT_ID, SAMPLE_IDS, pressure, sdv, irr, category, review)
   
   return(categorized_cohort)
 }
@@ -368,7 +378,7 @@ if (flag_additional) {
   
   added_sam <- eligible_cohort %>% 
     filter(is.element(PATIENT_ID, unlist(bpc_pat_ids))) %>%
-    select(PATIENT_ID, SAMPLE_IDS)
+    select(PATIENT_ID, SAMPLE_IDS, review)
   
   added_sam$ALREADY_IN_BPC <- rep(F, nrow(added_sam))
   if (nrow(added_sam)) {
@@ -423,6 +433,7 @@ if (debug && flag_additional) {
   print(glue("  Number of pressure cases: {get_pressure(config, phase, cohort, site)}"))
   print(glue("  Number of SDV cases (excluding pressure): {get_sdv(config, phase, cohort, site)}"))
   print(glue("  Number of IRR cases: {get_irr(config, phase, cohort, site)}"))
+  print(glue("  Number of patients need to be reviewed: {sum(eligible_cohort$review)}"))
   print(glue("Outfiles: {file_matrix}, {file_selection}"))
 }
 
