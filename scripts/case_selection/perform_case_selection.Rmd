@@ -90,9 +90,8 @@ Eligible samples are defined with following criteria:
 3. Sample was sequenced between allowed date range
     * Minimum sequencing date: `r config$phase[[phase]]$cohort[[cohort]]$date$seq_min`
     * Maximum sequencing date: `r config$phase[[phase]]$cohort[[cohort]]$date$seq_max`
-4. Patient was sequenced in the year of death or before. _(Patient with last contact int before age of sequencing needs to be reviewed by the QA manager)_
-5. Patient was not already included in the cohort in a previous BPC release.
-6. Patient or sample was not previously excluded for quality control or other reasons.
+4. Patient was not already included in the cohort in a previous BPC release.
+5. Patient or sample was not previously excluded for quality control or other reasons.
 
 ```{r eligibility}
 
@@ -111,7 +110,6 @@ Eligible cases fall into the following categories:
     * sdv: cases that undergo source data verification (SDV).  note: all pressure cases undergo SDV and the total number of cases required for SDV includes the pressure cases
     * pressure: pressure cases that also undergo source data verification (SDV)
     * irr: cases that undergo double abstraction to calculate inter-rater reliability (IRR) 
-    * review: cases that need to be reviewed by QA manager due to last contact before age of sequencing
 * extra: extra eligible cases not included in the production cohort
 
 ```{r categories}
@@ -120,7 +118,6 @@ print(glue("Target number of SDV cases (including pressure): {case_selection %>%
 print(glue("Target number of pressure cases: {case_selection %>% filter(pressure == 'pressure') %>% count()}"))
 print(glue("Target number of IRR cases: {case_selection %>% filter(irr == 'irr') %>% count()}"))
 print(glue("Extra eligible cases: {case_selection %>% filter(category == 'extra') %>% count()}"))
-print(glue("Cases to be reviewed: {sum(case_selection$review)}"))
 ```
 
 # Potential codes 

@@ -226,7 +226,7 @@ create_eligibility_matrix <- function(data,
     mutate(FLAG_SEQ_DATE = my(SEQ_DATE) >= my(seq_min) & my(SEQ_DATE) <= my(seq_max)) %>%
     
     # patient was alive at sequencing
-    mutate(FLAG_SEQ_ALIVE_YR = !is_double(YEAR_DEATH) | YEAR_DEATH >= SEQ_YEAR)  %>% 
+    mutate(SEQ_ALIVE_YR = !is_double(YEAR_DEATH) | YEAR_DEATH >= SEQ_YEAR)  %>% 
 
     mutate(SEQ_ALIVE_INT = !is_double(INT_CONTACT) | INT_CONTACT >= AGE_AT_SEQ_REPORT) %>%
     
@@ -245,7 +245,7 @@ create_eligibility_matrix <- function(data,
            FLAG_ALLOWED_CODE, 
            FLAG_ADULT, 
            FLAG_SEQ_DATE, 
-           FLAG_SEQ_ALIVE_YR,
+           SEQ_ALIVE_YR,
            FLAG_NOT_EXCLUDED)         
   
   return(mat)
@@ -433,7 +433,6 @@ if (debug && flag_additional) {
   print(glue("  Number of pressure cases: {get_pressure(config, phase, cohort, site)}"))
   print(glue("  Number of SDV cases (excluding pressure): {get_sdv(config, phase, cohort, site)}"))
   print(glue("  Number of IRR cases: {get_irr(config, phase, cohort, site)}"))
-  print(glue("  Number of patients need to be reviewed: {sum(eligible_cohort$review)}"))
   print(glue("Outfiles: {file_matrix}, {file_selection}"))
 }
 
