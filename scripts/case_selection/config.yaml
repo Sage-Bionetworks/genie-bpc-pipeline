@@ -350,14 +350,14 @@ phase:
         name: CRC
         site: 
           DFCI:
-            production: 532
-            adjusted: 532
+            production: 564
+            adjusted: 564
           DUKE:
             production: 0
             adjusted: 0
           MSK:
-            production: 733
-            adjusted: 733
+            production: 765
+            adjusted: 765
           PROV:
             production: 0
             adjusted: 0
@@ -365,14 +365,14 @@ phase:
             production: 0
             adjusted: 0
           UHN:
-            production: 110
-            adjusted: 110
+            production: 141
+            adjusted: 141
             date:
               seq_min: Jul-2017
               seq_max: Dec-2020
           VICC:
-            production: 135
-            adjusted: 135
+            production: 40
+            adjusted: 40
         date: 
           seq_min: Jan-2018
           seq_max: Dec-2020
