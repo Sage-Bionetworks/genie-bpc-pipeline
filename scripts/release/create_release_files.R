@@ -333,7 +333,9 @@ if(release){
     message(glue("No files was found in the staging folder ({syn_id_staging_clinical}). Quitting..."))
     stop()
   }
-  synapserutils::copy(syn_id_staging_clinical, syn_id_release_folder, setProvenance='existing')
+  copy_files <- sapply(staging_files, function(x){
+    synapserutils::copy(x[['id']], syn_id_release_folder, setProvenance='existing')
+  })
 } else {
   # provenance
   act <- Activity(name = "BPC clinical files",
