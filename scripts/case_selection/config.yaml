@@ -368,7 +368,7 @@ phase:
             production: 141
             adjusted: 141
             date:
-              seq_min: Jul-2017
+              seq_min: Oct-2016
               seq_max: Dec-2020
           VICC:
             production: 40
