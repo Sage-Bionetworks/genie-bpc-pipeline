@@ -78,11 +78,17 @@ default:
       pressure: 10
       seed: 65379
     UHN: 
-      pressure: 10
+      pressure: 3
       seed: 123456
     VICC:
       pressure: 10
       seed: 992
+    VHIO:
+      pressure: 5
+      seed: 943
+    JHU:
+      pressure: 10
+      seed: 23498
 phase:
   1:
     cohort: 
@@ -444,6 +450,9 @@ phase:
           VICC:
             production: 75
             adjusted: 75
+          VHIO:
+            production: 70
+            adjusted: 70
         date: 
           seq_min: Jan-2014
           seq_max: Dec-2020
@@ -481,6 +490,9 @@ phase:
           VICC:
             production: 103
             adjusted: 103
+          JHU:
+            production: 103
+            adjusted: 103
         date: 
           seq_min: Oct-2017
           seq_max: Jun-2021
@@ -513,6 +525,9 @@ phase:
           VICC:
             production: 80
             adjusted: 80
+          VHIO:
+            production: 45
+            adjusted: 45
         date: 
           seq_min: Apr-2012
           seq_max: Dec-2021
