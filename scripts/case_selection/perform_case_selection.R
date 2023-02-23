@@ -270,9 +270,8 @@ get_eligible_cohort <- function(x, randomize = T) {
   eligible <- as.data.frame(mod %>%
     filter(flag_eligible) %>% 
     group_by(PATIENT_ID) %>%
-    summarize(SAMPLE_IDS = paste0(SAMPLE_ID, collapse = ";"), 
-              review = !all(SEQ_ALIVE_INT))%>%
-    select(PATIENT_ID, SAMPLE_IDS, review))
+    summarize(SAMPLE_IDS = paste0(SAMPLE_ID, collapse = ";"))%>%
+    select(PATIENT_ID, SAMPLE_IDS))
   
   if (nrow(eligible) == 0) {
     stop(glue("Number of eligible samples for phase {phase} {site} {cohort} is 0.  Please revise eligibility criteria."))
@@ -284,11 +283,11 @@ get_eligible_cohort <- function(x, randomize = T) {
     final <- eligible %>%
         sample_n(size = nrow(eligible)) %>%
         mutate(order = c(1:nrow(eligible))) %>%
-        select(order, PATIENT_ID, SAMPLE_IDS, review)
+        select(order, PATIENT_ID, SAMPLE_IDS)
   } else {
     final <- eligible %>%
         mutate(order = c(1:nrow(eligible))) %>%
-        select(order, PATIENT_ID, SAMPLE_IDS, review) 
+        select(order, PATIENT_ID, SAMPLE_IDS) 
   }
   
   return(final)
@@ -320,8 +319,7 @@ create_selection_matrix <- function(eligible_cohort, n_prod, n_pressure, n_sdv, 
     mutate(sdv = col_sdv) %>%
     mutate(irr = col_irr) %>%
     mutate(category = c(rep("production", n_prod), rep("extra", n_eligible - n_prod))) %>%
-    select(order, PATIENT_ID, SAMPLE_IDS, pressure, sdv, irr, category, review)
-  
+    select(order, PATIENT_ID, SAMPLE_IDS, pressure, sdv, irr, category)
   return(categorized_cohort)
 }
 
@@ -378,7 +376,7 @@ if (flag_additional) {
   
   added_sam <- eligible_cohort %>% 
     filter(is.element(PATIENT_ID, unlist(bpc_pat_ids))) %>%
-    select(PATIENT_ID, SAMPLE_IDS, review)
+    select(PATIENT_ID, SAMPLE_IDS)
   
   added_sam$ALREADY_IN_BPC <- rep(F, nrow(added_sam))
   if (nrow(added_sam)) {
