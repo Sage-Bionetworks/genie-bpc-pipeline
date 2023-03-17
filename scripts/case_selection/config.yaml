@@ -414,9 +414,15 @@ phase:
           VICC:
             production: 71
             adjusted: 71
+          JHU:
+            production: 0
+            adjusted: 0
+          VHIO:
+            production: 0
+            adjusted: 0
         date: 
-          seq_min: Apr-2012
-          seq_max: Jun-2020
+          seq_min: Jan-2012
+          seq_max: Oct-2021
         oncotree:
           root: RCC
           allowed_codes: 
@@ -438,6 +444,9 @@ phase:
           MSK:
             production: 500
             adjusted: 500
+          JHU:
+            production: 0
+            adjusted: 0
           PROV:
             production: 65
             adjusted: 65
@@ -455,7 +464,7 @@ phase:
             adjusted: 70
         date: 
           seq_min: Jan-2014
-          seq_max: Dec-2020
+          seq_max: Feb-2022
         oncotree:
           root: OVARY
           allowed_codes: 
@@ -493,9 +502,12 @@ phase:
           JHU:
             production: 103
             adjusted: 103
+          VHIO:
+            production: 0
+            adjusted: 0
         date: 
           seq_min: Oct-2017
-          seq_max: Jun-2021
+          seq_max: Oct-2022
         oncotree:
           root: MEL
           allowed_codes: 
@@ -528,9 +540,12 @@ phase:
           VHIO:
             production: 45
             adjusted: 45
+          JHU: 
+            production: 0
+            adjusted: 0
         date: 
           seq_min: Apr-2012
-          seq_max: Dec-2021
+          seq_max: Feb-2023
         oncotree:
           root: EGC
           allowed_codes: 
