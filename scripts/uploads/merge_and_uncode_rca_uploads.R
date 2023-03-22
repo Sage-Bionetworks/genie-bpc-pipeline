@@ -687,7 +687,7 @@ save_output_synapse <- function(cohort) {
                   prov_used = c(as.character(unlist(config$upload[[cohort]])), 
                                 synid_dd,
                                 config$synapse$grs$id),
-                  prov_exec = "https://github.com/Sage-Bionetworks/Genie_processing/blob/master/bpc/uploads/merge_and_uncode_rca_uploads.R")
+                  prov_exec = "https://github.com/Sage-Bionetworks/genie-bpc-pipeline/tree/develop/scripts/uploads/merge_and_uncode_rca_uploads.R")
   
   if (file.exists(file_output_irr)) {
     save_to_synapse(path = file_output_irr,
@@ -698,7 +698,7 @@ save_output_synapse <- function(cohort) {
                     prov_used = c(as.character(unlist(config$upload[[cohort]])), 
                                   synid_dd,
                                   config$synapse$grs$id),
-                    prov_exec = "https://github.com/Sage-Bionetworks/Genie_processing/blob/master/bpc/uploads/merge_and_uncode_rca_uploads.R")
+                    prov_exec = "https://github.com/Sage-Bionetworks/genie-bpc-pipeline/tree/develop/scripts/uploads/merge_and_uncode_rca_uploads.R")
   }
   
   # clean up locally
