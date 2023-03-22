@@ -70,9 +70,9 @@ synid_folder_output <- get_folder_synid_from_path(synid_folder_root = config$syn
                                                   path = glue("{cohort}/{site}"))
 
 # provenance exec
-prov_exec_selection <- "https://github.com/Sage-Bionetworks/Genie_processing/blob/master/bpc/case_selection/perform_case_selection.R"
+prov_exec_selection <- "https://github.com/Sage-Bionetworks/genie-bpc-pipeline/tree/develop/scripts/case_selection/perform_case_selection.R"
 prov_exec_add <- prov_exec_selection
-prov_exec_report <- "https://github.com/Sage-Bionetworks/Genie_processing/blob/master/bpc/case_selection/perform_case_selection.Rmd"
+prov_exec_report <- "https://github.com/Sage-Bionetworks/genie-bpc-pipeline/tree/develop/scripts/case_selection/perform_case_selection.Rmd"
 
 # provancne used
 prov_used_selection <- c(config$synapse$main_patient$id, config$synapse$main_sample$id, config$synapse$bpc_patient$id)
