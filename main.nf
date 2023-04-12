@@ -5,7 +5,7 @@ params.comment = 'NSCLC public release update'
 params.synapse_config = false  // Default
 
 // Check if cohort is part of allowed cohort list
-def allowed_cohorts = ["BLADDER", "BrCa", "CRC", "NSCLC", "PANC", "Prostate"]
+def allowed_cohorts = ["BLADDER", "BrCa", "CRC", "NSCLC", "PANC", "Prostate", "CRC2", "NSCLC2", "MELANOMA", "OVARIAN", "ESOPHAGO", "RENAL"]
 if (!allowed_cohorts.contains(params.cohort)) {exit 1, 'Invalid cohort name'}
 
 ch_cohort = Channel.value(params.cohort)
