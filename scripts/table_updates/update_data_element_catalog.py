@@ -76,7 +76,7 @@ def _create_new_row(df, cohort):
     Create new row for updating the data element catalog
     """
     # add new and update old variables to data element catalog on Synapse
-        # add: variable, instrument, dataType='curated', type, label, cohort-dd, synColType, synColSize, numCols, colLabels
+        # add: variable, instrument, dataType='curated', type, label, cohort_dd, synColType, synColSize, numCols, colLabels
     df['synColType'] = df.apply(lambda row: _get_syn_col_type(row.type,row.validation), axis=1)
     df_choices = df[df['type'].isin(['dropdown','radio','checkbox'])]
     df_choices[['choices_num','max_len','choices_key']] = df_choices['choices'].apply(_get_choices_info)
@@ -84,9 +84,9 @@ def _create_new_row(df, cohort):
     checkbox_index = df_choices.index[df_choices.type == "checkbox"]
     df.loc[non_checkbox_index,'synColSize'] = df_choices.loc[non_checkbox_index,'max_len']
     df.loc[checkbox_index,['synColSize','numCols','colLabels']] = df_choices.loc[non_checkbox_index,['max_len','choices_num','choices_key']]
-    df.loc[df[df.type=="yesno"],'synColSize'] = 20
+    df.loc[df.type=="yesno",'synColSize'] = 20
     df['dataType'] = 'curated'
-    df[cohort+'-dd'] = True
+    df[cohort+'_dd'] = True
     df.drop(columns=['choices','validation'],axis=1,inplace=True)
     return df
 
@@ -154,7 +154,7 @@ def update_by_data_dictionary(args):
             vars_to_update_df = vars_to_update_df[['synColSize','numCols','colLabels']]
             vars_to_update_df = syn.store(Table(CATALOG_ID, vars_to_update_df))
         if not vars_to_add_df.empty: 
-            vars_to_add_df = _create_new_row(syn, vars_to_add_df, cohort)
+            vars_to_add_df = _create_new_row(vars_to_add_df, cohort)
             vars_to_add_df = syn.store(Table(CATALOG_ID, vars_to_add_df))
 
 def download_bpc_sor(syn, logger):

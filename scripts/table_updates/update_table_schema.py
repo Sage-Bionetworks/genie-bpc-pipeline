@@ -150,7 +150,7 @@ def update_table_schema(syn, logger, dry_run):
     curated_data_element = curated_data_element[['variable','instrument','type','synColType','synColSize','numCols','colLabels']]
     # create the master table 
     sage_table_view = download_synapse_table(syn,TABLE_INFO['sage'][0],TABLE_INFO['sage'][1])
-    sage_table_view.drop(columns='data_type',axis=1,inplace=True)
+    sage_table_view.drop(columns='table_type',axis=1,inplace=True)
     bpc_table_view = download_synapse_table(syn,TABLE_INFO['bpc'][0],TABLE_INFO['bpc'][1])
     bpc_table_view = bpc_table_view[['id','name']]
     irr_table_view = download_synapse_table(syn,TABLE_INFO['irr'][0],TABLE_INFO['irr'][1])
