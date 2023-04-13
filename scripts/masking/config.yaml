@@ -70,6 +70,11 @@ cohort:
       - MSK
       - UHN
       - VICC
+  NSCLC2:
+    sites:
+      - DFCI
+      - MSK
+      - UHN
 map:
   cohort_name:
     BLADDER: BLADDER
@@ -78,5 +83,6 @@ map:
     NSCLC: NSCLC
     PANC: Pancreas
     Prostate: Prostate
+    NSCLC2: NSCLC2
 misc:
   debug: TRUE
