@@ -356,8 +356,8 @@ phase:
         name: CRC
         site: 
           DFCI:
-            production: 564
-            adjusted: 564
+            production: 584
+            adjusted: 584
           DUKE:
             production: 0
             adjusted: 0
