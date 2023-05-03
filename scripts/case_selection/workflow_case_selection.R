@@ -16,7 +16,7 @@ config <- read_yaml("config.yaml")
 # user input ----------------------------
 
 option_list <- list( 
-  make_option(c("-p", "--phase"), type = "integer",
+  make_option(c("-p", "--phase"), type = "character",
               help="BPC phase"),
   make_option(c("-c", "--cohort"), type = "character",
               help="BPC cohort"),
