@@ -33,8 +33,8 @@ option_list <- list(
               help="Site on which to run analysis"),
   make_option(c("-d", "--date"), type="character", 
               help="Upload date for folder labels"),
-  make_option(c("-a", "--synapse_auth"), type = "character", default = "~/.synapseConfig", 
-              help="Path to .synapseConfig file or Synapse PAT (default: '~/.synapseConfig')")
+  make_option(c("-a", "--synapse_auth"), type = "character", default = NA,
+              help="Path to .synapseConfig file or Synapse PAT (default: normal synapse login behavior")
 )
 opt <- parse_args(OptionParser(option_list=option_list))
 waitifnot(!is.null(opt$cohort) && !is.null(opt$site) && !is.null(opt$date),
@@ -480,7 +480,8 @@ synLogin <- function(auth = NA, silent = T) {
 
 # synapse login -------------------
 
-login_status <- synLogin(auth = auth)
+#login_status <- synLogin(auth = auth)
+synapser::synLogin()
 
 # query and compute -------------------------------------------------
 

@@ -6,4 +6,5 @@ COPY . .
 
 RUN pip install -r requirements.txt
 
-ENTRYPOINT ["python", "update_data_table.py"]
+# Commented out ENTRYPOINT for NF tower
+# ENTRYPOINT ["python", "update_data_table.py"]

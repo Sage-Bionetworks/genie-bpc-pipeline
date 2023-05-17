@@ -448,7 +448,7 @@ if (is.null(synid_folder_upload)) {
                   prov_name = "synthetic redcap dataset", 
                   prov_desc = "synthetically generated dataset sampled from variables defined in a REDCap data dictionary", 
                   prov_used = synid_file_dd, 
-                  prov_exec = "https://github.com/Sage-Bionetworks/Genie_processing/blob/synth-bpc/bpc/synth/generate_synthetic_redcap_data.R")
+                  prov_exec = "https://github.com/Sage-Bionetworks/genie-bpc-pipeline/tree/develop/scripts/synth/generate_synthetic_redcap_data.R")
   file.remove(file_output)
   
   print(glue("File stored on Synapse in folder '{synid_folder_upload}'"))

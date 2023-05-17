@@ -16,7 +16,7 @@ config <- read_yaml("config.yaml")
 # user input ----------------------------
 
 option_list <- list( 
-  make_option(c("-p", "--phase"), type = "integer",
+  make_option(c("-p", "--phase"), type = "character",
               help="BPC phase"),
   make_option(c("-c", "--cohort"), type = "character",
               help="BPC cohort"),
@@ -41,13 +41,15 @@ waitifnot(is.element(phase, names(config$phase)),
           msg = c(glue("Error: phase {phase} is not valid.  Valid values: {phase_str}"),
                   "Usage: Rscript workflow_case_selection.R -h"))
 
-cohort_str <- paste0(names(config$phase[[phase]]$cohort), collapse = ", ")
-waitifnot(is.element(phase, names(config$phase)),
+cohort_in_config <- names(config$phase[[phase]]$cohort)
+cohort_str <- paste0(cohort_in_config, collapse = ", ")
+waitifnot(is.element(cohort, cohort_in_config),
           msg = c(glue("Error: cohort {cohort} is not valid for phase {phase}.  Valid values: {cohort_str}"),
                   "Usage: Rscript workflow_case_selection.R -h"))
 
-site_str <- paste0(names(config$phase[[phase]]$cohort[[cohort]]$site), collapse = ", ")
-waitifnot(is.element(phase, names(config$phase)),
+sites_in_config <- names(config$phase[[phase]]$cohort[[cohort]]$site)
+site_str <- paste0(sites_in_config, collapse = ", ")
+waitifnot(is.element(site, sites_in_config),
           msg = c(glue("Error: site {site} is not valid for phase {phase} and cohort {cohort}.  Valid values: {site_str}"),
                   "Usage: Rscript workflow_case_selection.R -h"))
 
@@ -77,9 +79,9 @@ if (is.na(synid_folder_output)) {
 }
 
 # provenance exec
-prov_exec_selection <- "https://github.com/Sage-Bionetworks/Genie_processing/blob/master/bpc/case_selection/perform_case_selection.R"
+prov_exec_selection <- "https://github.com/Sage-Bionetworks/genie-bpc-pipeline/tree/develop/scripts/case_selection/perform_case_selection.R"
 prov_exec_add <- prov_exec_selection
-prov_exec_report <- "https://github.com/Sage-Bionetworks/Genie_processing/blob/master/bpc/case_selection/perform_case_selection.Rmd"
+prov_exec_report <- "https://github.com/Sage-Bionetworks/genie-bpc-pipeline/tree/develop/scripts/case_selection/perform_case_selection.Rmd"
 
 # provancne used
 prov_used_selection <- c(config$synapse$main_patient$id, config$synapse$main_sample$id, config$synapse$bpc_patient$id)

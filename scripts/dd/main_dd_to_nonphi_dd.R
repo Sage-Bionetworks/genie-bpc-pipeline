@@ -63,7 +63,7 @@ if (!is.null(synid_folder_dd)) {
                   prov_name = "non-PHI data dictionary",
                   prov_desc = "BPC data dictionary with PHI columns removed",
                   prov_used = synid_file_dd,
-                  prov_exec = "https://github.com/Sage-Bionetworks/Genie_processing/blob/master/bpc/dd/main_dd_to_nonphi_dd.R")
+                  prov_exec = "https://github.com/Sage-Bionetworks/genie-bpc-pipeline/tree/develop/scripts/dd/main_dd_to_nonphi_dd.R")
 
   file.remove(file_local)
 }

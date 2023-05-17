@@ -60,7 +60,7 @@ if (!is.null(synid_folder_output)) {
                   prov_name = "import template",
                   prov_desc = "BPC import template generated from non-PHI data dictionary",
                   prov_used = synid_file_dd,
-                  prov_exec = "https://github.com/Sage-Bionetworks/Genie_processing/blob/master/bpc/dd/main_import_template.R")
+                  prov_exec = "https://github.com/Sage-Bionetworks/genie-bpc-pipeline/tree/develop/scripts/dd/main_import_template.R")
 
   file.remove(file_local)
 }

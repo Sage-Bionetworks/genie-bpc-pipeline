@@ -178,7 +178,7 @@ write.csv(patient_output,file = output_file_name,quote = TRUE,row.names = FALSE,
 act <- Activity(name = 'export main GENIE data', 
                 description='Export selected BPC patient data from main GENIE database',
                 used = c(clinical_sample_id, clinical_patient_id, in_file),
-                executed = 'https://github.com/Sage-Bionetworks/Genie_processing/blob/main/bpc-tables/bpc/case_selection/export_bpc_selected_cases.R')
+                executed = 'https://github.com/Sage-Bionetworks/genie-bpc-pipeline/tree/develop/scripts/case_selection/export_bpc_selected_cases.R')
 syn_file <- File(output_file_name, 
                  parent=out_folder,
                  name=output_entity_name,

@@ -5,7 +5,7 @@
 Clone this repository and navigate to the directory:
 ```
 git clone git@github.com:Sage-Bionetworks/genie-bpc-pipeline.git
-cd genie-bpc-pipeline/bpc/case_selection
+cd genie-bpc-pipeline/scripts/case_selection
 ```
 
 Install all required R packages:

@@ -1,7 +1,7 @@
 # Description: Perform BPC case selection by first constructing an eligibility matrix
 #   and then returning all records that fit the eligibility criteria.  Also, sample
 #   the requested number of SDV and IRR cases.  
-# Author: Haley Hunter-Zinck
+# Author: Haley Hunter-Zinck, Xindi Guo
 # Date: 2021-09-22
 
 # pre-setup --------------------------
@@ -40,13 +40,15 @@ waitifnot(is.element(phase, names(config$phase)),
           msg = c(glue("Error: phase {phase} is not valid.  Valid values: {phase_str}"),
                   "Usage: Rscript perform_case_selection.R -h"))
 
-cohort_str <- paste0(names(config$phase[[phase]]$cohort), collapse = ", ")
-waitifnot(is.element(phase, names(config$phase)),
+cohort_in_config <- names(config$phase[[phase]]$cohort)
+cohort_str <- paste0(cohort_in_config, collapse = ", ")
+waitifnot(is.element(cohort, cohort_in_config),
           msg = c(glue("Error: cohort {cohort} is not valid for phase {phase}.  Valid values: {cohort_str}"),
                   "Usage: Rscript perform_case_selection.R -h"))
 
-site_str <- paste0(names(config$phase[[phase]]$cohort[[cohort]]$site), collapse = ", ")
-waitifnot(is.element(phase, names(config$phase)),
+sites_in_config <- names(config$phase[[phase]]$cohort[[cohort]]$site)
+site_str <- paste0(sites_in_config, collapse = ", ")
+waitifnot(is.element(site, sites_in_config),
           msg = c(glue("Error: site {site} is not valid for phase {phase} and cohort {cohort}.  Valid values: {site_str}"),
                   "Usage: Rscript perform_case_selection.R -h"))
 
@@ -68,7 +70,8 @@ synLogin()
 # set random seed
 default_site_seed <- config$default$site[[site]]$seed
 cohort_site_seed <- config$phase[[phase]]$cohort[[cohort]]$site[[site]]$seed
-set.seed(seed = if (!is.null(cohort_site_seed)) cohort_site_seed else default_site_seed)
+site_seed <- if (!is.null(cohort_site_seed)) cohort_site_seed else default_site_seed
+set.seed(site_seed)
 
 # output files
 file_matrix <- tolower(glue("{cohort}_{site}_phase{phase}_eligibility_matrix.csv"))
@@ -163,7 +166,8 @@ get_eligibility_data <- function(synid_table_patient, synid_table_sample, site) 
   # read table data
   patient_data <- as.data.frame(synTableQuery(query = glue("SELECT PATIENT_ID, 
                                                                   CENTER,
-                                                                  YEAR_DEATH
+                                                                  YEAR_DEATH,
+                                                                  INT_CONTACT
                                                                   FROM {synid_table_patient}"),
                                              includeRowIdAndRowVersion = F)) 
   sample_data <- as.data.frame(synTableQuery(query = glue("SELECT PATIENT_ID, 
@@ -187,7 +191,8 @@ get_eligibility_data <- function(synid_table_patient, synid_table_sample, site) 
            SEQ_DATE, 
            AGE_AT_SEQ_REPORT,
            SEQ_YEAR,
-           YEAR_DEATH)
+           YEAR_DEATH,
+           INT_CONTACT)
   
   return(data)
 }
@@ -223,7 +228,9 @@ create_eligibility_matrix <- function(data,
     mutate(FLAG_SEQ_DATE = my(SEQ_DATE) >= my(seq_min) & my(SEQ_DATE) <= my(seq_max)) %>%
     
     # patient was alive at sequencing
-    mutate(FLAG_SEQ_ALIVE = !is_double(YEAR_DEATH) | YEAR_DEATH >= SEQ_YEAR)  %>% 
+    mutate(SEQ_ALIVE_YR = !is_double(YEAR_DEATH) | YEAR_DEATH >= SEQ_YEAR)  %>% 
+
+    mutate(SEQ_ALIVE_INT = !is_double(INT_CONTACT) | INT_CONTACT >= AGE_AT_SEQ_REPORT) %>%
     
     # patient not explicitly excluded
     mutate(FLAG_NOT_EXCLUDED = !is.element(PATIENT_ID, exclude_patient_id) & !is.element(SAMPLE_ID, exclude_sample_id))  %>% 
@@ -232,13 +239,15 @@ create_eligibility_matrix <- function(data,
            SAMPLE_ID, 
            ONCOTREE_CODE, 
            AGE_AT_SEQ_REPORT,
+           INT_CONTACT,
            SEQ_DATE,
            SEQ_YEAR,
            YEAR_DEATH,
+           SEQ_ALIVE_INT,
            FLAG_ALLOWED_CODE, 
            FLAG_ADULT, 
            FLAG_SEQ_DATE, 
-           FLAG_SEQ_ALIVE,
+           SEQ_ALIVE_YR,
            FLAG_NOT_EXCLUDED)         
   
   return(mat)
@@ -263,7 +272,7 @@ get_eligible_cohort <- function(x, randomize = T) {
   eligible <- as.data.frame(mod %>%
     filter(flag_eligible) %>% 
     group_by(PATIENT_ID) %>%
-    summarize(SAMPLE_IDS = paste0(SAMPLE_ID, collapse = ";")) %>%
+    summarize(SAMPLE_IDS = paste0(SAMPLE_ID, collapse = ";"))%>%
     select(PATIENT_ID, SAMPLE_IDS))
   
   if (nrow(eligible) == 0) {
@@ -296,12 +305,14 @@ create_selection_matrix <- function(eligible_cohort, n_prod, n_pressure, n_sdv, 
   
   # randomly disperse additional SDV cases among non-pressure
   col_sdv <- rep("", n_eligible)
+  set.seed(site_seed)
   idx_sdv <- sample((n_pressure+1):n_prod, n_sdv)
   col_sdv[1:n_pressure] <- "sdv"
   col_sdv[idx_sdv] <- "sdv"
   
   # randomly disperse addition IRR cases among non-pressure and non-sdv
   col_irr <- rep("", n_eligible)
+  set.seed(site_seed)
   idx_irr <- sample(setdiff((n_pressure+1):n_prod, idx_sdv), n_irr)
   col_irr[idx_irr] <- "irr"
   
@@ -311,7 +322,6 @@ create_selection_matrix <- function(eligible_cohort, n_prod, n_pressure, n_sdv, 
     mutate(irr = col_irr) %>%
     mutate(category = c(rep("production", n_prod), rep("extra", n_eligible - n_prod))) %>%
     select(order, PATIENT_ID, SAMPLE_IDS, pressure, sdv, irr, category)
-  
   return(categorized_cohort)
 }
 

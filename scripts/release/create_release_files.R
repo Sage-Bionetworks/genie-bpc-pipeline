@@ -19,10 +19,14 @@ option_list <- list(
   make_option(c("-c", "--cohort"), 
               type = "character",
               help="BPC cohort. i.e. NSCLC, CRC, BrCa, and etc."),
-  make_option(c("-s", "--save_to_synapse"), 
+  make_option(c("-s", "--staging"), 
               action="store_true", 
               default = FALSE,
-              help="Save files to Synapse and delete local copies"),
+              help="Save files to staging folder and delete local copies"),
+  make_option(c("-r", "--release"), 
+              action="store_true", 
+              default = FALSE,
+              help="Copy release files from staging to release folder"),
   make_option(c("-a", "--auth"), 
               type = "character",
               default = NA,
@@ -31,17 +35,20 @@ option_list <- list(
               action="store_true", 
               default = FALSE,
               help="Print script progress to the user")
+
 )
 opt <- parse_args(OptionParser(option_list=option_list))
 selected_cohort <- opt$cohort
-save_to_synapse <- opt$save_to_synapse
+staging <- opt$staging
+release <- opt$release
 auth <- opt$auth
 verbose <- opt$verbose
 
 if (verbose) {
   print(glue("Parameters: "))
   print(glue("- cohort:\t\t{selected_cohort}"))
-  print(glue("- save on synapse:\t{save_to_synapse}"))
+  print(glue("- staging:\t\t{staging}"))
+  print(glue("- release:\t\t{release}"))
   print(glue("- verbose:\t\t{verbose}"))
 }
 
@@ -57,6 +64,7 @@ if(str_cohort == "PANC"){
 
 # defined variables
 syn_id_rdata <- "syn22299362"
+#syn_id_rdata_version <- 58
 syn_id_sor <- "syn22294851"
 syn_id_release_info <- "syn27628075"
 
@@ -97,15 +105,15 @@ filter_for_release <- function(dataset, selected_dataset, selected_cohort, sor_d
   return(release_dat)
 }
 
-store_synapse <- function(var, 
-                          filename, 
-                          syn_id_release_folder, 
-                          save_to_synapse = F,
-                          activity = NULL) {
+store_file <- function(var, 
+                       filename, 
+                       syn_id_output_folder, 
+                       save_to_synapse = F,
+                       activity = NULL) {
   write.csv(var, filename, row.names = F, quote = T, na = "")
 
   if (save_to_synapse) {
-    synStore(File(filename, syn_id_release_folder), activity = activity)
+    synStore(File(filename, syn_id_output_folder), activity = activity)
     file.remove(filename)
   }
 }
@@ -180,7 +188,8 @@ if (verbose) {
 }
 
 # download release info
-release_info <- synTableQuery(glue("SELECT cohort, release_version, release_type, clinical_file_folder, sor_column FROM {syn_id_release_info} WHERE current is true"))$asDataFrame()
+release_info <- synTableQuery(glue("SELECT cohort, release_version, release_type, staging_folder, clinical_file_folder, sor_column FROM {syn_id_release_info} WHERE current is true"))$asDataFrame()
+syn_id_staging_folder <- release_info[release_info$cohort==selected_cohort,]$staging_folder
 syn_id_release_folder <- release_info[release_info$cohort==selected_cohort,]$clinical_file_folder
 clinical_column <- release_info[release_info$cohort==selected_cohort,]$sor_column
 
@@ -286,48 +295,70 @@ if('Cancer-Directed Radiation Therapy dataset' %in% unique(sor_df_filtered$datas
 
 # save to synapse ---------------------
 
-if (save_to_synapse && verbose) {
+if (release & verbose) {
   print(glue("{now(timeOnly = T)}: wiping release folder '{synGet(syn_id_release_folder)$properties$name}' ({syn_id_release_folder})..."))
 }
 
 # Wipe the folder
-if (save_to_synapse) {
+if (release) {
   current_files <- synGetChildren(syn_id_release_folder)$asList()
   remove_files <- sapply(current_files, function(x){
     synDelete(x[['id']])
   })
 }
 
+# Get the clinical folder in Staging
+current_files <- synGetChildren(syn_id_staging_folder)$asList()
+current_files_tbl <- do.call(rbind.data.frame, current_files)
+if ("clinical_data" %in% current_files_tbl$name) {
+  syn_id_staging_clinical <- current_files_tbl$id[which(current_files_tbl$name=="clinical_data")]
+} else {
+  syn_id_staging_clinical <- synStore(Folder(name="clinical_data", parent=syn_id_staging_folder))$properties$id
+}
+
 if (verbose) {
-  if (save_to_synapse) {
-    print(glue("{now(timeOnly = T)}: storing clinical files in release folder '{synGet(syn_id_release_folder)$properties$name}' ({syn_id_release_folder})..."))
+  if (release) {
+    print(glue("{now(timeOnly = T)}: copying clinical files from staging to release folder '{synGet(syn_id_release_folder)$properties$name}' ({syn_id_release_folder})..."))
+  } else if (staging) {
+    print(glue("{now(timeOnly = T)}: storing clinical files to staging folder '{synGet(syn_id_staging_clinical)$properties$name}' ({syn_id_staging_clinical})..."))
   } else {
     print(glue("{now(timeOnly = T)}: storing clinical files locally in current working directory '{getwd()}'..."))
   }
 }
 
-# provenance
-act <- Activity(name = "BPC clinical files",
-                description = glue("GENIE BPC clinical file generation for the {selected_cohort} cohort"),
-                used = c(syn_id_rdata, syn_id_release_info, syn_id_sor),
-                executed = "https://github.com/Sage-Bionetworks/genie-bpc-pipeline/tree/develop/scripts/release/create_release_files.R")
+if(release){
+  staging_files <- synGetChildren(syn_id_staging_clinical)$asList()
+  # Check if there is files in the staging folder
+  if (length(staging_files) == 0) {
+    message(glue("No files was found in the staging folder ({syn_id_staging_clinical}). Quitting..."))
+    stop()
+  }
+  copy_files <- sapply(staging_files, function(x){
+    synapserutils::copy(x[['id']], syn_id_release_folder, setProvenance='existing')
+  })
+} else {
+  # provenance
+  act <- Activity(name = "BPC clinical files",
+                  description = glue("GENIE BPC clinical file generation for the {selected_cohort} cohort"),
+                  used = c(syn_id_rdata, syn_id_release_info, syn_id_sor),
+                  executed = "https://github.com/Sage-Bionetworks/genie-bpc-pipeline/tree/develop/scripts/release/create_release_files.R")
 
-# Write and store files to Synapse
-store_synapse(ca_dx_derived_index_release, "cancer_level_dataset_index.csv",syn_id_release_folder, save_to_synapse = save_to_synapse, activity = act)
-store_synapse(ca_dx_derived_non_index_release, "cancer_level_dataset_non_index.csv",syn_id_release_folder, save_to_synapse = save_to_synapse, activity = act)
-store_synapse(pt_derived_release, "patient_level_dataset.csv",syn_id_release_folder, save_to_synapse = save_to_synapse, activity = act)
-store_synapse(ca_drugs_derived_release, "regimen_cancer_level_dataset.csv",syn_id_release_folder, save_to_synapse = save_to_synapse, activity = act)
-store_synapse(prissmm_image_derived_release, "imaging_level_dataset.csv",syn_id_release_folder, save_to_synapse = save_to_synapse, activity = act)
-store_synapse(prissmm_path_derived_release, "pathology_report_level_dataset.csv",syn_id_release_folder, save_to_synapse = save_to_synapse, activity = act)
-store_synapse(prissmm_md_derived_release, "med_onc_note_level_dataset.csv",syn_id_release_folder, save_to_synapse = save_to_synapse, activity = act)
-store_synapse(cpt_derived_release, "cancer_panel_test_level_dataset.csv",syn_id_release_folder, save_to_synapse = save_to_synapse, activity = act)
-if('PRISSMM Tumor Marker level dataset' %in% unique(sor_df_filtered$dataset)){
-  store_synapse(prissmm_tm_derived_release, "tm_level_dataset.csv",syn_id_release_folder, save_to_synapse = save_to_synapse, activity = act)
+  # Write and store files to local or staging
+  store_file(ca_dx_derived_index_release, "cancer_level_dataset_index.csv",syn_id_staging_clinical, save_to_synapse = staging, activity = act)
+  store_file(ca_dx_derived_non_index_release, "cancer_level_dataset_non_index.csv",syn_id_staging_clinical, save_to_synapse = staging, activity = act)
+  store_file(pt_derived_release, "patient_level_dataset.csv",syn_id_staging_clinical, save_to_synapse = staging, activity = act)
+  store_file(ca_drugs_derived_release, "regimen_cancer_level_dataset.csv",syn_id_staging_clinical, save_to_synapse = staging, activity = act)
+  store_file(prissmm_image_derived_release, "imaging_level_dataset.csv",syn_id_staging_clinical, save_to_synapse = staging, activity = act)
+  store_file(prissmm_path_derived_release, "pathology_report_level_dataset.csv",syn_id_staging_clinical, save_to_synapse = staging, activity = act)
+  store_file(prissmm_md_derived_release, "med_onc_note_level_dataset.csv",syn_id_staging_clinical, save_to_synapse = staging, activity = act)
+  store_file(cpt_derived_release, "cancer_panel_test_level_dataset.csv",syn_id_staging_clinical, save_to_synapse = staging, activity = act)
+  if('PRISSMM Tumor Marker level dataset' %in% unique(sor_df_filtered$dataset)){
+    store_file(prissmm_tm_derived_release, "tm_level_dataset.csv",syn_id_staging_clinical, save_to_synapse = staging, activity = act)
+  }
+  if('Cancer-Directed Radiation Therapy dataset' %in% unique(sor_df_filtered$dataset)){
+    store_file(ca_radtx_derived_release, "ca_radtx_dataset.csv",syn_id_staging_clinical, save_to_synapse = staging, activity = act)
+  }
 }
-if('Cancer-Directed Radiation Therapy dataset' %in% unique(sor_df_filtered$dataset)){
-  store_synapse(ca_radtx_derived_release, "ca_radtx_dataset.csv",syn_id_release_folder, save_to_synapse = save_to_synapse, activity = act)
-}
-
 # close out --------------------
 
 toc = as.double(Sys.time())

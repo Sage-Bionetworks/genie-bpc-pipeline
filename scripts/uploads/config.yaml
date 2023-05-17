@@ -76,23 +76,21 @@ upload:
   NSCLC2:
     DFCI:
       data1: syn27351603
-      header1: syn27351608
-    DUKE:
-      data1: syn30821503
+    # DUKE:
+      # data1: syn30821503
     MSK:
       data1: syn27351615
-    PROV:
-      data1: syn30821505
-    UCSF:
-      data1: syn30821507
+    # PROV:
+      # data1: syn30821505
+    # UCSF:
+      # data1: syn30821507
     UHN:
       data1: syn27351619
-    VICC:
-      data1: syn27351623
+    # VICC:
+      # data1: syn27351623
   CRC2:
     DFCI:
       data1: syn29418170
-      header1: syn29418169
     DUKE:
       data1: syn30821496
     MSK:
@@ -108,7 +106,6 @@ upload:
   RENAL:
     DFCI:
       data1: syn29418122
-      header1: syn29418121
     DUKE:
       data1: syn30821482
     MSK:
@@ -124,7 +121,6 @@ upload:
   MELANOMA:
     DFCI:
       data1: syn29418138
-      header1: syn29418137
     MSK:
       data1: syn29418140
     PROV:
@@ -138,7 +134,6 @@ upload:
   OVARIAN:
     DFCI:
       data1: syn29418091
-      header1: syn29418089
     DUKE:
       data1: syn30821466
     MSK:
@@ -154,7 +149,6 @@ upload:
   ESOPHAGO:
     DFCI:
       data1: syn29418106
-      header1: syn29418105
     DUKE:
       data1: syn30821475
     MSK:

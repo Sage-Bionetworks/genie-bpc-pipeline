@@ -60,7 +60,7 @@ Options:
 
 Example run: 
 ```
-Rscript update_hemonc_tables.R -c 2022-01-05.ccby_concepts.tab -r 2022-01-05.ccby_rels.tab -m '2022-01-05 update'
+Rscript update_hemonc_tables.R -c 2022-01-05.ccby_concepts.csv -r 2022-01-05.ccby_rels.csv -m '2022-01-05 update'
 ```
 
 ## Usage: generate drug masking reports

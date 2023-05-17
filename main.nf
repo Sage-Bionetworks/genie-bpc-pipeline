@@ -4,25 +4,13 @@ params.cohort = 'NSCLC'
 params.comment = 'NSCLC public release update'
 params.synapse_config = false  // Default
 
+// Check if cohort is part of allowed cohort list
+def allowed_cohorts = ["BLADDER", "BrCa", "CRC", "NSCLC", "PANC", "Prostate", "CRC2", "NSCLC2", "MELANOMA", "OVARIAN", "ESOPHAGO", "RENAL"]
+if (!allowed_cohorts.contains(params.cohort)) {exit 1, 'Invalid cohort name'}
+
 ch_cohort = Channel.value(params.cohort)
 ch_comment = Channel.value(params.comment)
 ch_synapse_config = params.synapse_config ? Channel.value(file(params.synapse_config)) : "null"
-
-/*
-Check cohort code is one of the valid values.
-*/
-process checkCohortCode {
-    input:
-    val cohort from ch_cohort
-
-    output:
-    stdout into outCheckCohortCode
-
-    script:
-    """
-    echo $cohorts | tr ' ' '\n' | grep -c ^$cohort\$
-    """
-}
 
 /*
 Run quality asssurance checklist for the upload report at error level.  
@@ -34,7 +22,7 @@ process quacUploadReportError {
    secret 'SYNAPSE_AUTH_TOKEN'
 
    input:
-   val previous from outCheckCohortCode
+   // val previous from outCheckCohortCode
    file syn_config   from ch_synapse_config
    val cohort        from ch_cohort
 

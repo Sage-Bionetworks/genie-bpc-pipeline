@@ -37,8 +37,8 @@ option_list <- list(
               help=glue("BPC cohort (choices: {cohorts_str}, {config$misc$all})")),
   make_option(c("-u", "--save_synapse"), action="store_true", default = FALSE, 
               help="Save output to Synapse"),
-  make_option(c("-a", "--synapse_auth"), type = "character", default = "~/.synapseConfig", 
-              help="Path to .synapseConfig file or Synapse PAT (default: '~/.synapseConfig')"),
+  make_option(c("-a", "--synapse_auth"), type = "character", default = NA,
+              help="Path to .synapseConfig file or Synapse PAT (default: normal synapse login behavior)"),
   make_option(c("-v", "--verbose"), action="store_true", default = FALSE, 
               help="Print out verbose output on script progress")
 )
@@ -687,7 +687,7 @@ save_output_synapse <- function(cohort) {
                   prov_used = c(as.character(unlist(config$upload[[cohort]])), 
                                 synid_dd,
                                 config$synapse$grs$id),
-                  prov_exec = "https://github.com/Sage-Bionetworks/Genie_processing/blob/master/bpc/uploads/merge_and_uncode_rca_uploads.R")
+                  prov_exec = "https://github.com/Sage-Bionetworks/genie-bpc-pipeline/tree/develop/scripts/uploads/merge_and_uncode_rca_uploads.R")
   
   if (file.exists(file_output_irr)) {
     save_to_synapse(path = file_output_irr,
@@ -698,7 +698,7 @@ save_output_synapse <- function(cohort) {
                     prov_used = c(as.character(unlist(config$upload[[cohort]])), 
                                   synid_dd,
                                   config$synapse$grs$id),
-                    prov_exec = "https://github.com/Sage-Bionetworks/Genie_processing/blob/master/bpc/uploads/merge_and_uncode_rca_uploads.R")
+                    prov_exec = "https://github.com/Sage-Bionetworks/genie-bpc-pipeline/tree/develop/scripts/uploads/merge_and_uncode_rca_uploads.R")
   }
   
   # clean up locally

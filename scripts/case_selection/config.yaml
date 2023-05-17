@@ -96,14 +96,17 @@ default:
       pressure: 10
       seed: 65379
     UHN: 
-      pressure: 10
+      pressure: 3
       seed: 123456
     VICC:
       pressure: 10
       seed: 992
     VHIO:
+      pressure: 5
+      seed: 943
+    JHU:
       pressure: 10
-      seed: 5509
+      seed: 23498
 phase:
   1:
     cohort: 
@@ -176,10 +179,10 @@ phase:
         site:
           DFCI:
             production: 570
-            adjusted: 570
+            adjusted: 568
           MSK:
             production: 705
-            adjusted: 705
+            adjusted: 704
           UHN:
             production: 0
             adjusted: 0
@@ -202,7 +205,7 @@ phase:
         site:
           DFCI:
             production: 713
-            adjusted: 710
+            adjusted: 711
           MSK:
             production: 881
             adjusted: 881
@@ -327,8 +330,8 @@ phase:
             production: 0
             adjusted: 0
           DFCI:
-            production: 410
-            adjusted: 410
+            production: 760
+            adjusted: 760
           DUKE:
             production: 210
             adjusted: 210
@@ -342,8 +345,8 @@ phase:
             production: 462
             adjusted: 462
           MSK:
-            production: 615
-            adjusted: 615
+            production: 965
+            adjusted: 965
           PROV:
             production: 210
             adjusted: 210
@@ -351,8 +354,8 @@ phase:
             production: 0
             adjusted: 0
           UCSF:
-            production: 100
-            adjusted: 100
+            production: 0
+            adjusted: 0
             date:
               seq_min: Oct-2016
               seq_max: Dec-2019
@@ -401,8 +404,8 @@ phase:
             production: 0
             adjusted: 0
           DFCI:
-            production: 300
-            adjusted: 300
+            production: 584
+            adjusted: 584
           DUKE:
             production: 135
             adjusted: 135
@@ -414,8 +417,8 @@ phase:
             production: 286
             adjusted: 286
           MSK:
-            production: 500
-            adjusted: 500
+            production: 785
+            adjusted: 785
           PROV:
             production: 135
             adjusted: 135
@@ -423,20 +426,17 @@ phase:
             production: 0
             adjusted: 0
           UCSF:
-            production: 60
-            adjusted: 60
+            production: 0
+            adjusted: 0
           UHN:
-            production: 110
-            adjusted: 110
+            production: 141
+            adjusted: 141
             date:
-              seq_min: Jul-2017
+              seq_min: Oct-2016
               seq_max: Dec-2020
           VICC:
-            production: 135
-            adjusted: 135
-            date: 
-              seq_min: Apr-2014
-              seq_max: Dec-2020
+            production: 0
+            adjusted: 0
           VHIO:
             production: 234
             adjusted: 234
@@ -488,20 +488,29 @@ phase:
             adjusted: 4
             pressure: 1
           UCSF:
-            production: 46
-            adjusted: 46
+            production: 71
+            adjusted: 71
           UHN:
-            production: 40
-            adjusted: 40
+            production: 42
+            adjusted: 42
           VHIO:
             production: 14
             adjusted: 14
           VICC:
-            production: 56
-            adjusted: 56
+            production: 0
+            adjusted: 0
+          JHU:
+            production: 0
+            adjusted: 0
+          VHIO:
+            production: 0
+            adjusted: 0
+          WAKE:
+            production: 30
+            adjusted: 30
         date: 
-          seq_min: Apr-2012
-          seq_max: Jun-2020
+          seq_min: Jan-2012
+          seq_max: Oct-2021
         oncotree:
           root: RCC
           allowed_codes: 
@@ -539,6 +548,9 @@ phase:
           MSK:
             production: 500
             adjusted: 500
+          JHU:
+            production: 0
+            adjusted: 0
           PROV:
             production: 65
             adjusted: 65
@@ -546,8 +558,8 @@ phase:
             production: 0
             adjusted: 0
           UCSF:
-            production: 80
-            adjusted: 80
+            production: 88
+            adjusted: 88
           UHN:
             production: 80
             adjusted: 80
@@ -555,11 +567,17 @@ phase:
             production: 80
             adjusted: 80
           VICC:
-            production: 75
-            adjusted: 75
+            production: 0
+            adjusted: 0
+          VHIO:
+            production: 70
+            adjusted: 70
+          WAKE:
+            production: 79
+            adjusted: 79
         date: 
           seq_min: Jan-2014
-          seq_max: Dec-2020
+          seq_max: Feb-2022
         oncotree:
           root: OVARY
           allowed_codes: 
@@ -615,11 +633,20 @@ phase:
             adjusted: 3
             pressure: 1
           VICC:
-            production: 103
-            adjusted: 103
+            production: 0
+            adjusted: 0
+          JHU:
+            production: 177
+            adjusted: 177
+          VHIO:
+            production: 0
+            adjusted: 0
+          WAKE:
+            production: 29
+            adjusted: 29
         date: 
           seq_min: Oct-2017
-          seq_max: Jun-2021
+          seq_max: Oct-2022
         oncotree:
           root: MEL
           allowed_codes: 
@@ -669,11 +696,20 @@ phase:
             production: 90
             adjusted: 90
           VICC:
-            production: 79
-            adjusted: 79
+            production: 0
+            adjusted: 0
+          VHIO:
+            production: 45
+            adjusted: 45
+          JHU: 
+            production: 38
+            adjusted: 38
+          WAKE:
+            production: 92
+            adjusted: 92
         date: 
           seq_min: Apr-2012
-          seq_max: Dec-2021
+          seq_max: Feb-2023
         oncotree:
           root: EGC
           allowed_codes: 

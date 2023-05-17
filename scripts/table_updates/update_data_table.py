@@ -24,12 +24,12 @@ import numpy
 
 from utilities import *
 
-TABLE_INFO = {"primary": ('syn23285911',"data_type='data'"),
-              "irr": ('syn21446696',"double_curated is true")}
+TABLE_INFO = {"primary": ('syn23285911',"table_type='data'"),
+              "irr": ('syn21446696',"table_type='data' and double_curated is true")}
 
 def _store_data(syn, table_id, label_data, table_type, logger, dry_run):
     table_schema = syn.get(table_id)
-    logger.info("Updating table: %s " % table_schema.name)
+    logger.info(f"Updating table: {table_schema.name} {table_id}")
     form_label = table_schema.form_label[0]
     table_columns = syn.getColumns(table_schema.columnIds)
     table_columns = [col['name'] for col in list(table_columns)]
@@ -50,9 +50,9 @@ def _store_data(syn, table_id, label_data, table_type, logger, dry_run):
             cols_to_skip.append("redcap_repeat_instance")
     rows_to_drop = temp_data.index[temp_data.apply(lambda row: check_empty_row(row,cols_to_skip),axis=1)]
     temp_data.drop(index=rows_to_drop,inplace=True)
-    # remove data in ca_directed_radtx if cohort = NSCLC, CRC, BrCa
+    # remove data in ca_directed_radtx if cohort = CRC, BrCa
     if table_schema.form == ['ca_directed_radtx']:
-        temp_data.drop(temp_data.index[temp_data.cohort.isin(["NSCLC","CRC","BrCa"])],inplace=True)
+        temp_data.drop(temp_data.index[temp_data.cohort.isin(["CRC","BrCa"])],inplace=True)
     # remove .0 from all columns
     temp_data = temp_data.applymap(lambda x: float_to_int(x))
     # update table
@@ -295,7 +295,7 @@ def main():
     # get master table
     table_id, condition = list(TABLE_INFO[table_type])
     master_table = download_synapse_table(syn, table_id, condition)
-    TABLE_INFO["redacted"] = ('syn21446696',"double_curated is false")
+    TABLE_INFO["redacted"] = ('syn21446696',"table_type='data' and double_curated is false")
     
    # download data files 
    # TODO: find the cohort that has new data

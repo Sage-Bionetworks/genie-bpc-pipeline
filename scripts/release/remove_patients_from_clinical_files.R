@@ -179,9 +179,9 @@ save_to_synapse <- function(path,
                     description = prov_desc,
                     used = prov_used,
                     executed = prov_exec)
-    file <- synStore(file, activity = act)
+    file <- synStore(file, activity = act, forceVersion=FALSE)
   } else {
-    file <- synStore(file)
+    file <- synStore(file, forceVersion=FALSE)
   }
   
   return(file$properties$id)
@@ -280,7 +280,7 @@ for (i in 1:length(synid_file_children)) {
     synid_file_dest <- save_to_synapse(path = file_local, 
                     parent_id = synid_folder_output,
                     prov_name = "filtered clinical files", 
-                    prov_desc = "remove redacted patients from clinical files as temporary fix for public release", 
+                    prov_desc = "remove redacted or retracted patients from clinical files", 
                     prov_used = c(synid_file_child, synid_table_rm), 
                     prov_exec = "https://github.com/Sage-Bionetworks/genie-bpc-pipeline/blob/develop/scripts/release/remove_patients_from_clinical_files.R")
     file.remove(file_local)

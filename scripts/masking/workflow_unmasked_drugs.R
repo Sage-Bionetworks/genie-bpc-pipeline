@@ -47,8 +47,8 @@ option_list <- list(
               help="Upload date for folder labels"),
   make_option(c("-s", "--save_synapse"), action="store_true", default=FALSE,
               help="Save output to Synapse"),
-  make_option(c("-a", "--synapse_auth"), type = "character", default = "~/.synapseConfig", 
-              help="Path to .synapseConfig file or Synapse PAT (default: '~/.synapseConfig')")
+  make_option(c("-a", "--synapse_auth"), type = "character", default = NA,
+              help="Path to .synapseConfig file or Synapse PAT (default: normal synapse login behavior")
 )
 
 # user arguments
@@ -256,41 +256,42 @@ get_auth_token <- function(path) {
 #' @param auth full path to .synapseConfig file or authentication token
 #' @param silent verbosity control on login
 #' @return TRUE for successful login; F otherwise
-synLogin <- function(auth = NA, silent = T) {
+# synLogin <- function(auth = NA, silent = T) {
   
-  # default synLogin behavior
-  if (is.na(auth)) {
-    syn <- synapser::synLogin(silent = silent)
-    return(T)
-  }
+#   # default synLogin behavior
+#   if (is.na(auth)) {
+#     syn <- synapser::synLogin(silent = silent)
+#     return(T)
+#   }
   
-  token = auth
+#   token = auth
   
-  # extract token from .synapseConfig
-  if (grepl(x = auth, pattern = "\\.synapseConfig$")) {
-    token = get_auth_token(auth)
+#   # extract token from .synapseConfig
+#   if (grepl(x = auth, pattern = "\\.synapseConfig$")) {
+#     token = get_auth_token(auth)
     
-    if (is.na(token)) {
-      return(F)
-    }
-  }
+#     if (is.na(token)) {
+#       return(F)
+#     }
+#   }
   
-  # login
-  syn <- tryCatch({
-    synapser::synLogin(authToken = token, silent = silent)
-  }, error = function(cond) {
-    return(F)
-  })
+#   # login
+#   syn <- tryCatch({
+#     synapser::synLogin(authToken = token, silent = silent)
+#   }, error = function(cond) {
+#     return(F)
+#   })
   
-  if (is.null(syn)) {
-    return(T)
-  }
-  return(syn)
-}
+#   if (is.null(syn)) {
+#     return(T)
+#   }
+#   return(syn)
+# }
 
 # synapse login -------------------
 
-login_status <- synLogin(auth = auth)
+# login_status <- synLogin(auth = auth)
+synapser::synLogin()
 
 # main ----------------------------
 
