@@ -89,6 +89,9 @@ default:
     JHU:
       pressure: 10
       seed: 23498
+    WAKE:
+      pressure: 10
+      seed: 4556
 phase:
   1:
     cohort: 
