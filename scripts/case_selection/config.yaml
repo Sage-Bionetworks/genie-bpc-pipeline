@@ -163,17 +163,17 @@ phase:
         name: CRC
         site:
           DFCI:
-            production: 570
-            adjusted: 568
+            production: 564
+            adjusted: 564
           MSK:
-            production: 705
-            adjusted: 704
+            production: 696
+            adjusted: 696
           UHN:
             production: 0
             adjusted: 0
           VICC:
             production: 225
-            adjusted: 226
+            adjusted: 225
         date:
           seq_min: Jan-2015
           seq_max: Apr-2018
@@ -189,11 +189,11 @@ phase:
         name: NSCLC
         site:
           DFCI:
-            production: 713
-            adjusted: 711
+            production: 696
+            adjusted: 696
           MSK:
-            production: 881
-            adjusted: 881
+            production: 869
+            adjusted: 869
           UHN:
             production: 55
             adjusted: 55
@@ -203,7 +203,7 @@ phase:
             seq_min: Jan-2014
           VICC:
             production: 226
-            adjusted: 227
+            adjusted: 226
         date:
           seq_min: Jan-2015
           seq_max: Dec-2017
