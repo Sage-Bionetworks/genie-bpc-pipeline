@@ -165,15 +165,21 @@ phase:
           DFCI:
             production: 564
             adjusted: 564
+            sdv: 113
+            irr: 28
           MSK:
             production: 696
             adjusted: 696
+            sdv: 139
+            irr: 35
           UHN:
             production: 0
             adjusted: 0
           VICC:
             production: 225
             adjusted: 225
+            sdv: 45
+            irr: 11
         date:
           seq_min: Jan-2015
           seq_max: Apr-2018
@@ -191,19 +197,25 @@ phase:
           DFCI:
             production: 696
             adjusted: 696
+            sdv: 139
+            irr: 35
           MSK:
             production: 869
             adjusted: 869
+            sdv: 174
+            irr: 43
           UHN:
             production: 55
             adjusted: 55
             pressure: 0
-            sdv: 6
+            sdv: 11
             irr: 3
             seq_min: Jan-2014
           VICC:
             production: 226
             adjusted: 226
+            sdv: 45
+            irr: 11
         date:
           seq_min: Jan-2015
           seq_max: Dec-2017
