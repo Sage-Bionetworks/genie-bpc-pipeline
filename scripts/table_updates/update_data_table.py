@@ -329,25 +329,23 @@ def main():
         cohort_data_list.append(df)
     label_data = pandas.concat(cohort_data_list, axis=0, ignore_index=True)
     label_data['redacted'] = numpy.nan
-    print(master_table)
-    print(label_data)
-    print(table_type)
-    # # update data tables
-    # store_data(syn, master_table, label_data, table_type, logger, dry_run)
-    # if not dry_run:
-    #     custom_fix(syn, master_table, logger)
-    #     if table_type == 'primary':
-    #         table_id, condition = list(TABLE_INFO['redacted'])
-    #         redacted_table_info = download_synapse_table(syn, table_id, condition)
-    #         logger.info("Updating redacted tables...")
-    #         update_redact_table(syn, redacted_table_info, master_table, logger)
-    #         logger.info("Updating version for redacted tables")
-    #         for table_id in redacted_table_info['id']:
-    #             update_version(syn, table_id, comment)
-    #     logger.info("Updating version for %s tables" % table_type)
-    #     for table_id in master_table['id']:
-    #         update_version(syn, table_id, comment)
-    #     logger.info("Table update is completed!")
+
+    # update data tables
+    store_data(syn, master_table, label_data, table_type, logger, dry_run)
+    if not dry_run:
+        custom_fix(syn, master_table, logger)
+        if table_type == 'primary':
+            table_id, condition = list(TABLE_INFO['redacted'])
+            redacted_table_info = download_synapse_table(syn, table_id, condition)
+            logger.info("Updating redacted tables...")
+            update_redact_table(syn, redacted_table_info, master_table, logger)
+            logger.info("Updating version for redacted tables")
+            for table_id in redacted_table_info['id']:
+                update_version(syn, table_id, comment)
+        logger.info("Updating version for %s tables" % table_type)
+        for table_id in master_table['id']:
+            update_version(syn, table_id, comment)
+        logger.info("Table update is completed!")
 
 if __name__ == "__main__":
     main()
