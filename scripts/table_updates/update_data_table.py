@@ -21,6 +21,7 @@ import math
 
 import pandas
 import numpy
+from genie import load
 
 from utilities import *
 
@@ -62,15 +63,23 @@ def _store_data(syn, table_id, label_data, table_type, logger, dry_run):
         existing_records = list(set(table_query.asDataFrame()['record_id']))
         temp_data = temp_data[~temp_data['record_id'].isin(existing_records)]
     if not dry_run:
-        if table_type=='primary':
-            table = syn.delete(table_query.asRowSet()) # wipe the table
-        table = syn.store(Table(table_schema, temp_data))
+        load._update_table(
+            syn=syn, database=table_query.asDataFrame(),
+            new_dataset=temp_data,
+            database_synid=table_id,
+            primary_key_cols=syn.get(table_id).primary_key,
+            to_delete=True
+        )
+        # if table_type=='primary':
+        #     table = syn.delete(table_query.asRowSet()) # wipe the table
+        # table = syn.store(Table(table_schema, temp_data))
     else:
-        temp_data.to_csv(table_id+"_temp.csv")
+        temp_data.to_csv(f"{table_id}_temp.csv")
 
 def store_data(syn, master_table, label_data, table_type, logger, dry_run):
     logger.info("Updating data for %s tables..." % table_type)
     for table_id in master_table['id']:
+        print(table_id)
         _store_data(syn, table_id, label_data, table_type, logger, dry_run)
 
 def get_phi_cutoff(unit):
@@ -184,8 +193,15 @@ def update_redact_table(syn, redacted_table_info, full_data_table_info, logger):
             table_schema = syn.get(row['id_redacted'])
             logger.info("Updating table: %s" % table_schema.name)
             table_query = syn.tableQuery("SELECT * from %s" % row['id_redacted'])
-            table = syn.delete(table_query.asRowSet()) # wipe the table
-            table = syn.store(Table(table_schema, new_df))
+            load._update_table(
+                syn=syn, database=table_query.asDataFrame(),
+                new_dataset=new_df,
+                database_synid=row['id_redacted'],
+                primary_key_cols=syn.get(row['id_redacted']).primary_key,
+                to_delete=True
+            )
+            # table = syn.delete(table_query.asRowSet()) # wipe the table
+            # table = syn.store(Table(table_schema, new_df))
     # Modify patient table
     df = syn.tableQuery('SELECT * FROM %s' % patient_table_id).asDataFrame()
     new_df, new_record_to_redact = _redact_table(df, interval_cols_info)
@@ -200,8 +216,15 @@ def update_redact_table(syn, redacted_table_info, full_data_table_info, logger):
     redacted_patient_id = master_table.loc[master_table['name']=="Patient Characteristics",'id_redacted'].values[0]
     table_schema = syn.get(redacted_patient_id)
     table_query = syn.tableQuery("SELECT * from %s" % redacted_patient_id)
-    table = syn.delete(table_query.asRowSet()) # wipe the table
-    table = syn.store(Table(table_schema, new_df))
+    # table = syn.delete(table_query.asRowSet()) # wipe the table
+    # table = syn.store(Table(table_schema, new_df))
+    load._update_table(
+        syn=syn, database=table_query.asDataFrame(),
+        new_dataset=new_df,
+        database_synid=row['id_redacted'],
+        primary_key_cols=syn.get(redacted_patient_id).primary_key,
+        to_delete=True
+    )
     # Update redacted column in full data patient table
     logger.info("Updating redacted column in the internal table...")
     full_pt_id = master_table.loc[master_table['name']=="Patient Characteristics",'id_full'].values[0]
@@ -306,23 +329,25 @@ def main():
         cohort_data_list.append(df)
     label_data = pandas.concat(cohort_data_list, axis=0, ignore_index=True)
     label_data['redacted'] = numpy.nan
-    
-    # update data tables
-    store_data(syn, master_table, label_data, table_type, logger, dry_run)
-    if not dry_run:
-        custom_fix(syn, master_table, logger)
-        if table_type == 'primary':
-            table_id, condition = list(TABLE_INFO['redacted'])
-            redacted_table_info = download_synapse_table(syn, table_id, condition)
-            logger.info("Updating redacted tables...")
-            update_redact_table(syn, redacted_table_info, master_table, logger)
-            logger.info("Updating version for redacted tables")
-            for table_id in redacted_table_info['id']:
-                update_version(syn, table_id, comment)
-        logger.info("Updating version for %s tables" % table_type)
-        for table_id in master_table['id']:
-            update_version(syn, table_id, comment)
-        logger.info("Table update is completed!")
+    print(master_table)
+    print(label_data)
+    print(table_type)
+    # # update data tables
+    # store_data(syn, master_table, label_data, table_type, logger, dry_run)
+    # if not dry_run:
+    #     custom_fix(syn, master_table, logger)
+    #     if table_type == 'primary':
+    #         table_id, condition = list(TABLE_INFO['redacted'])
+    #         redacted_table_info = download_synapse_table(syn, table_id, condition)
+    #         logger.info("Updating redacted tables...")
+    #         update_redact_table(syn, redacted_table_info, master_table, logger)
+    #         logger.info("Updating version for redacted tables")
+    #         for table_id in redacted_table_info['id']:
+    #             update_version(syn, table_id, comment)
+    #     logger.info("Updating version for %s tables" % table_type)
+    #     for table_id in master_table['id']:
+    #         update_version(syn, table_id, comment)
+    #     logger.info("Table update is completed!")
 
 if __name__ == "__main__":
     main()
