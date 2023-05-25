@@ -15,14 +15,23 @@ import yaml
 import utils
 
 
-def build_args():
+def get_config():
+    cur_path = pathlib.Path(__file__).parent.resolve()
+    with open(os.path.join(cur_path, "config.yaml")) as config_f:
+        config = yaml.safe_load(config_f)
+    return config
+
+
+def validate_args(args):
+    pass
+
+
+def build_args(config: dict):
     """Build args
 
     Returns:
         _type_: _description_
     """
-    # user input --------------------------
-    # TODO Use config file to auto assign choices
     cur_path = pathlib.Path(__file__).parent.resolve()
     with open(os.path.join(cur_path, "config.yaml")) as config_f:
         config = yaml.safe_load(config_f)
@@ -290,5 +299,7 @@ def main(args):
 
 
 if __name__ == "__main__":
-    args = build_args()
+    config = get_config()
+    args = build_args(config)
+    validate_args(config, args)
     main(args)
