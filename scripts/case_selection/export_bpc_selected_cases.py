@@ -115,9 +115,10 @@ def select_cases(
     clinical_patient_id = release_files["data_clinical_patient.txt"]
 
     # mapping tables
-    sex_mapping = syn.tableQuery("SELECT * FROM syn7434222 where NCI is not null").asDataFrame()
-    race_mapping = syn.tableQuery("SELECT * FROM syn7434236 where NCI is not null").asDataFrame()
-    ethnicity_mapping = syn.tableQuery("SELECT * FROM syn7434242 where NCI is not null").asDataFrame()
+    # TODO: remove once the granular codes are added to clinical tables
+    # sex_mapping = syn.tableQuery("SELECT * FROM syn7434222 where NCI is not null").asDataFrame()
+    # race_mapping = syn.tableQuery("SELECT * FROM syn7434236 where NCI is not null").asDataFrame()
+    # ethnicity_mapping = syn.tableQuery("SELECT * FROM syn7434242 where NCI is not null").asDataFrame()
 
     # output setup
     # HACK: this is to change "phase 1 additional" into phase1_additional
