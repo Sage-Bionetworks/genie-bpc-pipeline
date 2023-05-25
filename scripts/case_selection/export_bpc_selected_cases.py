@@ -115,9 +115,9 @@ def select_cases(
     clinical_patient_id = release_files["data_clinical_patient.txt"]
 
     # mapping tables
-    sex_mapping = syn.tableQuery("SELECT * FROM syn7434222").asDataFrame()
-    race_mapping = syn.tableQuery("SELECT * FROM syn7434236").asDataFrame()
-    ethnicity_mapping = syn.tableQuery("SELECT * FROM syn7434242").asDataFrame()
+    sex_mapping = syn.tableQuery("SELECT * FROM syn7434222 where NCI is not null").asDataFrame()
+    race_mapping = syn.tableQuery("SELECT * FROM syn7434236 where NCI is not null").asDataFrame()
+    ethnicity_mapping = syn.tableQuery("SELECT * FROM syn7434242 where NCI is not null").asDataFrame()
 
     # output setup
     # HACK: this is to change "phase 1 additional" into phase1_additional
@@ -265,9 +265,9 @@ def select_cases(
         name=output_entity_name,
         annotations={"phase": phase, "cohort": cohort, "site": site},
     )
-    # syn_file = syn.store(syn_file)
-    # syn.setProvenance(syn_file, act)
-    # os.remove(output_file_name)
+    syn_file = syn.store(syn_file)
+    syn.setProvenance(syn_file, act)
+    os.remove(output_file_name)
 
 
 def main(args):
