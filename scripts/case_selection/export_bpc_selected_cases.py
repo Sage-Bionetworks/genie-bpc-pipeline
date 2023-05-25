@@ -233,32 +233,43 @@ def select_cases(
     # Instrument - cancer_panel_test
     sample_info_list = []
     for patient_id in selected_cases:
-        sample_list = []
-        subset_df = clinical[clinical['PATIENT_ID'] == patient_id]
+        # sample_list = []
+        subset_df = clinical[clinical['patient_id'] == patient_id]
+        combined_df = subset_df[['patient_id', 'center', 'sample_id', 'oncotree_code', 'sample_type_detailed', 'seq_assay_id', 'seq_year', 'age_at_seq_report_days']].copy()
+        combined_df.rename(columns={
+            'patient_id': 'record_id',
+            'center': 'redcap_data_access_group',
+            'sample_id': 'cpt_genie_sample_id',
+            'oncotree_code': 'cpt_oncotree_code',
+            'sample_type_detailed': 'cpt_sample_type',
+            'seq_assay_id': 'cpt_seq_assay_id',
+            'seq_year': 'cpt_seq_date',
+            'age_at_seq_report_days': 'age_at_seq_report'
+        }, inplace=True)
+        combined_df['redcap_repeat_instrument'] = 'cancer_panel_test'
+        combined_df['redcap_repeat_instance'] =  list(range(1, len(combined_df)+1))
         # TODO: Fix me
-        for i, sample_id in enumerate(x):
-            print(sample_id)
-            subset_df = clinical[clinical["sample_id"] == sample_id]
-            # print(subset_df)
-            temp_df = pd.DataFrame(
-                {
-                    "record_id": subset_df['patient_id']
-                }
-            )
-            temp_df["redcap_repeat_instrument"] = "cancer_panel_test"
-            temp_df["redcap_repeat_instance"] = i
-            temp_df["redcap_data_access_group"] = subset_df["center"]
+        # for i, row in subset_df.iterrows():
+        #     # print(subset_df)
+        #     temp_df = pd.DataFrame(
+        #         {
+        #             "record_id": [patient_id]
+        #         }
+        #     )
+        #     temp_df["redcap_repeat_instrument"] = "cancer_panel_test"
+        #     temp_df["redcap_repeat_instance"] = i
+        #     temp_df["redcap_data_access_group"] = row["center"]
 
-            temp_df["cpt_genie_sample_id"] = sample_id
-            temp_df["cpt_oncotree_code"] = subset_df["oncotree_code"]
-            temp_df["cpt_sample_type"] = subset_df["sample_type_detailed"]
-            temp_df["cpt_seq_assay_id"] = subset_df["seq_assay_id"]
+        #     temp_df["cpt_genie_sample_id"] = row['sample_id']
+        #     temp_df["cpt_oncotree_code"] = row["oncotree_code"]
+        #     temp_df["cpt_sample_type"] = row["sample_type_detailed"]
+        #     temp_df["cpt_seq_assay_id"] = row["seq_assay_id"]
 
-            temp_df["cpt_seq_date"] = subset_df["seq_year"]
-            temp_df["age_at_seq_report"] = subset_df['age_at_seq_report_days']
-            sample_list.append(temp_df)
+        #     temp_df["cpt_seq_date"] = row["seq_year"]
+        #     temp_df["age_at_seq_report"] = row['age_at_seq_report_days']
+        #     sample_list.append(temp_df)
 
-        combined_df = pd.concat(sample_list, ignore_index=True)
+        # combined_df = pd.concat(sample_list, ignore_index=True)
         sample_info_list.append(combined_df)
     sample_info_df = pd.concat(sample_info_list, ignore_index=True)
     patient_output = pd.concat([patient_output, sample_info_df], ignore_index=True)
