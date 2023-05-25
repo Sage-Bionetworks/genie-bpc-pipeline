@@ -20,6 +20,7 @@ def build_args():
         _type_: _description_
     """
     # user input --------------------------
+    # TODO Use config file to auto assign choices
 
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -117,14 +118,6 @@ def select_cases(
     sex_mapping = syn.tableQuery("SELECT * FROM syn7434222").asDataFrame()
     race_mapping = syn.tableQuery("SELECT * FROM syn7434236").asDataFrame()
     ethnicity_mapping = syn.tableQuery("SELECT * FROM syn7434242").asDataFrame()
-    race_mapping.index = race_mapping["CODE"]
-    race_dict = race_mapping.to_dict()
-
-    ethnicity_mapping.index = ethnicity_mapping["CODE"]
-    ethnicity_dict = ethnicity_mapping.to_dict()
-
-    sex_mapping.index = sex_mapping["CODE"]
-    sex_dict = sex_mapping.to_dict()
 
     # output setup
     # HACK: this is to change "phase 1 additional" into phase1_additional
@@ -166,9 +159,11 @@ def select_cases(
     clinical.columns = clinical.columns.str.lower()
 
     # Get all samples for those patients
-    samples_per_patient = clinical.loc[
-        clinical["patient_id"].isin(selected_cases), "sample_id"
-    ].astype(str)
+    # TODO: fix me
+    # samples_per_patient = clinical['sample_id'][
+    #     clinical["patient_id"].isin(selected_cases)
+    # ]
+    # print(samples_per_patient)
 
     # Mapping data for each instrument
     patient_output = pd.DataFrame({"record_id": selected_cases})
@@ -221,6 +216,7 @@ def select_cases(
     patient_output.loc[
         patient_output["birth_year"] == "cannotReleaseHIPAA", "birth_year"
     ] = pd.NA
+    # TODO: Fix me
     # patient_output.loc[
     #     patient_output["naaccr_ethnicity_code"] == -1, "naaccr_ethnicity_code"
     # ] = 9
@@ -236,44 +232,34 @@ def select_cases(
 
     # Instrument - cancer_panel_test
     sample_info_list = []
-    for x in samples_per_patient:
+    for patient_id in selected_cases:
         sample_list = []
+        subset_df = clinical[clinical['PATIENT_ID'] == patient_id]
+        # TODO: Fix me
         for i, sample_id in enumerate(x):
+            print(sample_id)
+            subset_df = clinical[clinical["sample_id"] == sample_id]
+            # print(subset_df)
             temp_df = pd.DataFrame(
                 {
-                    "record_id": clinical.loc[
-                        clinical["sample_id"] == sample_id, "patient_id"
-                    ]
+                    "record_id": subset_df['patient_id']
                 }
             )
             temp_df["redcap_repeat_instrument"] = "cancer_panel_test"
             temp_df["redcap_repeat_instance"] = i
-            temp_df["redcap_data_access_group"] = clinical.loc[
-                clinical["sample_id"] == sample_id, "center"
-            ]
+            temp_df["redcap_data_access_group"] = subset_df["center"]
 
             temp_df["cpt_genie_sample_id"] = sample_id
-            temp_df["cpt_oncotree_code"] = clinical.loc[
-                clinical["sample_id"] == sample_id, "oncotree_code"
-            ]
-            temp_df["cpt_sample_type"] = clinical.loc[
-                clinical["sample_id"] == sample_id, "sample_type_detailed"
-            ]
-            temp_df["cpt_seq_assay_id"] = clinical.loc[
-                clinical["sample_id"] == sample_id, "seq_assay_id"
-            ]
-            temp_df["cpt_seq_date"] = clinical.loc[
-                clinical["sample_id"] == sample_id, "seq_year"
-            ]
-            temp_df["age_at_seq_report"] = clinical.loc[
-                clinical["sample_id"] == sample_id, "age_at_seq_report_days"
-            ]
+            temp_df["cpt_oncotree_code"] = subset_df["oncotree_code"]
+            temp_df["cpt_sample_type"] = subset_df["sample_type_detailed"]
+            temp_df["cpt_seq_assay_id"] = subset_df["seq_assay_id"]
 
+            temp_df["cpt_seq_date"] = subset_df["seq_year"]
+            temp_df["age_at_seq_report"] = subset_df['age_at_seq_report_days']
             sample_list.append(temp_df)
 
         combined_df = pd.concat(sample_list, ignore_index=True)
         sample_info_list.append(combined_df)
-
     sample_info_df = pd.concat(sample_info_list, ignore_index=True)
     patient_output = pd.concat([patient_output, sample_info_df], ignore_index=True)
 
@@ -291,9 +277,9 @@ def select_cases(
         name=output_entity_name,
         annotations={"phase": phase, "cohort": cohort, "site": site},
     )
-    syn_file = syn.store(syn_file)
-    syn.setProvenance(syn_file, act)
-    os.remove(output_file_name)
+    # syn_file = syn.store(syn_file)
+    # syn.setProvenance(syn_file, act)
+    # os.remove(output_file_name)
 
 
 def main(args):
