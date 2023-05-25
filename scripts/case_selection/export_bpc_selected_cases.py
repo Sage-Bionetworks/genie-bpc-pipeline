@@ -5,10 +5,12 @@
 
 import argparse
 import os
+import pathlib
 from datetime import datetime
 
 import synapseclient
 import pandas as pd
+import yaml
 
 import utils
 
@@ -21,7 +23,12 @@ def build_args():
     """
     # user input --------------------------
     # TODO Use config file to auto assign choices
-
+    cur_path = pathlib.Path(__file__).parent.resolve()
+    with open(os.path.join(cur_path, "config.yaml")) as config_f:
+        config = yaml.safe_load(config_f)
+        phases = config['phase'].keys()
+        cohorts = config['release']['cohort'].keys()
+        sites = config['default']['site'].keys()
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "-i",
@@ -40,22 +47,22 @@ def build_args():
         "-p",
         "--phase",
         type=str,
-        help="BPC phase. i.e. pilot, phase 1, phase 1 additional",
-        choices=["phase 1", "phase 1 additional", "phase 2"],
+        help="BPC phase.",
+        choices=phases,
     )
     parser.add_argument(
         "-c",
         "--cohort",
         type=str,
-        help="BPC cohort. i.e. NSCLC, CRC, BrCa, and etc.",
-        choices=["NSCLC", "CRC", "BrCa", "PANC", "Prostate", "BLADDER"],
+        help="BPC cohort.",
+        choices=cohorts,
     )
     parser.add_argument(
         "-s",
         "--site",
         type=str,
-        help="BPC site. i.e. DFCI, MSK, UHN, VICC, and etc.",
-        choices=["DFCI", "MSK", "UHN", "VICC"],
+        help="BPC site.",
+        choices=sites,
     )
     args = parser.parse_args()
     return args
