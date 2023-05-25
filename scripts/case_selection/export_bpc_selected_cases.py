@@ -4,14 +4,13 @@
 
 
 import argparse
-import datetime
 import os
-from functools import reduce
+from datetime import datetime
 
 import synapseclient
 import pandas as pd
 
-from . import utils
+import utils
 
 
 def build_args():
@@ -124,28 +123,32 @@ def select_cases(
     # And everything else: "phase 2" into "phase2"
     phase_no_space = phase.replace(" ", "", 1).replace(" ", "_")
     output_entity_name = f"{site}_{cohort}_{phase_no_space}_genie_export.csv"
-    output_file_name = (
-        f"{site}_{cohort}_{phase_no_space}_genie_export_{datetime.today()}.csv"
-    )
+    today = str(datetime.today()).split(" ")[0]
+    output_file_name = f"{site}_{cohort}_{phase_no_space}_genie_export_{today}.csv"
 
     # download input file and get selected cases/samples
     selected_info = pd.read_csv(syn.get(in_file).path)
     selected_cases = selected_info["PATIENT_ID"]
 
-    # Convert selected_info$SAMPLE_IDS to a list
+    # Convert selected_info['SAMPLE_IDS'] to a list
+    # This is a column with semi-colon delimited sample ids
     selected_samples = selected_info["SAMPLE_IDS"].str.split(";").explode().tolist()
 
-    # Create query for selected cases
-    temp = ",".join(selected_samples)
-    temp = [shlex.quote(x) for x in temp.split(",")]
+    # # Create query for selected cases
+    # temp = ",".join(selected_samples)
+    # temp = [shlex.quote(x) for x in temp.split(",")]
 
     # Download clinical data
     clinical_sample = pd.read_csv(
-        syn.get(clinical_sample_id, downloadFile=True, followLink=True).path, skiprows=4
+        syn.get(clinical_sample_id, followLink=True).path, comment="#", sep="\t"
     )
+    # Subset clinical samples to selected samples
+    # To reduce the merge
+    clinical_sample = clinical_sample[
+        clinical_sample["SAMPLE_ID"].isin(selected_samples)
+    ]
     clinical_patient = pd.read_csv(
-        syn.get(clinical_patient_id, downloadFile=True, followLink=True).path,
-        skiprows=4,
+        syn.get(clinical_patient_id, followLink=True).path, comment="#", sep="\t"
     )
 
     # Combined clinical data
@@ -264,21 +267,21 @@ def select_cases(
 
     # Output and upload
     patient_output.to_csv(output_file_name, index=False, quoting=True)
-    act = synapseclient.Activity(
-        name="export main GENIE data",
-        description="Export selected BPC patient data from main GENIE database",
-        used=[clinical_sample_id, clinical_patient_id, in_file],
-        executed="https://github.com/Sage-Bionetworks/genie-bpc-pipeline/tree/develop/scripts/case_selection/export_bpc_selected_cases.R",
-    )
-    syn_file = synapseclient.File(
-        output_file_name,
-        parent=out_folder,
-        name=output_entity_name,
-        annotations={"phase": phase, "cohort": cohort, "site": site},
-    )
-    syn_file = syn.store(syn_file)
-    syn.setProvenance(syn_file, act)
-    os.remove(output_file_name)
+    # act = synapseclient.Activity(
+    #     name="export main GENIE data",
+    #     description="Export selected BPC patient data from main GENIE database",
+    #     used=[clinical_sample_id, clinical_patient_id, in_file],
+    #     executed="https://github.com/Sage-Bionetworks/genie-bpc-pipeline/tree/develop/scripts/case_selection/export_bpc_selected_cases.R",
+    # )
+    # syn_file = synapseclient.File(
+    #     output_file_name,
+    #     parent=out_folder,
+    #     name=output_entity_name,
+    #     annotations={"phase": phase, "cohort": cohort, "site": site},
+    # )
+    # syn_file = syn.store(syn_file)
+    # syn.setProvenance(syn_file, act)
+    # os.remove(output_file_name)
 
 
 def main(args):
@@ -289,7 +292,7 @@ def main(args):
     phase = args.phase
     cohort = args.cohort
     site = args.site
-    select_cases(in_file, out_folder, phase, cohort, site)
+    select_cases(syn, in_file, out_folder, phase, cohort, site)
 
 
 if __name__ == "__main__":
