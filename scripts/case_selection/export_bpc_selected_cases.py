@@ -117,6 +117,14 @@ def select_cases(
     sex_mapping = syn.tableQuery("SELECT * FROM syn7434222").asDataFrame()
     race_mapping = syn.tableQuery("SELECT * FROM syn7434236").asDataFrame()
     ethnicity_mapping = syn.tableQuery("SELECT * FROM syn7434242").asDataFrame()
+    race_mapping.index = race_mapping["CODE"]
+    race_dict = race_mapping.to_dict()
+
+    ethnicity_mapping.index = ethnicity_mapping["CODE"]
+    ethnicity_dict = ethnicity_mapping.to_dict()
+
+    sex_mapping.index = sex_mapping["CODE"]
+    sex_dict = sex_mapping.to_dict()
 
     # output setup
     # HACK: this is to change "phase 1 additional" into phase1_additional
@@ -189,38 +197,42 @@ def select_cases(
     ]
 
     # Mapping to code
-    patient_output["naaccr_ethnicity_code"] = patient_output[
-        "naaccr_ethnicity_code"
-    ].map(ethnicity_mapping.set_index("CBIO_LABEL")["CODE"])
-    patient_output["naaccr_race_code_primary"] = patient_output[
-        "naaccr_race_code_primary"
-    ].map(race_mapping.set_index("CBIO_LABEL")["CODE"])
-    patient_output["naaccr_race_code_secondary"] = patient_output[
-        "naaccr_race_code_secondary"
-    ].map(race_mapping.set_index("CBIO_LABEL")["CODE"])
-    patient_output["naaccr_race_code_tertiary"] = patient_output[
-        "naaccr_race_code_tertiary"
-    ].map(race_mapping.set_index("CBIO_LABEL")["CODE"])
-    patient_output["naaccr_sex_code"] = patient_output["naaccr_sex_code"].map(
-        sex_mapping.set_index("CBIO_LABEL")["CODE"]
-    )
+    # TODO: How can you map to code... Its a one to many mapping...
+    # you can go from code to cbioportal label but not back
+    # Why is it mapped back to code?
+    # patient_output["naaccr_ethnicity_code"] = patient_output[
+    #     "naaccr_ethnicity_code"
+    # ].map(ethnicity_mapping.set_index("CODE")["CBIO_LABEL"])
+    # print(patient_output["naaccr_ethnicity_code"])
+    # patient_output["naaccr_race_code_primary"] = patient_output[
+    #     "naaccr_race_code_primary"
+    # ].map(race_mapping.set_index("CBIO_LABEL")["CODE"])
+    # patient_output["naaccr_race_code_secondary"] = patient_output[
+    #     "naaccr_race_code_secondary"
+    # ].map(race_mapping.set_index("CBIO_LABEL")["CODE"])
+    # patient_output["naaccr_race_code_tertiary"] = patient_output[
+    #     "naaccr_race_code_tertiary"
+    # ].map(race_mapping.set_index("CBIO_LABEL")["CODE"])
+    # patient_output["naaccr_sex_code"] = patient_output["naaccr_sex_code"].map(
+    #     sex_mapping.set_index("CBIO_LABEL")["CODE"]
+    # )
 
     # Recode values in patient_output DataFrame
     patient_output.loc[
         patient_output["birth_year"] == "cannotReleaseHIPAA", "birth_year"
     ] = pd.NA
-    patient_output.loc[
-        patient_output["naaccr_ethnicity_code"] == -1, "naaccr_ethnicity_code"
-    ] = 9
-    patient_output.loc[
-        patient_output["naaccr_race_code_primary"] == -1, "naaccr_race_code_primary"
-    ] = 99
-    patient_output.loc[
-        patient_output["naaccr_race_code_secondary"] == -1, "naaccr_race_code_secondary"
-    ] = 88
-    patient_output.loc[
-        patient_output["naaccr_race_code_tertiary"] == -1, "naaccr_race_code_tertiary"
-    ] = 88
+    # patient_output.loc[
+    #     patient_output["naaccr_ethnicity_code"] == -1, "naaccr_ethnicity_code"
+    # ] = 9
+    # patient_output.loc[
+    #     patient_output["naaccr_race_code_primary"] == -1, "naaccr_race_code_primary"
+    # ] = 99
+    # patient_output.loc[
+    #     patient_output["naaccr_race_code_secondary"] == -1, "naaccr_race_code_secondary"
+    # ] = 88
+    # patient_output.loc[
+    #     patient_output["naaccr_race_code_tertiary"] == -1, "naaccr_race_code_tertiary"
+    # ] = 88
 
     # Instrument - cancer_panel_test
     sample_info_list = []
@@ -266,22 +278,22 @@ def select_cases(
     patient_output = pd.concat([patient_output, sample_info_df], ignore_index=True)
 
     # Output and upload
-    patient_output.to_csv(output_file_name, index=False, quoting=True)
-    # act = synapseclient.Activity(
-    #     name="export main GENIE data",
-    #     description="Export selected BPC patient data from main GENIE database",
-    #     used=[clinical_sample_id, clinical_patient_id, in_file],
-    #     executed="https://github.com/Sage-Bionetworks/genie-bpc-pipeline/tree/develop/scripts/case_selection/export_bpc_selected_cases.R",
-    # )
-    # syn_file = synapseclient.File(
-    #     output_file_name,
-    #     parent=out_folder,
-    #     name=output_entity_name,
-    #     annotations={"phase": phase, "cohort": cohort, "site": site},
-    # )
-    # syn_file = syn.store(syn_file)
-    # syn.setProvenance(syn_file, act)
-    # os.remove(output_file_name)
+    patient_output.to_csv(output_file_name, index=False)
+    act = synapseclient.Activity(
+        name="export main GENIE data",
+        description="Export selected BPC patient data from main GENIE database",
+        used=[clinical_sample_id, clinical_patient_id, in_file],
+        executed="https://github.com/Sage-Bionetworks/genie-bpc-pipeline/tree/develop/scripts/case_selection/export_bpc_selected_cases.R",
+    )
+    syn_file = synapseclient.File(
+        output_file_name,
+        parent=out_folder,
+        name=output_entity_name,
+        annotations={"phase": phase, "cohort": cohort, "site": site},
+    )
+    syn_file = syn.store(syn_file)
+    syn.setProvenance(syn_file, act)
+    os.remove(output_file_name)
 
 
 def main(args):
