@@ -2,7 +2,6 @@
 
 params.cohort = 'NSCLC'
 params.comment = 'NSCLC public release update'
-params.synapse_config = false  // Default
 
 // Check if cohort is part of allowed cohort list
 def allowed_cohorts = ["BLADDER", "BrCa", "CRC", "NSCLC", "PANC", "Prostate", "CRC2", "NSCLC2", "MELANOMA", "OVARIAN", "ESOPHAGO", "RENAL"]
@@ -10,7 +9,6 @@ if (!allowed_cohorts.contains(params.cohort)) {exit 1, 'Invalid cohort name'}
 
 ch_cohort = Channel.value(params.cohort)
 ch_comment = Channel.value(params.comment)
-ch_synapse_config = params.synapse_config ? Channel.value(file(params.synapse_config)) : "null"
 
 /*
 Run quality asssurance checklist for the upload report at error level.  
@@ -23,24 +21,16 @@ process quacUploadReportError {
 
    input:
    // val previous from outCheckCohortCode
-   file syn_config   from ch_synapse_config
    val cohort        from ch_cohort
 
    output:
    stdout into outUploadReportError
 
    script:
-   if ( params.synapse_config ) {
-      """
-      cd /usr/local/src/myscripts/
-      Rscript genie-bpc-quac.R -c $cohort -s all -r upload -l error -v -a $syn_config
-      """
-   } else {
-      """
-      cd /usr/local/src/myscripts/
-      Rscript genie-bpc-quac.R -c $cohort -s all -r upload -l error -v
-      """
-   }
+   """
+   cd /usr/local/src/myscripts/
+   Rscript genie-bpc-quac.R -c $cohort -s all -r upload -l error -v
+   """
 }
 
 outUploadReportError.view()
@@ -55,24 +45,16 @@ process quacUploadReportWarning {
 
    input:
    val previous from outUploadReportError
-   file syn_config   from ch_synapse_config
    val cohort        from ch_cohort
 
    output:
    stdout into outUploadReportWarning
 
    script:
-   if ( params.synapse_config ) {
-      """
-      cd /usr/local/src/myscripts/
-      Rscript genie-bpc-quac.R -c $cohort -s all -r upload -l warning -u -v -a $syn_config
-      """
-   } else {
-      """
-      cd /usr/local/src/myscripts/
-      Rscript genie-bpc-quac.R -c $cohort -s all -r upload -l warning -u -v
-      """
-   }
+   """
+   cd /usr/local/src/myscripts/
+   Rscript genie-bpc-quac.R -c $cohort -s all -r upload -l warning -u -v
+   """
 }
 
 outUploadReportWarning.view()
@@ -87,24 +69,16 @@ process mergeAndUncodeRcaUploads {
 
    input:
    val previous from outUploadReportWarning
-   file syn_config   from ch_synapse_config
    val cohort        from ch_cohort
 
    output:
    stdout into outMergeAndUncodeRcaUploads
 
    script:
-   if ( params.synapse_config ) {
-      """
-      cd /usr/local/src/myscripts/
-      Rscript merge_and_uncode_rca_uploads.R -c $cohort -u -a $syn_config -v
-      """
-   } else {
-      """
-      cd /usr/local/src/myscripts/
-      Rscript merge_and_uncode_rca_uploads.R -c $cohort -u -v
-      """
-   }
+   """
+   cd /usr/local/src/myscripts/
+   Rscript merge_and_uncode_rca_uploads.R -c $cohort -u -v
+   """
 }
 
 outMergeAndUncodeRcaUploads.view()
@@ -119,24 +93,16 @@ process tmpRemovePatientsFromMerged {
 
    input:
    val previous from outMergeAndUncodeRcaUploads
-   file syn_config   from ch_synapse_config
    val cohort        from ch_cohort
 
    output:
    stdout into outTmpRemovePatientsFromMerged
 
    script:
-   if ( params.synapse_config ) {
-      """
-      cd /usr/local/src/myscripts/
-      Rscript remove_patients_from_merged.R -c $cohort -a $syn_config -v
-      """
-   } else {
-      """
-      cd /usr/local/src/myscripts/
-      Rscript remove_patients_from_merged.R -c $cohort -v
-      """
-   }
+   """
+   cd /usr/local/src/myscripts/
+   Rscript remove_patients_from_merged.R -c $cohort -v
+   """
 }
 
 outTmpRemovePatientsFromMerged.view()
@@ -151,24 +117,16 @@ process updateDataTable {
 
    input:
    val previous from outTmpRemovePatientsFromMerged
-   file syn_config   from ch_synapse_config
    val comment       from ch_comment
 
    output:
    stdout into outUpdateDataTable
 
    script:
-   if ( params.synapse_config ) {
-      """
-      cd /root/scripts/
-      python update_data_table.py -s $syn_config -p /root/scripts/config.json -m $comment primary
-      """
-   } else {
-      """
-      cd /root/scripts/
-      python update_data_table.py -p /root/scripts/config.json -m $comment primary
-      """
-   }
+   """
+   cd /root/scripts/
+   python update_data_table.py -p /root/scripts/config.json -m $comment primary
+   """
 }
 
 outUpdateDataTable.view()
@@ -184,7 +142,6 @@ process updateDateTrackingTable {
 
    input:
    val previous from outUpdateDataTable
-   file syn_config   from ch_synapse_config
    val cohort        from ch_cohort
    val comment       from ch_comment
 
@@ -192,17 +149,10 @@ process updateDateTrackingTable {
    stdout into outUpdateDateTrackingTable
 
    script:
-   if ( params.synapse_config ) {
-      """
-      cd /usr/local/src/myscripts/
-      Rscript update_date_tracking_table.R -c $cohort -d `date +'%Y-%m-%d'` -s $comment -a $syn_config
-      """
-   } else {
-      """
-      cd /usr/local/src/myscripts/
-      Rscript update_date_tracking_table.R -c $cohort -d `date +'%Y-%m-%d'` -s $comment
-      """
-   }
+   """
+   cd /usr/local/src/myscripts/
+   Rscript update_date_tracking_table.R -c $cohort -d `date +'%Y-%m-%d'` -s $comment
+   """
 }
 
 outUpdateDateTrackingTable.view()
@@ -218,26 +168,17 @@ process quacTableReport {
 
    input:
    val previous from outUpdateDateTrackingTable
-   file syn_config   from ch_synapse_config
    val cohort        from ch_cohort
 
    output:
    stdout into outTableReport
 
    script:
-   if ( params.synapse_config ) {
-      """
-      cd /usr/local/src/myscripts/
-      Rscript genie-bpc-quac.R -c $cohort -s all -r table -l error -u -v -a $syn_config
-      Rscript genie-bpc-quac.R -c $cohort -s all -r table -l warning -u -v -a $syn_config
-      """
-   } else {
-      """
-      cd /usr/local/src/myscripts/
-      Rscript genie-bpc-quac.R -c $cohort -s all -r table -l error -u -v
-      Rscript genie-bpc-quac.R -c $cohort -s all -r table -l warning -u -v
-      """
-   }
+   """
+   cd /usr/local/src/myscripts/
+   Rscript genie-bpc-quac.R -c $cohort -s all -r table -l error -u -v
+   Rscript genie-bpc-quac.R -c $cohort -s all -r table -l warning -u -v
+   """
 }
 
 outTableReport.view()
@@ -252,26 +193,17 @@ process quacComparisonReport {
 
    input:
    val previous from outTableReport
-   file syn_config   from ch_synapse_config
    val cohort        from ch_cohort
 
    output:
    stdout into outComparisonReport
 
    script:
-   if ( params.synapse_config ) {
-      """
-      cd /usr/local/src/myscripts/
-      Rscript genie-bpc-quac.R -c $cohort -s all -r comparison -l error -u -v -a $syn_config
-      Rscript genie-bpc-quac.R -c $cohort -s all -r comparison -l warning -u -v -a $syn_config
-      """
-   } else {
-      """
-      cd /usr/local/src/myscripts/
-      Rscript genie-bpc-quac.R -c $cohort -s all -r comparison -l error -u -v
-      Rscript genie-bpc-quac.R -c $cohort -s all -r comparison -l warning -u -v
-      """
-   }
+   """
+   cd /usr/local/src/myscripts/
+   Rscript genie-bpc-quac.R -c $cohort -s all -r comparison -l error -u -v
+   Rscript genie-bpc-quac.R -c $cohort -s all -r comparison -l warning -u -v
+   """
 }
 
 outComparisonReport.view()
@@ -286,24 +218,16 @@ process maskingReport {
 
    input:
    val previous from outComparisonReport
-   file syn_config   from ch_synapse_config
    val cohort        from ch_cohort
 
    output:
    stdout into outMaskingReport
 
    script:
-   if ( params.synapse_config ) {
-      """
-      cd /usr/local/src/myscripts/
-      Rscript workflow_unmasked_drugs.R -c $cohort -d `date +'%Y-%m-%d'` -s -a $syn_config
-      """
-   } else {
-      """
-      cd /usr/local/src/myscripts/
-      Rscript workflow_unmasked_drugs.R -c $cohort -d `date +'%Y-%m-%d'` -s
-      """
-   }
+   """
+   cd /usr/local/src/myscripts/
+   Rscript workflow_unmasked_drugs.R -c $cohort -d `date +'%Y-%m-%d'` -s
+   """
 }
 
 outMaskingReport.view()
@@ -319,25 +243,16 @@ process updateCaseCountTable {
 
    input:
    val previous from outMaskingReport
-   file syn_config   from ch_synapse_config
    val comment       from ch_comment
 
    output:
    stdout into outCaseCount
 
    script:
-   if ( params.synapse_config ) {
-      """
-      cd /usr/local/src/myscripts/
-      Rscript update_case_count_table.R -s -c $comment -a $syn_config
-      """
-   } else {
-      """
-      cd /usr/local/src/myscripts/
-      Rscript update_case_count_table.R -s -c $comment
-      """
-   }
+   """
+   cd /usr/local/src/myscripts/
+   Rscript update_case_count_table.R -s -c $comment
+   """
 }
 
 outCaseCount.view()
-
