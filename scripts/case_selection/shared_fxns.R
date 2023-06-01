@@ -45,7 +45,7 @@ get_sdv_or_irr_value <- function(config, phase, cohort, site, key = c("sdv", "ir
   n_prod <- get_production(config, phase, cohort, site)
   
   # site default
-  val_site <- get_default_site(config, site, "val")
+  val_site <- get_default_site(config, site, key)
   if (!is.null(val_site) && is.na(val_site)) {
     if (val_site < 1) {
       return(round(val_site * (n_prod)))
@@ -54,7 +54,7 @@ get_sdv_or_irr_value <- function(config, phase, cohort, site, key = c("sdv", "ir
   }
   
   # custom
-  val_custom <- get_custom(config, phase, cohort, site, "val")
+  val_custom <- get_custom(config, phase, cohort, site, key)
   if (!is.null(val_custom) && !is.na(val_custom)) {
     if (val_custom < 1) {
       return(round(val_custom * (n_prod)))
@@ -63,7 +63,7 @@ get_sdv_or_irr_value <- function(config, phase, cohort, site, key = c("sdv", "ir
   }
   
   # site default
-  val_site <- get_default_site(config, site, "val")
+  val_site <- get_default_site(config, site, key)
   if (!is.null(val_site) && !is.na(val_site)) {
     if (val_site < 1) {
       return(round(val_site * (n_prod)))
