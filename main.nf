@@ -163,7 +163,7 @@ process updateDataTable {
    else {
       """
       cd /root/scripts/
-      python update_data_table.py -p /root/scripts/config.json -m $comment primary -d
+      python update_data_table.py -p /root/scripts/config.json -m $comment -d True primary
       """
    }
 }
