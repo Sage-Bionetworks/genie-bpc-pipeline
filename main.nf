@@ -1,6 +1,11 @@
 #!/usr/bin/env nextflow
 
 params.cohort = 'NSCLC'
+/* 
+Note: For multi-word strings like in the param comment here, everywhere that calls $comment as an argument
+needed to be enclosed with double quotes so that nextflow interprets it as an entire string and 
+not separate command line arguments 
+*/
 params.comment = 'NSCLC public release update'
 // testing or production pipeline
 params.production = false

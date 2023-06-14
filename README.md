@@ -204,7 +204,7 @@ This workflow takes care of transferring files to and from Synapse. Hence, it re
 
 ### Commands
 
-You can visit [parameters](https://github.com/Sage-Bionetworks/genie-bpc-pipeline/blob/develop/main.nf#L2-L6) to see the list of currently available parameters/flags and their default values if you don't specify any.
+You can visit [parameters](https://github.com/Sage-Bionetworks/genie-bpc-pipeline/blob/develop/main.nf#L2-L11) to see the list of currently available parameters/flags and their default values if you don't specify any.
 
 ### Running nextflow using an EC2
 
