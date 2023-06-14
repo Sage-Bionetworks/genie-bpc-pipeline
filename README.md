@@ -210,15 +210,15 @@ You can visit [parameters](https://github.com/Sage-Bionetworks/genie-bpc-pipelin
 
 1. For an ec2 instance with Linux and docker, see here for installing Java 11: [How do I install a software package from the Extras Library on an EC2 instance running Amazon Linux 2?](https://aws.amazon.com/premiumsupport/knowledge-center/ec2-install-extras-library-software/)
 
-1. Install nextflow by following instructions here: [Get started — Nextflow](https://www.nextflow.io/docs/latest/getstarted.html#get-started)
+1. Install nextflow by following instructions here: [Get started — Nextflow](https://www.nextflow.io/docs/latest/getstarted.html#get-started). Update your `PATH` variable to include the directory where your nextflow executable is installed at.
 
-- Update PATH to include directory where your nextflow executable is
+1. Make sure to set any nextflow secrets using the Nextflow Cli: [Secrets — Nextflow](https://www.nextflow.io/docs/latest/secrets.html#command-line). You will need to set a `SYNAPSE_AUTH_TOKEN` secret for running the nextflow genie repo by doing 
 
-1. Make sure to set any nextflow secrets using the Nextflow Cli: [Secrets — Nextflow](https://www.nextflow.io/docs/latest/secrets.html#command-line)
+```
+nextflow secrets set SYNAPSE_AUTH_TOKEN “INSERT YOUR SYNAPSE TOKEN HERE”
+```
 
-- You will need to set a SYNAPSE_AUTH_TOKEN secret for running the nextflow genie repo by doing nextflow secrets set SYNAPSE_AUTH_TOKEN “INSERT YOUR SYNAPSE TOKEN HERE”
-
-1. Make any changes
+1. Make any changes to `main.nf`
 
 1. Run the pipeline
 
