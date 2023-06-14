@@ -170,4 +170,64 @@ To conduct case selection for a new site, modify the `config.yaml` file. Add in 
 During curation, sites may find cases to be ineligible and may have no additional case for which to substitute the ineligible case.  To account for expected reductions in the target count, update the `adjusted` target number in the `config.yaml` file.  These numbers will then be reflected in the `Case Selection Counts` Table on Synapse (syn26228746) and used in the QA checks to verify the number of submitted cases from each site matches the adjusted target.  
 
 ### Selection of additional samples
-After initial case selection and curation, additional samples for selected cases may be submitted through the main GENIE releases.  These additional samples are collected for curators upon request.  These cohorts are defined in much the same way as other cohorts but without production targets.  See format under the `1_additional` key in the `config.yaml` file for an example.  
+After initial case selection and curation, additional samples for selected cases may be submitted through the main GENIE releases.  These additional samples are collected for curators upon request.  These cohorts are defined in much the same way as other cohorts but without production targets.  See format under the `1_additional` key in the `config.yaml` file for an example.
+
+## Nextflow development
+
+Follow instructions here for running the genie BPC pipeline nextflow workflow locally
+
+An EC2 instance is **required** to run processing and develop locally. Follow instructions using [Service-Catalog-Provisioning](https://help.sc.sageit.org/sc/Service-Catalog-Provisioning.938836322.html) to create an ec2 on service catalog. You will also want to follow the section [SSM with SSH](https://help.sc.sageit.org/sc/Service-Catalog-Provisioning.938836322.html#ServiceCatalogProvisioning-SSMwithSSH) if you want to use VS code to run/develop.
+
+For GENIE BPC, here are the specification recommendations when launching an EC2 instance:
+
+- EC2 Product: Linux with Docker
+- EC2 Instance Type: t3.2xlarge
+- Disk size: ~100 GB
+
+### Dependencies
+
+- [Java 8 or later](https://www.java.com/en/download/)
+- [Nextflow 22.10.x or earlier](https://www.nextflow.io/docs/latest/getstarted.html#get-started)
+
+
+### Configuration
+
+Prior to running the pipeline, you will need to create a Nextflow secret called `SYNAPSE_AUTH_TOKEN`
+with a Synapse personal access token ([docs](#authentication)).
+
+### Authentication
+
+This workflow takes care of transferring files to and from Synapse. Hence, it requires a secret with a personal access token for authentication. To configure Nextflow with such a token, follow these steps:
+
+1. Generate a personal access token (PAT) on Synapse using [this dashboard](https://www.synapse.org/#!PersonalAccessTokens:). Make sure to enable the `view`, `download`, and `modify` scopes since this workflow both downloads and uploads to Synapse.
+2. Create a secret called `SYNAPSE_AUTH_TOKEN` containing a Synapse personal access token using the [Nextflow CLI](https://nextflow.io/docs/latest/secrets.html)
+
+### Commands
+
+You can visit [parameters](https://github.com/Sage-Bionetworks/genie-bpc-pipeline/blob/develop/main.nf#L2-L6) to see the list of currently available parameters/flags and their default values if you don't specify any.
+
+### Running nextflow using an EC2
+
+1. For an ec2 instance with Linux and docker, see here for installing Java 11: [How do I install a software package from the Extras Library on an EC2 instance running Amazon Linux 2?](https://aws.amazon.com/premiumsupport/knowledge-center/ec2-install-extras-library-software/)
+
+1. Install nextflow by following instructions here: [Get started — Nextflow](https://www.nextflow.io/docs/latest/getstarted.html#get-started)
+
+- Update PATH to include directory where your nextflow executable is
+
+1. Make sure to set any nextflow secrets using the Nextflow Cli: [Secrets — Nextflow](https://www.nextflow.io/docs/latest/secrets.html#command-line)
+
+- You will need to set a SYNAPSE_AUTH_TOKEN secret for running the nextflow genie repo by doing nextflow secrets set SYNAPSE_AUTH_TOKEN “INSERT YOUR SYNAPSE TOKEN HERE”
+
+1. Make any changes
+
+1. Run the pipeline
+
+```bash
+nextflow main.nf
+```
+
+Note: you can also chose what version of nextflow to run with using:
+
+```bash
+NXF_VER=<nextflow_version> nextflow main.nf
+```

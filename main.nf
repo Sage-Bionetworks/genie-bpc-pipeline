@@ -157,13 +157,13 @@ process updateDataTable {
    if (params.production) {
       """
       cd /root/scripts/
-      python update_data_table.py -p /root/scripts/config.json -m $comment primary
+      python update_data_table.py -p /root/scripts/config.json -m "$comment" primary
       """
    }
    else {
       """
       cd /root/scripts/
-      python update_data_table.py -p /root/scripts/config.json -m $comment -d True primary
+      python update_data_table.py -p /root/scripts/config.json -m "$comment" primary -d
       """
    }
 }
@@ -192,7 +192,7 @@ process updateDateTrackingTable {
    if (params.production) {
       """
       cd /usr/local/src/myscripts/
-      Rscript update_date_tracking_table.R -c $cohort -d `date +'%Y-%m-%d'` -s $comment
+      Rscript update_date_tracking_table.R -c $cohort -d `date +'%Y-%m-%d'` -s "$comment"
       """
    }
    else {
@@ -330,7 +330,7 @@ process updateCaseCountTable {
    if (params.production) {
       """
       cd /usr/local/src/myscripts/
-      Rscript update_case_count_table.R -s -c $comment
+      Rscript update_case_count_table.R -s -c "$comment"
       """
    }
    else {

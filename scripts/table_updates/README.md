@@ -3,6 +3,9 @@ BPC Table Update
 
 Installation and Setup
 ----------------------
+### Python version
+Make sure you have Python 3.8 installed
+
 ### Install the required packages
     (sudo) pip install -r requirements.txt
 
