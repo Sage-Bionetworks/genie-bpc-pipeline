@@ -28,6 +28,10 @@ or store in ~/.synapseConfig with the following format:
 authtoken = {your_personal_access_token_here}
 ```
 
+## Usage: running the genie bpc nextflow pipeline
+
+Skip to this section to learn about how to develop and run the nextflow pipeline locally: ([nextflow development](#nextflow-development))
+
 ## Usage: case selection
 
 To display the command line interface:
@@ -184,13 +188,13 @@ For GENIE BPC, here are the specification recommendations when launching an EC2 
 - EC2 Instance Type: t3.2xlarge
 - Disk size: ~100 GB
 
-### Dependencies
+### Nextflow Dependencies
 
 - [Java 8 or later](https://www.java.com/en/download/)
 - [Nextflow 22.10.x or earlier](https://www.nextflow.io/docs/latest/getstarted.html#get-started)
 
 
-### Configuration
+### Nextflow Configuration
 
 Prior to running the pipeline, you will need to create a Nextflow secret called `SYNAPSE_AUTH_TOKEN`
 with a Synapse personal access token ([docs](#authentication)).
@@ -210,17 +214,17 @@ You can visit [parameters](https://github.com/Sage-Bionetworks/genie-bpc-pipelin
 
 1. For an ec2 instance with Linux and docker, see here for installing Java 11: [How do I install a software package from the Extras Library on an EC2 instance running Amazon Linux 2?](https://aws.amazon.com/premiumsupport/knowledge-center/ec2-install-extras-library-software/)
 
-1. Install nextflow by following instructions here: [Get started — Nextflow](https://www.nextflow.io/docs/latest/getstarted.html#get-started). Update your `PATH` variable to include the directory where your nextflow executable is installed at.
+2. Install nextflow by following instructions here: [Get started — Nextflow](https://www.nextflow.io/docs/latest/getstarted.html#get-started). Update your `PATH` variable to include the directory where your nextflow executable is installed at.
 
-1. Make sure to set any nextflow secrets using the Nextflow Cli: [Secrets — Nextflow](https://www.nextflow.io/docs/latest/secrets.html#command-line). You will need to set a `SYNAPSE_AUTH_TOKEN` secret for running the nextflow genie repo by doing 
+3. Make sure to set any nextflow secrets using the Nextflow Cli: [Secrets — Nextflow](https://www.nextflow.io/docs/latest/secrets.html#command-line). You will need to set a `SYNAPSE_AUTH_TOKEN` secret for running the nextflow genie repo by doing 
 
 ```
 nextflow secrets set SYNAPSE_AUTH_TOKEN “INSERT YOUR SYNAPSE TOKEN HERE”
 ```
 
-1. Make any changes to `main.nf`
+4. Make any changes to `main.nf`
 
-1. Run the pipeline
+5. Run the pipeline
 
 ```bash
 nextflow main.nf
