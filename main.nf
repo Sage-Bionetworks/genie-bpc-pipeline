@@ -1,7 +1,14 @@
 #!/usr/bin/env nextflow
 
 params.cohort = 'NSCLC'
+/* 
+Note: For multi-word strings like in the param comment here, everywhere that calls $comment as an argument
+needed to be enclosed with double quotes so that nextflow interprets it as an entire string and 
+not separate command line arguments 
+*/
 params.comment = 'NSCLC public release update'
+// testing or production pipeline
+params.production = false
 
 // Check if cohort is part of allowed cohort list
 def allowed_cohorts = ["BLADDER", "BrCa", "CRC", "NSCLC", "PANC", "Prostate", "CRC2", "NSCLC2", "MELANOMA", "OVARIAN", "ESOPHAGO", "RENAL"]
@@ -18,6 +25,7 @@ process quacUploadReportError {
 
    container 'sagebionetworks/genie-bpc-quac'
    secret 'SYNAPSE_AUTH_TOKEN'
+   debug true
 
    input:
    // val previous from outCheckCohortCode
@@ -42,6 +50,7 @@ process quacUploadReportWarning {
 
    container 'sagebionetworks/genie-bpc-quac'
    secret 'SYNAPSE_AUTH_TOKEN'
+   debug true
 
    input:
    val previous from outUploadReportError
@@ -51,10 +60,18 @@ process quacUploadReportWarning {
    stdout into outUploadReportWarning
 
    script:
-   """
-   cd /usr/local/src/myscripts/
-   Rscript genie-bpc-quac.R -c $cohort -s all -r upload -l warning -u -v
-   """
+   if (params.production) {
+      """
+      cd /usr/local/src/myscripts/
+      Rscript genie-bpc-quac.R -c $cohort -s all -r upload -l warning -u -v
+      """
+   } 
+   else {
+      """
+      cd /usr/local/src/myscripts/
+      Rscript genie-bpc-quac.R -c $cohort -s all -r upload -l warning -v
+      """
+   }
 }
 
 outUploadReportWarning.view()
@@ -66,6 +83,7 @@ process mergeAndUncodeRcaUploads {
 
    container 'sagebionetworks/genie-bpc-pipeline-uploads'
    secret 'SYNAPSE_AUTH_TOKEN'
+   debug true
 
    input:
    val previous from outUploadReportWarning
@@ -75,10 +93,18 @@ process mergeAndUncodeRcaUploads {
    stdout into outMergeAndUncodeRcaUploads
 
    script:
-   """
-   cd /usr/local/src/myscripts/
-   Rscript merge_and_uncode_rca_uploads.R -c $cohort -u -v
-   """
+   if (params.production) {
+      """
+      cd /usr/local/src/myscripts/
+      Rscript merge_and_uncode_rca_uploads.R -c $cohort -u -v
+      """
+   }
+   else {
+      """
+      cd /usr/local/src/myscripts/
+      Rscript merge_and_uncode_rca_uploads.R -c $cohort -v
+      """
+   }
 }
 
 outMergeAndUncodeRcaUploads.view()
@@ -90,6 +116,7 @@ process tmpRemovePatientsFromMerged {
 
    container 'sagebionetworks/genie-bpc-pipeline-uploads'
    secret 'SYNAPSE_AUTH_TOKEN'
+   debug true
 
    input:
    val previous from outMergeAndUncodeRcaUploads
@@ -99,10 +126,18 @@ process tmpRemovePatientsFromMerged {
    stdout into outTmpRemovePatientsFromMerged
 
    script:
-   """
-   cd /usr/local/src/myscripts/
-   Rscript remove_patients_from_merged.R -c $cohort -v
-   """
+   if (params.production) {
+      """
+      cd /usr/local/src/myscripts/
+      Rscript remove_patients_from_merged.R -c $cohort -v
+      """
+   }
+   else {
+      """
+      cd /usr/local/src/myscripts/
+      Rscript remove_patients_from_merged.R -c $cohort -v -o NA
+      """
+   }
 }
 
 outTmpRemovePatientsFromMerged.view()
@@ -114,6 +149,7 @@ process updateDataTable {
 
    container 'sagebionetworks/genie-bpc-pipeline-table-updates'
    secret 'SYNAPSE_AUTH_TOKEN'
+   debug true
 
    input:
    val previous from outTmpRemovePatientsFromMerged
@@ -123,10 +159,18 @@ process updateDataTable {
    stdout into outUpdateDataTable
 
    script:
-   """
-   cd /root/scripts/
-   python update_data_table.py -p /root/scripts/config.json -m $comment primary
-   """
+   if (params.production) {
+      """
+      cd /root/scripts/
+      python update_data_table.py -p /root/scripts/config.json -m "$comment" primary
+      """
+   }
+   else {
+      """
+      cd /root/scripts/
+      python update_data_table.py -p /root/scripts/config.json -m "$comment" primary -d
+      """
+   }
 }
 
 outUpdateDataTable.view()
@@ -139,6 +183,7 @@ process updateDateTrackingTable {
 
    container 'sagebionetworks/genie-bpc-pipeline-references'
    secret 'SYNAPSE_AUTH_TOKEN'
+   debug true
 
    input:
    val previous from outUpdateDataTable
@@ -149,10 +194,18 @@ process updateDateTrackingTable {
    stdout into outUpdateDateTrackingTable
 
    script:
-   """
-   cd /usr/local/src/myscripts/
-   Rscript update_date_tracking_table.R -c $cohort -d `date +'%Y-%m-%d'` -s $comment
-   """
+   if (params.production) {
+      """
+      cd /usr/local/src/myscripts/
+      Rscript update_date_tracking_table.R -c $cohort -d `date +'%Y-%m-%d'` -s "$comment"
+      """
+   }
+   else {
+      """
+      cd /usr/local/src/myscripts/
+      Rscript update_date_tracking_table.R -c $cohort -d `date +'%Y-%m-%d'`
+      """
+   }
 }
 
 outUpdateDateTrackingTable.view()
@@ -165,6 +218,7 @@ process quacTableReport {
 
    container 'sagebionetworks/genie-bpc-quac'
    secret 'SYNAPSE_AUTH_TOKEN'
+   debug true
 
    input:
    val previous from outUpdateDateTrackingTable
@@ -174,11 +228,20 @@ process quacTableReport {
    stdout into outTableReport
 
    script:
-   """
-   cd /usr/local/src/myscripts/
-   Rscript genie-bpc-quac.R -c $cohort -s all -r table -l error -u -v
-   Rscript genie-bpc-quac.R -c $cohort -s all -r table -l warning -u -v
-   """
+   if (params.production) {
+      """
+      cd /usr/local/src/myscripts/
+      Rscript genie-bpc-quac.R -c $cohort -s all -r table -l error -u -v
+      Rscript genie-bpc-quac.R -c $cohort -s all -r table -l warning -u -v
+      """
+   }
+   else {
+      """
+      cd /usr/local/src/myscripts/
+      Rscript genie-bpc-quac.R -c $cohort -s all -r table -l error -v
+      Rscript genie-bpc-quac.R -c $cohort -s all -r table -l warning -v
+      """
+   }
 }
 
 outTableReport.view()
@@ -190,6 +253,7 @@ process quacComparisonReport {
 
    container 'sagebionetworks/genie-bpc-quac'
    secret 'SYNAPSE_AUTH_TOKEN'
+   debug true
 
    input:
    val previous from outTableReport
@@ -199,11 +263,20 @@ process quacComparisonReport {
    stdout into outComparisonReport
 
    script:
-   """
-   cd /usr/local/src/myscripts/
-   Rscript genie-bpc-quac.R -c $cohort -s all -r comparison -l error -u -v
-   Rscript genie-bpc-quac.R -c $cohort -s all -r comparison -l warning -u -v
-   """
+   if (params.production) {
+      """
+      cd /usr/local/src/myscripts/
+      Rscript genie-bpc-quac.R -c $cohort -s all -r comparison -l error -u -v
+      Rscript genie-bpc-quac.R -c $cohort -s all -r comparison -l warning -u -v
+      """
+   }
+   else {
+      """
+      cd /usr/local/src/myscripts/
+      Rscript genie-bpc-quac.R -c $cohort -s all -r comparison -l error -v
+      Rscript genie-bpc-quac.R -c $cohort -s all -r comparison -l warning -v
+      """
+   }
 }
 
 outComparisonReport.view()
@@ -215,6 +288,7 @@ process maskingReport {
 
    container 'sagebionetworks/genie-bpc-pipeline-masking'
    secret 'SYNAPSE_AUTH_TOKEN'
+   debug true
 
    input:
    val previous from outComparisonReport
@@ -224,10 +298,18 @@ process maskingReport {
    stdout into outMaskingReport
 
    script:
-   """
-   cd /usr/local/src/myscripts/
-   Rscript workflow_unmasked_drugs.R -c $cohort -d `date +'%Y-%m-%d'` -s
-   """
+   if (params.production) {
+      """
+      cd /usr/local/src/myscripts/
+      Rscript workflow_unmasked_drugs.R -c $cohort -d `date +'%Y-%m-%d'` -s
+      """
+   }
+   else {
+      """
+      cd /usr/local/src/myscripts/
+      Rscript workflow_unmasked_drugs.R -c $cohort -d `date +'%Y-%m-%d'`
+      """
+   }
 }
 
 outMaskingReport.view()
@@ -240,6 +322,7 @@ process updateCaseCountTable {
 
    container 'sagebionetworks/genie-bpc-pipeline-case-selection'
    secret 'SYNAPSE_AUTH_TOKEN'
+   debug true
 
    input:
    val previous from outMaskingReport
@@ -249,10 +332,18 @@ process updateCaseCountTable {
    stdout into outCaseCount
 
    script:
-   """
-   cd /usr/local/src/myscripts/
-   Rscript update_case_count_table.R -s -c $comment
-   """
+   if (params.production) {
+      """
+      cd /usr/local/src/myscripts/
+      Rscript update_case_count_table.R -s -c "$comment"
+      """
+   }
+   else {
+      """
+      cd /usr/local/src/myscripts/
+      Rscript update_case_count_table.R
+      """
+   }
 }
 
 outCaseCount.view()
