@@ -191,7 +191,7 @@ For GENIE BPC, here are the specification recommendations when launching an EC2 
 ### Nextflow Dependencies
 
 - [Java 8 or later](https://www.java.com/en/download/)
-- [Nextflow 22.10.x or earlier](https://www.nextflow.io/docs/latest/getstarted.html#get-started)
+- [Nextflow 21.04.x or later](https://www.nextflow.io/docs/latest/getstarted.html#get-started)
 
 
 ### Nextflow Configuration
