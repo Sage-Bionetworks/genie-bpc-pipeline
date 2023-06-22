@@ -48,6 +48,18 @@ if (params.production == null) { exit 1, 'production parameter not specified!' }
 // Print parameter summary log to screen
 log.info NfcoreSchema.paramsSummaryLog(workflow, params)
 
+// Print message for production mode vs test mode
+if (params.production) { 
+   log.warn "----------------------------------------------------"
+   log.warn "RUNNING IN PRODUCTION MODE"
+   log.warn "----------------------------------------------------"
+} 
+else { 
+   log.warn "----------------------------------------------------"
+   log.warn "RUNNING IN TEST MODE"
+   log.warn "----------------------------------------------------"
+}
+
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     IMPORT LOCAL MODULES/SUBWORKFLOWS
