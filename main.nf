@@ -23,6 +23,7 @@ not separate command line arguments
 params.comment = 'NSCLC public release update'
 params.production = false
 params.schema_ignore_params = ""
+params.help = false
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
