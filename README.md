@@ -245,3 +245,6 @@ Note: you can also chose what version of nextflow to run with using:
 ```bash
 NXF_VER=<nextflow_version> nextflow main.nf
 ```
+
+## Citations
+This pipeline uses some code and infrastructure developed and maintained by the [nf-core](https://nf-co.re) community, reused here under the [MIT license](https://github.com/nf-core/tools/blob/master/LICENSE).
