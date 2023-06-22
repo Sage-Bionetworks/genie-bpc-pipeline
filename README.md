@@ -4,7 +4,7 @@
 
 Clone this repository and navigate to the directory:
 ```
-git clone git@github.com:Sage-Bionetworks/genie-bpc-pipeline.git
+git clone https://github.com/Sage-Bionetworks/genie-bpc-pipeline.git
 cd genie-bpc-pipeline/scripts/case_selection
 ```
 
