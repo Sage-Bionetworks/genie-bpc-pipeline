@@ -1,8 +1,58 @@
 #!/usr/bin/env nextflow
-// Ensure DSL2
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    genie-bpc-pipeline
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    Github : https://github.com/Sage-Bionetworks/genie-bpc-pipeline
+*/
+
 nextflow.enable.dsl = 2
 
-// IMPORT MODULES
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    SET DEFAULT PARAMETERS
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+params.cohort = 'NSCLC'
+/* 
+Note: For multi-word strings like in the param comment here, everywhere that calls $comment as an argument
+needed to be enclosed with double quotes so that nextflow interprets it as an entire string and 
+not separate command line arguments 
+*/
+params.comment = 'NSCLC public release update'
+params.production = false
+params.schema_ignore_params = ""
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    VALIDATE & PRINT PARAMETER SUMMARY
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+// Print help to screen if parameter set
+if (params.help){
+   command = "nextflow run main.nf"
+   log.info NfcoreSchema.paramsHelp(workflow, params, command)
+   System.exit(0)
+}
+// Validate input parameters
+NfcoreSchema.validateParameters(workflow, params, log)
+
+// Check mandatory parameters
+if (params.cohort == null) { exit 1, 'cohort parameter not specified!' }
+if (params.comment == null) { exit 1, 'comment parameter not specified!' }
+if (params.production == null) { exit 1, 'production parameter not specified!' }
+
+// Print parameter summary log to screen
+log.info NfcoreSchema.paramsSummaryLog(workflow, params)
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    IMPORT LOCAL MODULES/SUBWORKFLOWS
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
 include { run_quac_upload_report_error } from './modules/run_quac_upload_report_error'
 include { run_quac_upload_report_warning } from './modules/run_quac_upload_report_warning'
 include { merge_and_uncode_rca_uploads } from './modules/merge_and_uncode_rca_uploads'
@@ -14,46 +64,11 @@ include { run_quac_comparison_report } from './modules/run_quac_comparison_repor
 include { create_masking_report } from './modules/create_masking_report'
 include { update_case_count_table } from './modules/update_case_count_table'
 
-params.cohort = 'NSCLC'
-/* 
-Note: For multi-word strings like in the param comment here, everywhere that calls $comment as an argument
-needed to be enclosed with double quotes so that nextflow interprets it as an entire string and 
-not separate command line arguments 
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    RUN WORKFLOW
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
-params.comment = 'NSCLC public release update'
-// testing or production pipeline
-params.production = false
-
-// Check if cohort is part of allowed cohort list
-def allowed_cohorts = [
-   "BLADDER", 
-   "BrCa",
-   "CRC", 
-   "NSCLC", 
-   "PANC", 
-   "Prostate", 
-   "CRC2", 
-   "NSCLC2", 
-   "MELANOMA", 
-   "OVARIAN", 
-   "ESOPHAGO", 
-   "RENAL"
-]
-
-// Check if production param is in allowed values
-def allowed_prod_vals = [
-   true,
-   false
-]
-
-if (!allowed_cohorts.contains(params.cohort)) {
-   exit 1, 'Invalid cohort name'
-}
-
-if (!allowed_prod_vals.contains(params.production)) {
-   exit 1, 'Invalid production param value'
-}
-
 
 workflow {
    ch_cohort = Channel.value(params.cohort)
@@ -71,3 +86,8 @@ workflow {
    update_case_count_table(create_masking_report.out, ch_comment, params.production)
 }
 
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    THE END
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/

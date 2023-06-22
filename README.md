@@ -222,12 +222,22 @@ You can visit [parameters](https://github.com/Sage-Bionetworks/genie-bpc-pipelin
 nextflow secrets set SYNAPSE_AUTH_TOKEN “INSERT YOUR SYNAPSE TOKEN HERE”
 ```
 
-4. Make any changes to `main.nf`
-
-5. Run the pipeline
+4. Run the pipeline with the default parameter settings
 
 ```bash
 nextflow main.nf
+```
+
+If you want to pass values to the parameter settings, you can use the help flag to see what parameters you can set:
+
+```bash
+nextflow main.nf --help
+```
+
+If you want to run the pipeline in production mode with the default parameter settings:
+
+```bash
+nextflow main.nf --production
 ```
 
 Note: you can also chose what version of nextflow to run with using:
