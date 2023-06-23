@@ -4,7 +4,7 @@
 
 Clone this repository and navigate to the directory:
 ```
-git clone git@github.com:Sage-Bionetworks/genie-bpc-pipeline.git
+git clone https://github.com/Sage-Bionetworks/genie-bpc-pipeline.git
 cd genie-bpc-pipeline/scripts/case_selection
 ```
 
@@ -191,7 +191,7 @@ For GENIE BPC, here are the specification recommendations when launching an EC2 
 ### Nextflow Dependencies
 
 - [Java 8 or later](https://www.java.com/en/download/)
-- [Nextflow 22.10.x or earlier](https://www.nextflow.io/docs/latest/getstarted.html#get-started)
+- [Nextflow 21.04.x or later](https://www.nextflow.io/docs/latest/getstarted.html#get-started)
 
 
 ### Nextflow Configuration
@@ -222,12 +222,22 @@ You can visit [parameters](https://github.com/Sage-Bionetworks/genie-bpc-pipelin
 nextflow secrets set SYNAPSE_AUTH_TOKEN “INSERT YOUR SYNAPSE TOKEN HERE”
 ```
 
-4. Make any changes to `main.nf`
-
-5. Run the pipeline
+4. Run the pipeline with the default parameter settings
 
 ```bash
 nextflow main.nf
+```
+
+If you want to pass values to the parameter settings, you can use the help flag to see what parameters you can set:
+
+```bash
+nextflow main.nf --help
+```
+
+If you want to run the pipeline in production mode with the default parameter settings:
+
+```bash
+nextflow main.nf --production
 ```
 
 Note: you can also chose what version of nextflow to run with using:
@@ -235,3 +245,6 @@ Note: you can also chose what version of nextflow to run with using:
 ```bash
 NXF_VER=<nextflow_version> nextflow main.nf
 ```
+
+## Citations
+This pipeline uses some code and infrastructure developed and maintained by the [nf-core](https://nf-co.re) community, reused here under the [MIT license](https://github.com/nf-core/tools/blob/master/LICENSE).

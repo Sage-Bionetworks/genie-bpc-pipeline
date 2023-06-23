@@ -1,0 +1,65 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "https://raw.githubusercontent.com/Sage-Bionetworks/genie-bpc-pipeline/develop/nextflow_schema.json",
+    "title": "Sage-Bionetworks/genie-bpc-pipeline parameters",
+    "description": "Nextflow pipeline for GENIE BPC processing",
+    "type": "object",
+    "definitions": {
+        "parameters": {
+            "title": "Input options",
+            "type": "object",
+            "fa_icon": "fas fa-terminal",
+            "description": "Define GENIE BPC pipeline parameters.",
+            "properties": {
+                "cohort": {
+                    "type": "string",
+                    "default": "NSCLC",
+                    "description": "Name of the cohort to process through GENIE BPC.",
+                    "enum": [
+                        "BLADDER",
+                        "BrCa",
+                        "CRC",
+                        "NSCLC",
+                        "PANC",
+                        "Prostate",
+                        "CRC2",
+                        "NSCLC2",
+                        "MELANOMA",
+                        "OVARIAN",
+                        "ESOPHAGO",
+                        "RENAL"
+                    ]
+                },
+                "comment": {
+                    "type": "string",
+                    "description": "Description for this cohort run of the BPC pipeline",
+                    "default": "NSCLC public release update"
+                },
+                "production": {
+                    "type": "boolean",
+                    "description": "Whether to run in production mode or not. Production mode means uploading to Synapse.",
+                    "default": false,
+                    "enum": [
+                        true,
+                        false
+                    ]
+                },
+                "schema_ignore_params": {
+                    "type": "string",
+                    "description": "Put parameters to ignore for validation here separated by comma",
+                    "default": ""
+                },
+                "help": {
+                    "type": "boolean",
+                    "description": "Display input options and descriptions",
+                    "default": false
+                }
+            }
+        }
+    },
+    "allOf": [
+        {
+            "$ref": "#/definitions/parameters"
+        }
+    ]
+}
