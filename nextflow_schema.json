@@ -16,17 +16,17 @@
                     "default": "NSCLC",
                     "description": "Name of the cohort to process through GENIE BPC.",
                     "enum": [
-                        "BLADDER", 
-                        "BrCa", 
-                        "CRC", 
-                        "NSCLC", 
-                        "PANC", 
-                        "Prostate", 
-                        "CRC2", 
-                        "NSCLC2", 
-                        "MELANOMA", 
-                        "OVARIAN", 
-                        "ESOPHAGO", 
+                        "BLADDER",
+                        "BrCa",
+                        "CRC",
+                        "NSCLC",
+                        "PANC",
+                        "Prostate",
+                        "CRC2",
+                        "NSCLC2",
+                        "MELANOMA",
+                        "OVARIAN",
+                        "ESOPHAGO",
                         "RENAL"
                     ]
                 },
@@ -43,6 +43,16 @@
                         true,
                         false
                     ]
+                },
+                "schema_ignore_params": {
+                    "type": "string",
+                    "description": "Put parameters to ignore for validation here separated by comma",
+                    "default": ""
+                },
+                "help": {
+                    "type": "boolean",
+                    "description": "Display input options and descriptions",
+                    "default": false
                 }
             }
         }
