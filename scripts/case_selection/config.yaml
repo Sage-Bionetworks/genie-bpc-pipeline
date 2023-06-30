@@ -312,6 +312,19 @@ phase:
               - RLCLC
               - GCLC
               - BLCLC
+      CRC:
+        name: CRC
+        date:
+          seq_min: May-2018
+          seq_max: Dec-2022
+        oncotree:
+          root: COADREAD
+          allowed_codes: 
+            - COADREAD
+            - COAD
+            - MACR
+            - SRCCR
+            - READ
   2:
     cohort: 
       NSCLC:
