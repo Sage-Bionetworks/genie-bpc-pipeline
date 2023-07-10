@@ -10,6 +10,14 @@ waitifnot <- function(cond, msg = "") {
   }
 }
 
+get_sites_in_config <- function(config, phase, cohort){
+  if (phase == '1_additional') {
+    return(names(config$phase[[1]]$cohort[[cohort]]$site))
+  }else{
+    return(names(config$phase[[phase]]$cohort[[cohort]]$site))
+  }
+}
+
 get_default_global <- function(config, key) {
   return(config$default$global[[key]])
 }
