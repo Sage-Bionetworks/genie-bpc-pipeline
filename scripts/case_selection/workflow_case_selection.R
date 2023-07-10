@@ -47,7 +47,7 @@ waitifnot(is.element(cohort, cohort_in_config),
           msg = c(glue("Error: cohort {cohort} is not valid for phase {phase}.  Valid values: {cohort_str}"),
                   "Usage: Rscript workflow_case_selection.R -h"))
 
-sites_in_config <- names(config$phase[[phase]]$cohort[[cohort]]$site)
+sites_in_config <- get_sites_in_config(config, phase, cohort)
 site_str <- paste0(sites_in_config, collapse = ", ")
 waitifnot(is.element(site, sites_in_config),
           msg = c(glue("Error: site {site} is not valid for phase {phase} and cohort {cohort}.  Valid values: {site_str}"),

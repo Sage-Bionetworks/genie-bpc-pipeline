@@ -46,15 +46,20 @@ waitifnot(is.element(cohort, cohort_in_config),
           msg = c(glue("Error: cohort {cohort} is not valid for phase {phase}.  Valid values: {cohort_str}"),
                   "Usage: Rscript perform_case_selection.R -h"))
 
-sites_in_config <- names(config$phase[[phase]]$cohort[[cohort]]$site)
+sites_in_config <- get_sites_in_config(config, phase, cohort)
 site_str <- paste0(sites_in_config, collapse = ", ")
 waitifnot(is.element(site, sites_in_config),
           msg = c(glue("Error: site {site} is not valid for phase {phase} and cohort {cohort}.  Valid values: {site_str}"),
                   "Usage: Rscript perform_case_selection.R -h"))
 
-if (get_production(config, phase, cohort, site) == 0) {
-  stop(glue("Production target is 0 for phase {phase} {site} {cohort}.  Please revise eligibility criteria."))
-}
+# additional parameters
+flag_additional <- grepl(pattern = "addition", x = phase)
+
+if (!flag_additional){
+  if(get_production(config, phase, cohort, site) == 0) {
+    stop(glue("Production target is 0 for phase {phase} {site} {cohort}.  Please revise eligibility criteria."))
+  }
+}  
 
 # setup ----------------------------
 
@@ -80,7 +85,6 @@ file_add <- tolower(glue("{cohort}_{site}_phase{phase}_samples.csv"))
 
 # misc parameters
 debug <- config$misc$debug
-flag_additional <- grepl(pattern = "addition", x = phase)
 
 # functions ----------------------------
 
