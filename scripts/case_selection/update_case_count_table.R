@@ -37,8 +37,11 @@ auth <- opt$synapse_auth
 
 # functions ----------------------------
 
-get_current_production_record_count <- function(synid_table_patient, cohort, site = NA) {
+get_current_production_record_count <- function(synid_table_patient, cohort, phase, site = NA) {
   
+  if(cohort %in% c('NSCLC','CRC') & phase == "2"){
+    cohort <- glue(cohort, phase)
+  }
   if (is.na(site)) {
     query = glue("SELECT record_id FROM {synid_table_patient} WHERE cohort = '{cohort}'")
   } else {
@@ -181,19 +184,15 @@ final <- matrix(NA, nrow = 0, ncol = length(labels), dimnames = list(c(), labels
 for (phase in names(config$phase)) {
   for (cohort in names(config$phase[[phase]]$cohort)) {
     for (site in names(config$phase[[phase]]$cohort[[cohort]]$site)) {
-      
       n_current <- get_current_production_record_count(synid_table_patient = config$synapse$bpc_patient$id,
-                                                       cohort = cohort, 
+                                                       cohort = cohort,
+                                                       phase = phase,
                                                        site = site)
       n_target <- get_production(config, phase, cohort, site)
       n_adjust <- get_adjusted(config, phase, cohort, site)
       n_pressure <- get_pressure(config, phase, cohort, site)
       n_sdv <- get_sdv(config, phase, cohort, site)
       n_irr <- get_irr(config, phase, cohort, site)
-      
-      if (phase == "2") {
-        n_current = 0
-      }
       
       final <- rbind(final, c(cohort, site, phase, n_current, n_target, n_adjust, n_pressure, n_sdv, n_irr))
     }
