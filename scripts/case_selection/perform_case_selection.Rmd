@@ -125,7 +125,7 @@ AACR supplies a list of eligible OncoTree codes.  Here, we traverse the branches
 
 ```{r potential codes}
 
-oncotree <- fromJSON(getURL("http://oncotree.mskcc.org/api/tumorTypes"), flatten = T)
+oncotree <- fromJSON(getURL("https://oncotree.info/api/tumorTypes"), flatten = T)
 root <- config$phase[[phase]]$cohort[[cohort]]$oncotree$root
 descendants <- traverse(root = root,
                      oncotree = oncotree)
