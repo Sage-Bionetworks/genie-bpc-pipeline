@@ -66,6 +66,11 @@ Example run:
 Rscript workflow_case_selection.R  -p 1 -c NSCLC -s DFCI -u
 ```
 
+```
+docker run -e SYNAPSE_AUTH_TOKEN={...]} sagebionetworks/{...specific repo...}
+docker run -e SYNAPSE_AUTH_TOKEN=$SYN_AUTH sagebionetworks/genie-bpc-pipeline-masking Rscript workflow_unmasked_drugs.R -c NSCLC2 -d 2023-08-01 -s
+```
+
 ## Usage: create GENIE export files
 
 To display the command line interface:
