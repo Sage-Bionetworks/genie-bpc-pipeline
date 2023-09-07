@@ -195,13 +195,13 @@ phase:
         name: NSCLC
         site:
           DFCI:
-            production: 696
-            adjusted: 696
+            production: 710
+            adjusted: 710
             sdv: 139
             irr: 35
           MSK:
-            production: 869
-            adjusted: 869
+            production: 881
+            adjusted: 881
             sdv: 174
             irr: 43
           UHN:
@@ -212,8 +212,8 @@ phase:
             irr: 3
             seq_min: Jan-2014
           VICC:
-            production: 226
-            adjusted: 226
+            production: 227
+            adjusted: 227
             sdv: 45
             irr: 11
         date:
