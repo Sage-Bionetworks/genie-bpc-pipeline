@@ -68,7 +68,7 @@ entity = syn.get(file_id)
 mapping_file = pd.read_csv(entity.path)
 table = syn.tableQuery(f"select * from {tbl_id}")
 columns = table.headers
-col_names = [column.name for column in columns]
+col_names = [column.name for column in columns if column.name not in ("ROW_ID", "ROW_VERSION")]
 
 # Mapping
 if comment is None:
@@ -80,7 +80,7 @@ if verbose:
     print(f"{now(time_only=True)}: formatting mapping information...")
 
 # Make adjustments to match the table schema
-mapping_file = mapping_file.rename(columns={"BRCA": "BrCa", "PROSTATE": "Prostate", "inclusion.criteria": "inclusion_criteria"})
+mapping_file = mapping_file.rename(columns={"BRCA": "BrCa", "PROSTATE": "Prostate", "inclusion criteria": "inclusion_criteria"})
 for cohort in cohorts:
     mapping_file[cohort] = mapping_file[cohort].replace({"Y": True, "N": False, "TBD": False})
 mapping_file['data_type'] = mapping_file['data_type'].str.lower()
@@ -93,7 +93,7 @@ if save_to_synapse:
 
     deleted = syn.tableQuery(f"select * from {tbl_id}")
     syn.delete(deleted.asRowSet())
-    syn.store(Table(tbl_id, mapping_file))
+    syn.store(Table(tbl_id, mapping_file[col_names]))
 
     snapshot_comment = f"{{'snapshotComment': '{comment}'}}"
     snapshot_comment = snapshot_comment.replace("'", '"')
