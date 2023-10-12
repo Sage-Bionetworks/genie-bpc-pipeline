@@ -92,7 +92,7 @@ if save_to_synapse:
         print(f"{now(time_only=True)}: updating Synapse table '{syn.get(tbl_id).name}' ({tbl_id}) with snapshot...")
 
     deleted = syn.tableQuery(f"select * from {tbl_id}")
-    syn.delete(deleted)
+    syn.delete(deleted.asRowSet())
     syn.store(Table(tbl_id, mapping_file))
 
     snapshot_comment = f"{{'snapshotComment': '{comment}'}}"
