@@ -40,7 +40,7 @@ def main(save_to_synapse, comment, verbose):
         print(f"{now(time_only=True)}: reading mapping file CSV...")
 
     entity = syn.get(file_id)
-    mapping_file = pd.read_csv(entity.path)
+    mapping_file = pd.read_csv(entity.path, encoding="ISO-8859-1")
     table = syn.tableQuery(f"select * from {tbl_id}")
     columns = table.headers
     col_names = [column.name for column in columns if column.name not in ("ROW_ID", "ROW_VERSION")]
