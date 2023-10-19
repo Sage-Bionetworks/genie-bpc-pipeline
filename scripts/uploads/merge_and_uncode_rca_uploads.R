@@ -1,7 +1,7 @@
 # Description: Merge and uncode REDCap uploads for GENIE BPC
 #   into REDCap academic format to replace RCC functionality.
-# Author: Haley Hunter-Zinck
-# Date: September 13, 2021
+# Date created: September 13, 2021
+# Last update: October 19, 2023
 
 # pre-setup ----------------------------
 
@@ -360,17 +360,14 @@ merge_mappings <- function(primarys, secondarys, debug = F) {
 #' if the label is not found in the primary mapping matrix.
 #' @return Data frame of uncoded data.
 #' @example
-#' map_code_to_value(data = my_data, dd = dd, grs = grs)
-uncode_data <- function(df_coded, dd, grs) {
+#' map_code_to_value(data = my_data, dd = dd)
+uncode_data <- function(df_coded, dd) {
   
   df_uncoded <- df_coded
   
-  # merge reference mappings
-  mappings_primary <- parse_mappings(strs = grs[,config$column_name$rs_value], 
-                                     labels = grs[,config$column_name$rs_label])
-  mappings_secondary <- parse_mappings(strs = dd[[config$column_name$variable_mapping]], 
-                                labels = dd[[config$column_name$variable_name]])
-  mappings <- merge_mappings(mappings_primary, mappings_secondary)
+  # mappings
+  mappings <- parse_mappings(strs = dd[[config$column_name$variable_mapping]], 
+                             labels = dd[[config$column_name$variable_name]])
   
   # custom mappings
   mapping_complete <- data.frame(codes = names(config$mapping$complete),
@@ -685,8 +682,7 @@ save_output_synapse <- function(cohort) {
                   prov_name = "BPC non-IRR upload data",
                   prov_desc = "Merged and uncoded BPC upload data from sites academic REDCap instances with IRR cases removed",
                   prov_used = c(as.character(unlist(config$upload[[cohort]])), 
-                                synid_dd,
-                                config$synapse$grs$id),
+                                synid_dd),
                   prov_exec = "https://github.com/Sage-Bionetworks/genie-bpc-pipeline/tree/develop/scripts/uploads/merge_and_uncode_rca_uploads.R")
   
   if (file.exists(file_output_irr)) {
@@ -696,8 +692,7 @@ save_output_synapse <- function(cohort) {
                     prov_name = "BPC IRR upload data",
                     prov_desc = "Merged and uncoded BPC upload IRR case data from sites academic REDCap instances",
                     prov_used = c(as.character(unlist(config$upload[[cohort]])), 
-                                  synid_dd,
-                                  config$synapse$grs$id),
+                                  synid_dd),
                     prov_exec = "https://github.com/Sage-Bionetworks/genie-bpc-pipeline/tree/develop/scripts/uploads/merge_and_uncode_rca_uploads.R")
   }
   
@@ -713,16 +708,6 @@ save_output_synapse <- function(cohort) {
 status <- synLogin(auth = auth)
 
 # main ----------------------------
-
-if (debug) {
-  print(glue("{now(timeOnly = T)}: Reading global response set..."))
-}
-
-grs <- read.csv(synGet(config$synapse$grs$id)$path, 
-                sep = ",", 
-                stringsAsFactors = F,
-                check.names = F,
-                na.strings = c(""))
 
 # for each user-specified cohort
 for (cohort in cohort_input) {
@@ -753,8 +738,7 @@ for (cohort in cohort_input) {
   
   # uncode
   uncoded <- uncode_data(df_coded = coded, 
-                         dd = dd,
-                         grs = grs)
+                         dd = dd)
   
   if (debug) {
     print(glue("{now(timeOnly = T)}: Formatting uncoded data..."))
