@@ -163,7 +163,7 @@ get_bpc_synid_prissmm <- function(synid_table_prissmm, cohort,
   
   query <- ""
   if (is.na(version)) {
-      query <- glue("SELECT id FROM {synid_table_prissmm} \
+    query <- glue("SELECT id FROM {synid_table_prissmm} \
                 WHERE cohort = '{cohort}' \
                 ORDER BY name DESC LIMIT 1")
   } else {
