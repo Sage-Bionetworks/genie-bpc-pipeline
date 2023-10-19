@@ -365,7 +365,7 @@ uncode_data <- function(df_coded, dd) {
   
   df_uncoded <- df_coded
   
-  # merge reference mappings
+  # mappings
   mappings <- parse_mappings(strs = dd[[config$column_name$variable_mapping]], 
                              labels = dd[[config$column_name$variable_name]])
   
