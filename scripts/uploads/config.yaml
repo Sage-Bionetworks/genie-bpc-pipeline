@@ -1,9 +1,4 @@
 synapse:
-  grs: 
-    id: syn24184523
-    name: Global_Response_Set
-    type: file
-    description: BPC REDCap mapping between coded and uncoded values to supplement data dictionaries
   prissmm: 
     id: syn22684834
     name: PRISSMM Documentation Versions
@@ -170,8 +165,6 @@ column_name:
   variable_type: "Text Validation Type OR Show Slider Number"
   variable_min: "Text Validation Min"
   variable_max: "Text Validation Max"
-  rs_label: "Response Set Label"
-  rs_value: "Response Set Values"
 mapping:
   complete:
     0: "Not Started"
