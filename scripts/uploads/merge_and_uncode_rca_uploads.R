@@ -1,7 +1,6 @@
 # Description: Merge and uncode REDCap uploads for GENIE BPC
 #   into REDCap academic format to replace RCC functionality.
-# Author: Haley Hunter-Zinck, Xindi Guo
-# Date: September 13, 2021
+# Date created: September 13, 2021
 # Last update: October 19, 2023
 
 # pre-setup ----------------------------
