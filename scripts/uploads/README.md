@@ -1,6 +1,6 @@
 # Merge and Uncode REDCap exports
-
-
+[![automated](https://img.shields.io/docker/cloud/automated/sagebionetworks/genie-bpc-pipeline-uploads)](https://hub.docker.com/r/sagebionetworks/genie-bpc-pipeline-uploads)
+![status](https://img.shields.io/docker/cloud/build/sagebionetworks/genie-bpc-pipeline-uploads)
 
 ## Installation
 
