@@ -413,32 +413,32 @@ phase:
         name: RENAL
         site: 
           DFCI:
-            production: 400
-            adjusted: 400
+            production: 435
+            adjusted: 435
           MSK:
-            production: 600
-            adjusted: 600
+            production: 636
+            adjusted: 636
           PROV:
             production: 107
             adjusted: 107
           UCSF:
-            production: 71
-            adjusted: 71
+            production: 30
+            adjusted: 30
           UHN:
             production: 42
             adjusted: 42
-          VICC:
-            production: 0
-            adjusted: 0
-          JHU:
-            production: 0
-            adjusted: 0
-          VHIO:
-            production: 0
-            adjusted: 0
+          #VICC:
+          #  production: 0
+          #  adjusted: 0
+          #JHU:
+          #  production: 0
+          #  adjusted: 0
+          #VHIO:
+          #  production: 0
+          #  adjusted: 0
           WAKE:
-            production: 30
-            adjusted: 30
+            production: 0
+            adjusted: 0
         date: 
           seq_min: Jan-2012
           seq_max: Oct-2021
