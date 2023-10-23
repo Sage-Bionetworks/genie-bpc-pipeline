@@ -163,13 +163,13 @@ phase:
         name: CRC
         site:
           DFCI:
-            production: 564
-            adjusted: 564
+            production: 570
+            adjusted: 570
             sdv: 113
             irr: 28
           MSK:
-            production: 696
-            adjusted: 696
+            production: 683
+            adjusted: 683
             sdv: 139
             irr: 35
           UHN:
