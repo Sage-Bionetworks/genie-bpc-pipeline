@@ -23,6 +23,7 @@ upload:
   CRC:
     DFCI:
       data1: syn25961098
+      data2: syn52812707
       #header1: syn25961099
     MSK:
       data1: syn25953196
