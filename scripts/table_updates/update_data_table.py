@@ -51,8 +51,8 @@ def _store_data(syn, table_id, label_data, table_type, logger, dry_run):
     rows_to_drop = temp_data.index[temp_data.apply(lambda row: check_empty_row(row,cols_to_skip),axis=1)]
     temp_data.drop(index=rows_to_drop,inplace=True)
     # remove data in ca_directed_radtx if cohort = CRC, BrCa
-    if table_schema.form == ['ca_directed_radtx']:
-        temp_data.drop(temp_data.index[temp_data.cohort.isin(["CRC","BrCa"])],inplace=True)
+    #if table_schema.form == ['ca_directed_radtx']:
+    #    temp_data.drop(temp_data.index[temp_data.cohort.isin(["CRC","BrCa"])],inplace=True)
     # remove .0 from all columns
     temp_data = temp_data.applymap(lambda x: float_to_int(x))
     # update table
