@@ -1,4 +1,4 @@
-pandas >= 1.1.3
-numpy >= 1.19.1
-synapseclient >= 2.5.1
+pandas>=1.1.3
+numpy>=1.19.1
+synapseclient>=2.5.1
 aacrgenie>=12.5.0
