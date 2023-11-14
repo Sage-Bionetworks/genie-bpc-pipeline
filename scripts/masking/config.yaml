@@ -75,6 +75,11 @@ cohort:
       - DFCI
       - MSK
       - UHN
+  CRC2:
+    sites:
+      - DFCI
+      - MSK
+      - UHN
 map:
   cohort_name:
     BLADDER: BLADDER
