@@ -112,13 +112,12 @@ def _to_redact_birth_year(df_col_birth_year, df_col_dt_compare, df_col_vital_sta
     Returns:
         tuple: pandas.core.indexes: to redact index in Dataframe
     """
-    df_col_birth_year = pandas.to_numeric(df_col_birth_year, downcast='integer',errors='coerce')
     if len(df_col_dt_compare)==0:
         df_col_dt_compare = datetime.date.today()
     else:
         df_col_dt_compare = df_col_dt_compare.fillna(datetime.datetime.now().strftime("%Y-%m-%d"))  
         df_col_dt_compare = df_col_dt_compare.apply(lambda x: datetime.datetime.strptime(str(x),"%Y-%m-%d").date())
-    dates_diff = df_col_dt_compare - df_col_birth_year.apply(lambda x: datetime.date(x, 1, 1))
+    dates_diff = df_col_dt_compare - df_col_birth_year.apply(lambda x: datetime.date(datetime.date.today().year, 1, 1) if math.isnan(x) else datetime.date(int(x), 1, 1))
     date_diff_bool = dates_diff.dt.days > get_phi_cutoff("day")
     vital_status_bool = df_col_vital_status == 'No'
     to_redact = date_diff_bool & vital_status_bool
@@ -196,6 +195,7 @@ def update_redact_table(syn, redacted_table_info, full_data_table_info, logger):
     final_record = list(set(record_to_redact))
     new_df.loc[new_df['record_id'].isin(final_record), 'redacted'] = 'Yes'
     new_df.loc[new_df['record_id'].isin(final_record), 'birth_year'] = ''
+    new_df['birth_year'] = new_df['birth_year'].map(float_to_int)
     new_df['redacted'] = new_df['redacted'].fillna(value='No')
     redacted_patient_id = master_table.loc[master_table['name']=="Patient Characteristics",'id_redacted'].values[0]
     table_schema = syn.get(redacted_patient_id)
