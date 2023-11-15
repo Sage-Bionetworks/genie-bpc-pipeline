@@ -89,5 +89,6 @@ map:
     PANC: Pancreas
     Prostate: Prostate
     NSCLC2: NSCLC2
+    CRC2: CRC2
 misc:
   debug: TRUE
