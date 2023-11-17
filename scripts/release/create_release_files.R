@@ -67,6 +67,7 @@ syn_id_rdata <- "syn22299362"
 #syn_id_rdata_version <- 58
 syn_id_sor <- "syn22294851"
 syn_id_release_info <- "syn27628075"
+syn_id_retraction <- "syn52915299"
 
 # functions -----------------------
 
@@ -88,7 +89,8 @@ now <- function(timeOnly = F, tz = "US/Pacific") {
   return(format(Sys.time(), "%Y-%m-%d %H:%M:%S"))
 }
 
-filter_for_release <- function(dataset, selected_dataset, selected_cohort, sor_df_filtered)
+filter_for_release <- function(dataset, selected_dataset, selected_cohort, 
+                               sor_df_filtered, retracted_patient)
 {
   # get the list of released columns
   release_cols <- sor_df_filtered %>%
@@ -100,6 +102,7 @@ filter_for_release <- function(dataset, selected_dataset, selected_cohort, sor_d
   # filter the data by cohort and release columns
   release_dat <- dataset %>%
     filter(cohort==selected_cohort) %>%
+    filter(!record_id %in% retracted_patient) %>%
     select(all_of(release_cols))
   
   return(release_dat)
@@ -193,11 +196,18 @@ syn_id_staging_folder <- release_info[release_info$cohort==selected_cohort,]$sta
 syn_id_release_folder <- release_info[release_info$cohort==selected_cohort,]$clinical_file_folder
 clinical_column <- release_info[release_info$cohort==selected_cohort,]$sor_column
 
+# load Rdata of derived variable
 if (verbose) {
   print(glue("{now(timeOnly = T)}: loading derived variable file data from '{synGet(syn_id_rdata)$properties$name}' ({syn_id_rdata})..."))
 }
 
+load(synGet(syn_id_rdata)$path)
+
 # read scope of release
+if (verbose) {
+  print(glue("{now(timeOnly = T)}: reading scope of release from '{synGet(syn_id_sor)$properties$name}' ({syn_id_sor})..."))
+}
+
 sor_df <- readxl::read_excel(synGet(syn_id_sor)$path, sheet = "Data Dictionary")
 
 # check that column name exists in the SOR
@@ -212,12 +222,12 @@ if (verbose) {
   print(glue("{now(timeOnly = T)}: extracting release status for {selected_cohort} {release_version}-{release_type} from SOR column '{clinical_column}'..."))
 }
 
-# load Rdata of derived variable
-load(synGet(syn_id_rdata)$path)
-
+# get the list of retracted patient
 if (verbose) {
-  print(glue("{now(timeOnly = T)}: reading scope of release from '{synGet(syn_id_sor)$properties$name}' ({syn_id_sor})..."))
+  print(glue("{now(timeOnly = T)}: loading retracted patients ({syn_id_retraction}) for the release..."))
 }
+retracted_table <- synTableQuery(glue("SELECT patient_id FROM {syn_id_retraction} WHERE cohort = '{selected_cohort}'"))$asDataFrame()
+retracted_pt_list <- retracted_table$patient_id
 
 # main -----------------
 
@@ -244,7 +254,8 @@ if (verbose) {
 ca_dx_derived_index_release <- filter_for_release(ca_dx_derived_index_redacted,
                                                   selected_dataset = "Cancer diagnosis dataset",
                                                   selected_cohort,
-                                                  sor_df_filtered = sor_df_filtered)
+                                                  sor_df_filtered = sor_df_filtered,
+                                                  retracted_patient = retracted_pt_list)
 index_cols <- intersect(sor_df_filtered$variable[sor_df_filtered$sor %in% c("yes","index cancer only")],
                         colnames(ca_dx_derived_index_release))
 ca_dx_derived_index_release <- ca_dx_derived_index_release[index_cols]
@@ -252,45 +263,54 @@ ca_dx_derived_index_release <- ca_dx_derived_index_release[index_cols]
 ca_dx_derived_non_index_release <- filter_for_release(ca_dx_derived_non_index_redacted,
                                                       selected_dataset = "Cancer diagnosis dataset",
                                                       selected_cohort,
-                                                      sor_df_filtered = sor_df_filtered)
+                                                      sor_df_filtered = sor_df_filtered,
+                                                      retracted_patient = retracted_pt_list)
 non_index_cols <- intersect(sor_df_filtered$variable[sor_df_filtered$sor %in% c("yes","non-index cancer only")],
                             colnames(ca_dx_derived_non_index_release))
 ca_dx_derived_non_index_release <- ca_dx_derived_non_index_release[non_index_cols]
 pt_derived_release <- filter_for_release(pt_derived_redacted,
                                          'Patient-level dataset',
                                          selected_cohort,
-                                         sor_df_filtered = sor_df_filtered)
+                                         sor_df_filtered = sor_df_filtered,
+                                         retracted_patient = retracted_pt_list)
 ca_drugs_derived_release <- filter_for_release(ca_drugs_derived_redacted, 
                                                'Cancer-directed regimen dataset',
                                                selected_cohort,
-                                               sor_df_filtered = sor_df_filtered)
+                                               sor_df_filtered = sor_df_filtered,
+                                               retracted_patient = retracted_pt_list)
 prissmm_image_derived_release <- filter_for_release(prissmm_image_derived_redacted,
                                                     'PRISSMM Imaging level dataset',
                                                     selected_cohort,
-                                                    sor_df_filtered = sor_df_filtered)
+                                                    sor_df_filtered = sor_df_filtered,
+                                                    retracted_patient = retracted_pt_list)
 prissmm_path_derived_release <- filter_for_release(prissmm_path_derived_redacted,
                                                    'PRISSMM Pathology level dataset',
                                                    selected_cohort,
-                                                   sor_df_filtered = sor_df_filtered)
+                                                   sor_df_filtered = sor_df_filtered,
+                                                   retracted_patient = retracted_pt_list)
 prissmm_md_derived_release <- filter_for_release(prissmm_md_derived_redacted, 
                                                  'PRISSMM Medical Oncologist Assessment level dataset',
                                                  selected_cohort,
-                                                 sor_df_filtered = sor_df_filtered)
+                                                 sor_df_filtered = sor_df_filtered,
+                                                 retracted_patient = retracted_pt_list)
 cpt_derived_release <- filter_for_release(cpt_derived_redacted, 
                                           'Cancer panel test level dataset',
                                           selected_cohort,
-                                          sor_df_filtered = sor_df_filtered)
+                                          sor_df_filtered = sor_df_filtered,
+                                          retracted_patient = retracted_pt_list)
 if('PRISSMM Tumor Marker level dataset' %in% unique(sor_df_filtered$dataset)){
   prissmm_tm_derived_release <- filter_for_release(prissmm_tm_derived_redacted, 
                                                    'PRISSMM Tumor Marker level dataset',
                                                    selected_cohort,
-                                                   sor_df_filtered = sor_df_filtered)
+                                                   sor_df_filtered = sor_df_filtered,
+                                                   retracted_patient = retracted_pt_list)
 }
 if('Cancer-Directed Radiation Therapy dataset' %in% unique(sor_df_filtered$dataset)){
   ca_radtx_derived_release <- filter_for_release(ca_radtx_derived_redacted, 
                                                  'Cancer-Directed Radiation Therapy dataset',
                                                  selected_cohort,
-                                                 sor_df_filtered = sor_df_filtered)
+                                                 sor_df_filtered = sor_df_filtered,
+                                                 retracted_patient = retracted_pt_list)
 }
 
 # save to synapse ---------------------
@@ -340,7 +360,7 @@ if(release){
   # provenance
   act <- Activity(name = "BPC clinical files",
                   description = glue("GENIE BPC clinical file generation for the {selected_cohort} cohort"),
-                  used = c(syn_id_rdata, syn_id_release_info, syn_id_sor),
+                  used = c(syn_id_rdata, syn_id_release_info, syn_id_sor, syn_id_retraction),
                   executed = "https://github.com/Sage-Bionetworks/genie-bpc-pipeline/tree/develop/scripts/release/create_release_files.R")
 
   # Write and store files to local or staging
