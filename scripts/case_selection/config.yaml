@@ -419,8 +419,8 @@ phase:
             production: 636
             adjusted: 636
           PROV:
-            production: 107
-            adjusted: 107
+            production: 105
+            adjusted: 105
           UCSF:
             production: 30
             adjusted: 30
@@ -464,8 +464,8 @@ phase:
             production: 0
             adjusted: 0
           PROV:
-            production: 65
-            adjusted: 65
+            production: 133
+            adjusted: 133
           UCSF:
             production: 88
             adjusted: 88
@@ -542,8 +542,8 @@ phase:
             production: 515
             adjusted: 515
           PROV:
-            production: 60
-            adjusted: 60
+            production: 100
+            adjusted: 100
           UCSF:
             production: 45
             adjusted: 45
