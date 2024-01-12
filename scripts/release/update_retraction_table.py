@@ -86,11 +86,27 @@ def get_file_id_by_name(syn, folder_id, file_name):
         folder_id (String): Synapse Folder ID
         file_name (String): File Name
     """
-    for f in syn.getChildren(folder_id, includeTypes=['file']):
+    for f in syn.getChildren(folder_id):
         f_name = f['name']
         f_id = f['id']
         if f_name == file_name:
             return(f_id)
+        
+def download_sample_file(syn, file_id):
+    """Download sample file by the file Synapse ID
+
+    Args:
+        syn: Synapse Object
+        file_id (String): Synapse file ID
+    """
+    file_entity = syn.get(file_id)
+    if file_entity.concreteType == 'org.sagebionetworks.repo.model.Link':
+        linked_id = file_entity.linksTo['targetId']
+        linked_version = file_entity.linksTo['targetVersionNumber']
+        return(pandas.read_csv(syn.get(linked_id,version=linked_version).path, sep='\t', header=None, usecols=[0]))
+    else:
+        return(pandas.read_csv(syn.get(file_id).path, sep='\t', header=None, usecols=[0]))
+        
 
 def main():
     parser = argparse.ArgumentParser(
@@ -142,7 +158,7 @@ def main():
     main_genie_release_folder = release_info['main_genie_release'].values[0]
     main_genie_release_version = syn.get(main_genie_release_folder).name
     clinical_file_id = get_file_id_by_name(syn, main_genie_release_folder, 'data_clinical_sample.txt')
-    clinical_pt_from_sample = pandas.read_csv(syn.get(clinical_file_id).path, sep='\t', header=None, usecols=[0])
+    clinical_pt_from_sample = download_sample_file(syn, clinical_file_id)
     clinical_pt_from_sample.columns = ['patient_id']
     main_genie_patient_list = list(set(clinical_pt_from_sample.iloc[5:]['patient_id']))
    
