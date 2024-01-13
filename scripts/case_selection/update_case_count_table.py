@@ -18,7 +18,7 @@ if not os.path.exists("config.yaml"):
     workdir = "/usr/local/src/myscripts"
 with open(f"{workdir}/config.yaml", "r") as stream:
     config = yaml.safe_load(stream)
-print(config)
+
 # user input --------------------------
 parser = argparse.ArgumentParser()
 parser.add_argument(
