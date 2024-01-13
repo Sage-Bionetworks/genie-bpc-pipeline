@@ -99,13 +99,8 @@ def download_sample_file(syn, file_id):
         syn: Synapse Object
         file_id (String): Synapse file ID
     """
-    file_entity = syn.get(file_id)
-    if file_entity.concreteType == 'org.sagebionetworks.repo.model.Link':
-        linked_id = file_entity.linksTo['targetId']
-        linked_version = file_entity.linksTo['targetVersionNumber']
-        return(pandas.read_csv(syn.get(linked_id,version=linked_version).path, sep='\t', header=None, usecols=[0]))
-    else:
-        return(pandas.read_csv(syn.get(file_id).path, sep='\t', header=None, usecols=[0]))
+    file_entity = syn.get(file_id, followLink=True)
+    return(pandas.read_csv(file_entity.path, sep='\t', header=None, usecols=[0]))
         
 
 def main():
