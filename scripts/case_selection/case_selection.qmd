@@ -28,7 +28,6 @@ import yaml
 import pandas as pd
 import requests
 import json
-from pandas.io.json import json_normalize
 
 def traverse(root, oncotree):
     desc = []
@@ -119,7 +118,7 @@ AACR supplies a list of eligible OncoTree codes.  Here, we traverse the branches
 
 # potential codes
 ```{python}
-oncotree = json_normalize(json.loads(requests.get("https://oncotree.info/api/tumorTypes").text))
+oncotree = pd.json_normalize(json.loads(requests.get("https://oncotree.info/api/tumorTypes").text))
 root = config['phase'][phase]['cohort'][cohort]['oncotree']['root']
 descendants = traverse(root, oncotree)
 
