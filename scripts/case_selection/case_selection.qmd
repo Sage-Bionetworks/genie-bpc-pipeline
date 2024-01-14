@@ -14,9 +14,9 @@ format:
 #| echo: false
 #| output: false
 
-phase = '1'
-cohort = 'NSCLC'
-site = 'DFCI'
+phase = None
+cohort = None
+site = None
 ```
 
 ```{python}
@@ -48,7 +48,7 @@ with open('config.yaml', 'r') as f:
     config = yaml.safe_load(f)
 
 # user specified parameters
-# phase = str(params['phase'])
+phase = str(phase)
 # cohort = params['cohort']
 # site = params['site']
 
