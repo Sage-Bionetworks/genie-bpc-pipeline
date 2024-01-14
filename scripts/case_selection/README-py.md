@@ -9,6 +9,7 @@ cd genie-bpc-pipeline/scripts/case_selection
 ```
 
 Install all required Python package and quarto cli.
+Install pandoc: https://github.com/jgm/pandoc/releases/tag/3.1.11.1
 
 ```
 pip install aacrgenie jupyter jupyter

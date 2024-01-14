@@ -1,0 +1,135 @@
+---
+title: "Summary of case selection"
+author: "Xindi Guo"
+date: now
+date-format: "YYYY-MM-DD HH:mm"
+jupyter: python3
+format:
+  html:
+    code-fold: true
+---
+
+```{python}
+#| tags: [parameters]
+#| echo: false
+#| output: false
+
+phase = '1'
+cohort = 'NSCLC'
+site = 'DFCI'
+```
+
+```{python}
+#| echo: false
+#| output: false
+
+import synapseclient
+import yaml
+import pandas as pd
+import requests
+import json
+from pandas.io.json import json_normalize
+
+def traverse(root, oncotree):
+    desc = []
+
+    children = oncotree['code'][oncotree['parent'] == root]
+
+    if len(children) == 0:
+        return [root]
+
+    for child in children:
+        desc.extend(traverse(child, oncotree))
+
+    return [root] + desc
+
+# read in all global parameters
+with open('config.yaml', 'r') as f:
+    config = yaml.safe_load(f)
+
+# user specified parameters
+# phase = str(params['phase'])
+# cohort = params['cohort']
+# site = params['site']
+
+# file names
+file_matrix = f"{cohort}_{site}_phase{phase}_eligibility_matrix.csv".lower()
+file_selection = f"{cohort}_{site}_phase{phase}_case_selection.csv".lower()
+
+# read
+eligibility_matrix = pd.read_csv(file_matrix)
+case_selection = pd.read_csv(file_selection)
+
+syn = synapseclient.login()
+```
+
+# Parameters
+
+**Phase**: `{python} phase`
+
+**Cohort**: `{python} cohort`
+
+**Site**: `{python} site`
+
+# Eligibility
+
+Eligible samples are defined with following criteria:
+
+1. Sample has an allowed OncoTree code
+    * Allowed codes: `{python} ", ".join(config['phase'][phase]['cohort'][cohort]['oncotree']['allowed_codes'])`
+2. Patient contributing sample was within the allowable age range at the time of sequencing
+    * Minimum age: `{python} config['default']['global']['age_min']`
+    * Maximum age: `{python} config['phase']['1']['cohort'][cohort]['age_max'] if config['phase']['1']['cohort'][cohort].get('age_max') is not None else config['default']['global']['age_max']`
+3. Sample was sequenced between allowed date range
+    * Minimum sequencing date: `{python} config['phase'][phase]['cohort'][cohort]['date']['seq_min']`
+    * Maximum sequencing date: `{python} config['phase'][phase]['cohort'][cohort]['date']['seq_max']`
+4. Patient was not already included in the cohort in a previous BPC release.
+5. Patient or sample was not previously excluded for quality control or other reasons.
+
+```{python}
+# eligibility
+query = f"SELECT COUNT(*) as counts FROM {config['synapse']['main_patient']['id']} WHERE CENTER = '{site}'"
+n_main_genie = syn.tableQuery(query).asDataFrame()['counts'][0]
+
+print(f"Total number of main GENIE cases for site: {n_main_genie}")
+print(f"Total number of BPC eligible cases: {len(case_selection)}")
+```
+
+# Identify categories of eligible cases
+
+Eligible cases fall into the following categories:
+
+* production
+    * sdv: cases that undergo source data verification (SDV).  note: all pressure cases undergo SDV and the total number of cases required for SDV includes the pressure cases
+    * pressure: pressure cases that also undergo source data verification (SDV)
+    * irr: cases that undergo double abstraction to calculate inter-rater reliability (IRR) 
+* extra: extra eligible cases not included in the production cohort
+
+```{python}
+# categories
+print(f"Target number of production cases: {len(case_selection[case_selection['category'] == 'production'])}")
+print(f"Target number of SDV cases (including pressure): {len(case_selection[case_selection['sdv'] == 'sdv'])}")
+print(f"Target number of pressure cases: {len(case_selection[case_selection['pressure'] == 'pressure'])}")
+print(f"Target number of IRR cases: {len(case_selection[case_selection['irr'] == 'irr'])}")
+print(f"Extra eligible cases: {len(case_selection[case_selection['category'] == 'extra'])}")
+```
+
+# Potential codes 
+AACR supplies a list of eligible OncoTree codes.  Here, we traverse the branches to list other potential codes that lie beneath a relevant OncoTree root code but are not included in the list of allowable codes for cohort eligibility.  
+
+# potential codes
+```{python}
+oncotree = json_normalize(json.loads(requests.get("https://oncotree.info/api/tumorTypes").text))
+root = config['phase'][phase]['cohort'][cohort]['oncotree']['root']
+descendants = traverse(root, oncotree)
+
+selected = config['phase'][phase]['cohort'][cohort]['oncotree']['allowed_codes']
+excluded = list(set(descendants) - set(selected))
+
+selected_str = ", ".join(selected)
+excluded_str = ", ".join(excluded)
+print(f"Selected codes: {selected_str}")
+print(f"Selected codes under root {root}: {', '.join([code for code in selected if code in descendants])}")
+print(f"Selected codes NOT under root {root}: {', '.join([code for code in selected if code not in descendants])}")
+print(f"Non-selected codes under root {root}: {excluded_str}")
+```
