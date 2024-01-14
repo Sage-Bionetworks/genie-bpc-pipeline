@@ -10,44 +10,6 @@ import yaml
 
 from utils import get_production, get_adjusted, get_pressure, get_sdv, get_irr
 
-# setup ----------------------
-tic = time.time()
-
-workdir = "."
-if not os.path.exists("config.yaml"):
-    workdir = "/usr/local/src/myscripts"
-with open(f"{workdir}/config.yaml", "r") as stream:
-    config = yaml.safe_load(stream)
-
-
-parser = argparse.ArgumentParser()
-parser.add_argument(
-    "-s",
-    "--save_synapse",
-    action="store_true",
-    default=False,
-    help="Save updated counts on Synapse",
-)
-parser.add_argument(
-    "-c", "--comment", type=str, help="Comment for new table snapshot version"
-)
-parser.add_argument(
-    "-a",
-    "--synapse_auth",
-    type=str,
-    default=None,
-    help="Path to .synapseConfig file or Synapse PAT (default: normal synapse login behavior",
-)
-args = parser.parse_args()
-
-save_synapse = args.save_synapse
-comment = args.comment
-auth = args.synapse_auth
-
-# synapse login -------------------
-syn = synapseclient.Synapse()
-syn.login()
-
 
 def get_current_production_record_count(synid_table_patient, cohort, phase, site=None):
     syn = synapseclient.login()
@@ -124,72 +86,110 @@ def create_new_table_version(table_id, data, comment=""):
     return n_version
 
 
-# main ----------------------------
-labels = [
-    "cohort",
-    "site",
-    "phase",
-    "current_cases",
-    "target_cases",
-    "adjusted_cases",
-    "pressure",
-    "sdv",
-    "irr",
-]
-final = pd.DataFrame(columns=labels)
-
-# gather production counts
-for phase in config["phase"].keys():
-    for cohort in config["phase"][phase]["cohort"].keys():
-        for site in config["phase"][phase]["cohort"][cohort].get("site", {}).keys():
-            n_current = get_current_production_record_count(
-                synid_table_patient=config["synapse"]["bpc_patient"]["id"],
-                cohort=cohort,
-                phase=phase,
-                site=site,
-            )
-            n_target = get_production(config, phase, cohort, site)
-            n_adjust = get_adjusted(config, phase, cohort, site)
-            n_pressure = get_pressure(config, phase, cohort, site)
-            n_sdv = get_sdv(config, phase, cohort, site)
-            n_irr = get_irr(config, phase, cohort, site)
-
-            final = final.append(
-                pd.Series(
-                    [
-                        cohort,
-                        site,
-                        phase,
-                        n_current,
-                        n_target,
-                        n_adjust,
-                        n_pressure,
-                        n_sdv,
-                        n_irr,
-                    ],
-                    index=labels,
-                ),
-                ignore_index=True,
-            )
-
-# sort
-final = final.sort_values(by=["phase", "cohort", "site"])
-
-# save ------------------------
-if save_synapse:
-    pass
-    # n_version = create_new_table_version(table_id=config['synapse']['case_selection']['id'],
-    #                                      data=final,
-    #                                      comment=comment)
-else:
-    final.to_csv("case_selection_counts.csv", index=False)
-
-# close out ----------------------------
-if save_synapse:
-    print(
-        f"Table saved to Synapse as 'Case Selection Counts' ({config['synapse']['case_selection']['id']}), version {n_version}"
+def main():
+    """
+    The main function that performs the core logic of the program.
+    It parses command line arguments, retrieves configuration settings,
+    gathers production counts for each phase, cohort, and site,
+    sorts the final results, and saves the data either locally or on Synapse.
+    """
+    tic = time.time()
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "-s",
+        "--save_synapse",
+        action="store_true",
+        default=False,
+        help="Save updated counts on Synapse",
     )
-else:
-    print("Table saved locally to 'case_selection_counts.csv'")
-toc = time.time()
-print(f"Runtime: {round(toc - tic)} s")
+    parser.add_argument(
+        "-c", "--comment", type=str, help="Comment for new table snapshot version"
+    )
+    args = parser.parse_args()
+
+    save_synapse = args.save_synapse
+    comment = args.comment
+
+    syn = synapseclient.Synapse()
+    syn.login()
+
+    workdir = "."
+    if not os.path.exists("config.yaml"):
+        workdir = "/usr/local/src/myscripts"
+    with open(f"{workdir}/config.yaml", "r") as stream:
+        config = yaml.safe_load(stream)
+
+    # main ----------------------------
+    labels = [
+        "cohort",
+        "site",
+        "phase",
+        "current_cases",
+        "target_cases",
+        "adjusted_cases",
+        "pressure",
+        "sdv",
+        "irr",
+    ]
+    final = pd.DataFrame(columns=labels)
+
+    # gather production counts
+    for phase in config["phase"].keys():
+        for cohort in config["phase"][phase]["cohort"].keys():
+            for site in config["phase"][phase]["cohort"][cohort].get("site", {}).keys():
+                n_current = get_current_production_record_count(
+                    synid_table_patient=config["synapse"]["bpc_patient"]["id"],
+                    cohort=cohort,
+                    phase=phase,
+                    site=site,
+                )
+                n_target = get_production(config, phase, cohort, site)
+                n_adjust = get_adjusted(config, phase, cohort, site)
+                n_pressure = get_pressure(config, phase, cohort, site)
+                n_sdv = get_sdv(config, phase, cohort, site)
+                n_irr = get_irr(config, phase, cohort, site)
+
+                final = final.append(
+                    pd.Series(
+                        [
+                            cohort,
+                            site,
+                            phase,
+                            n_current,
+                            n_target,
+                            n_adjust,
+                            n_pressure,
+                            n_sdv,
+                            n_irr,
+                        ],
+                        index=labels,
+                    ),
+                    ignore_index=True,
+                )
+
+    # sort
+    final = final.sort_values(by=["phase", "cohort", "site"])
+
+    # save ------------------------
+    if save_synapse:
+        n_version = create_new_table_version(
+            table_id=config["synapse"]["case_selection"]["id"],
+            data=final,
+            comment=comment,
+        )
+    else:
+        final.to_csv("case_selection_counts.csv", index=False)
+
+    # close out ----------------------------
+    if save_synapse:
+        print(
+            f"Table saved to Synapse as 'Case Selection Counts' ({config['synapse']['case_selection']['id']}), version {n_version}"
+        )
+    else:
+        print("Table saved locally to 'case_selection_counts.csv'")
+    toc = time.time()
+    print(f"Runtime: {round(toc - tic)} s")
+
+
+if __name__ == "__main__":
+    main()

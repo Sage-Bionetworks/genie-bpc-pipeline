@@ -8,9 +8,10 @@ git clone git@github.com:Sage-Bionetworks/genie-bpc-pipeline.git
 cd genie-bpc-pipeline/scripts/case_selection
 ```
 
-Install all required R packages:
+Install all required Python package and quarto cli.
+
 ```
-R -e 'renv::restore()'
+pip install aacrgenie jupyter jupyter
 ```
 
 ## Synapse credentials
@@ -21,6 +22,21 @@ export SYNAPSE_AUTH_TOKEN={your_personal_access_token_here}
 ```
 
 ## Usage: case selection
+
+* Performing case selection
+
+    ```
+    python perform_case_selection.py -p 1 -c NSCLC -s DFCI   
+    ```
+
+* Rendering quarto case selection
+
+    ```
+    quarto render perform_case_selection.qmd  -P p:1 -P c:NSCLC -P s:DFCI
+    ```
+
+
+### R
 
 To display the command line interface:
 ```
@@ -88,34 +104,23 @@ Options:
 
 ## Usage: update table counts
 
-To display the command line interface:
 ```
-Rscript update_case_count_table.R -h
-```
+python update_case_count_table.py -h
+usage: update_case_count_table.py [-h] [-s] [-c COMMENT] [-a SYNAPSE_AUTH]
 
-The command line interface will display as follows:
-```
-Usage: update_case_count_table.R [options]
+optional arguments:
+  -h, --help            show this help message and exit
+  -s, --save_synapse    Save updated counts on Synapse
+  -c COMMENT, --comment COMMENT
+                        Comment for new table snapshot version
 
-
-Options:
-	-s, --save_synapse
-		Save updated counts on Synapse
-
-	-c COMMENT, --comment=COMMENT
-		Comment for new table snapshot version
-
-	-a SYNAPSE_AUTH, --synapse_auth=SYNAPSE_AUTH
-		Path to .synapseConfig file or Synapse PAT (default: '~/.synapseConfig')
-
-	-h, --help
-		Show this help message and exit
 ```
 
 Example run: 
 ```
-Rscript update_case_count_table.R -s -c 'nsclc phase 2 update' -a $SYNAPSE_AUTH_TOKEN
+python update_case_count_table.py -s -c 'nsclc phase 2 update'
 ```
+
 
 ## Usage: update table with case selection criteria
 
