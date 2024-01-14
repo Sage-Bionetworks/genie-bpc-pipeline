@@ -282,6 +282,22 @@ def create_selection_matrix(
 
 
 def build_parser():
+    """
+    Builds and returns a parser object for command line arguments.
+
+    Parameters:
+        None
+
+    Returns:
+        dict: A dictionary containing the parsed command line arguments, including the BPC phase, cohort, site, and config.
+
+    Raises:
+        AssertionError: If the provided phase, cohort, or site values are not valid according to the config file.
+
+    Example:
+        >>> build_parser()
+        {"phase": "example_phase", "cohort": "example_cohort", "site": "example_site", "config": {"example_key": "example_value"}}
+    """
     # parameters
     with open("config.yaml", "r") as f:
         config = yaml.safe_load(f)
