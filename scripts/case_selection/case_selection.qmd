@@ -80,8 +80,8 @@ Eligible samples are defined with following criteria:
     * Minimum age: `{python} config['default']['global']['age_min']`
     * Maximum age: `{python} config['phase']['1']['cohort'][cohort]['age_max'] if config['phase']['1']['cohort'][cohort].get('age_max') is not None else config['default']['global']['age_max']`
 3. Sample was sequenced between allowed date range
-    * Minimum sequencing date: `{python} config['phase'][phase]['cohort'][cohort]['date']['seq_min']`
-    * Maximum sequencing date: `{python} config['phase'][phase]['cohort'][cohort]['date']['seq_max']`
+    * Minimum sequencing date: `{python} config['phase'][phase]['cohort'][cohort]['date']['seq_min'] if config['phase'][phase]['cohort'][cohort]['site'][site].get('date') is None else config['phase'][phase]['cohort'][cohort]['site'][site]['date']['seq_min']`
+    * Maximum sequencing date: `{python} config['phase'][phase]['cohort'][cohort]['date']['seq_max'] if config['phase'][phase]['cohort'][cohort]['site'][site].get('date') is None else config['phase'][phase]['cohort'][cohort]['site'][site]['date']['seq_max']`
 4. Patient was not already included in the cohort in a previous BPC release.
 5. Patient or sample was not previously excluded for quality control or other reasons.
 
