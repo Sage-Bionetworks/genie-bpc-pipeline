@@ -74,34 +74,12 @@ python update_case_count_table.py -s -c 'nsclc phase 2 update'
 
 To display the command line interface:
 ```
-Rscript update_case_criteria_table.R -h
-```
-
-The command line interface will display as follows:
-```
-Usage: update_case_criteria_table.R [options]
-
-
-Options:
-        -s, --save_synapse
-                Save updated counts on Synapse (default: FALSE)
-
-        -c COMMENT, --comment=COMMENT
-                Comment for new table snapshot version (default: 'update to case selection criteria')
-
-        -v, --verbose
-                Output script messages to the user (default: FALSE)
-
-        -a AUTH, --auth=AUTH
-                Synapse personal access token or path to .synapseConfig (default: normal synapse login behavior)
-
-        -h, --help
-                Show this help message and exit```
+python update_case_criteria_table.py -h
 ```
 
 Example run: 
 ```
-Rscript update_case_criteria_table.R -s  -c 'example run' -v
+python update_case_criteria_table.py -s  -c 'example run' -v
 ```
 
 ## Configuration
