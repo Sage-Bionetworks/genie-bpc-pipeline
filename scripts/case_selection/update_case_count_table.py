@@ -131,7 +131,7 @@ def main():
         "sdv",
         "irr",
     ]
-    final = pd.DataFrame(columns=labels)
+    case_count_table_df = pd.DataFrame(columns=labels)
 
     # gather production counts
     for phase in config["phase"].keys():
@@ -148,8 +148,8 @@ def main():
                 n_pressure = get_pressure(config, phase, cohort, site)
                 n_sdv = get_sdv(config, phase, cohort, site)
                 n_irr = get_irr(config, phase, cohort, site)
-
-                final = final.append(
+                # TODO: update to pd.concat
+                case_count_table_df = case_count_table_df.append(
                     pd.Series(
                         [
                             cohort,
@@ -168,17 +168,17 @@ def main():
                 )
 
     # sort
-    final = final.sort_values(by=["phase", "cohort", "site"])
+    case_count_table_df = case_count_table_df.sort_values(by=["phase", "cohort", "site"])
 
     # save ------------------------
     if save_synapse:
         n_version = create_new_table_version(
             table_id=config["synapse"]["case_selection"]["id"],
-            data=final,
+            data=case_count_table_df,
             comment=comment,
         )
     else:
-        final.to_csv("case_selection_counts.csv", index=False)
+        case_count_table_df.to_csv("case_selection_counts.csv", index=False)
 
     # close out ----------------------------
     if save_synapse:

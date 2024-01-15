@@ -12,7 +12,7 @@ Install all required Python package and quarto cli.
 Install pandoc: https://github.com/jgm/pandoc/releases/tag/3.1.11.1
 
 ```
-pip install aacrgenie jupyter jupyter
+pip install aacrgenie jupyter
 ```
 
 ## Synapse credentials
@@ -36,39 +36,9 @@ export SYNAPSE_AUTH_TOKEN={your_personal_access_token_here}
     quarto render perform_case_selection.qmd  -P p:1 -P c:NSCLC -P s:DFCI
     ```
 
-
-### R
-
-To display the command line interface:
-```
-Rscript workflow_case_selection.R -h
-```
-
-The command line interface will display as follows:
-```
-Usage: workflow_case_selection.R [options]
-
-
-Options:
-	-p PHASE, --phase=PHASE
-		BPC phase
-
-	-c COHORT, --cohort=COHORT
-		BPC cohort
-
-	-s SITE, --site=SITE
-		BPC site
-
-	-u, --save_synapse
-		Save output to Synapse
-
-	-h, --help
-		Show this help message and exit
-```
-
 Example run: 
 ```
-Rscript workflow_case_selection.R  -p 1 -c NSCLC -s DFCI -u
+python workflow_case_selection.py -p 1 -c NSCLC -s DFCI
 ```
 
 ## Usage: create GENIE export files

@@ -1,0 +1,18 @@
+FROM sagebionetworks/genie:latest
+
+RUN pip3 install jupyterlab papermill
+
+ENV QUARTO_VERSION 1.4.542
+
+WORKDIR /opt
+
+RUN wget https://github.com/quarto-dev/quarto-cli/releases/download/v${QUARTO_VERSION}/quarto-${QUARTO_VERSION}-linux-amd64.tar.gz
+RUN tar -C /opt -xvzf quarto-${QUARTO_VERSION}-linux-amd64.tar.gz
+
+# Set quarto path
+ENV PATH="${PATH}:/opt/quarto-${QUARTO_VERSION}/bin/"
+
+RUN quarto install tinytex
+
+WORKDIR /case_selection
+COPY . .
