@@ -49,6 +49,17 @@ def get_patient_ids_in_release(syn, synid_file_release):
 
 
 def get_patient_ids_bpc_removed(syn, synid_table_patient_removal, cohort):
+    """
+    Retrieves the IDs of patients whose blood pressure control has been removed from the specified cohort.
+
+    Parameters:
+        syn (Synapse): A Synapse object for accessing the Synapse platform.
+        synid_table_patient_removal (str): The name of the table containing patient removal information.
+        cohort (str): The name of the cohort to filter by.
+
+    Returns:
+        list: A list of record IDs for the removed patients.
+    """
     query = (
         f"SELECT record_id FROM {synid_table_patient_removal} WHERE {cohort} = 'true'"
     )
@@ -57,6 +68,17 @@ def get_patient_ids_bpc_removed(syn, synid_table_patient_removal, cohort):
 
 
 def get_sample_ids_bpc_removed(syn, synid_table_sample_removal, cohort):
+    """
+    Retrieves a list of sample IDs from a table after removing samples based on a specified cohort.
+
+    Parameters:
+        syn (Synapse): An instance of the Synapse client.
+        synid_table_sample_removal (str): The ID of the table containing the sample removal information.
+        cohort (str): The name of the cohort used for filtering.
+
+    Returns:
+        list: A list of sample IDs that meet the specified criteria.
+    """
     query = (
         f"SELECT SAMPLE_ID FROM {synid_table_sample_removal} WHERE {cohort} = 'true'"
     )
@@ -65,6 +87,15 @@ def get_sample_ids_bpc_removed(syn, synid_table_sample_removal, cohort):
 
 
 def get_site_list(site):
+    """
+    Returns a list of site names based on the input site.
+
+    Parameters:
+        site (str): The input site name.
+
+    Returns:
+        list: A list of site names. If the input site is "PROV", the function returns ["PROV", "SCI"]. Otherwise, it returns [site].
+    """
     if site == "PROV":
         return ["PROV", "SCI"]
     return [site]
