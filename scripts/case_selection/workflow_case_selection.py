@@ -127,9 +127,17 @@ if not flag_additional:
     # render eligibility report
     # quarto render case_selection.qmd -P phase:1 -P cohort:NSCLC -P site:DFCI
     quarto_render_cmd = [
-        'quarto', 'render', 'case_selection.qmd', '-P',
-        f'phase:{phase}', '-P', f'cohort:{cohort}', '-P', f'site:{site}',
-        '--output', file_report
+        "quarto",
+        "render",
+        "case_selection.qmd",
+        "-P",
+        f"phase:{phase}",
+        "-P",
+        f"cohort:{cohort}",
+        "-P",
+        f"site:{site}",
+        "--output",
+        file_report,
     ]
     print(" ".join(quarto_render_cmd))
     subprocess.run(quarto_render_cmd)

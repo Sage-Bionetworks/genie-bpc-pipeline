@@ -168,7 +168,9 @@ def main():
                 )
 
     # sort
-    case_count_table_df = case_count_table_df.sort_values(by=["phase", "cohort", "site"])
+    case_count_table_df = case_count_table_df.sort_values(
+        by=["phase", "cohort", "site"]
+    )
 
     # save ------------------------
     if save_synapse:
