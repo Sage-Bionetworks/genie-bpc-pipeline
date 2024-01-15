@@ -33,13 +33,14 @@ export SYNAPSE_AUTH_TOKEN={your_personal_access_token_here}
 * Rendering quarto case selection
 
     ```
-    quarto render perform_case_selection.qmd  -P p:1 -P c:NSCLC -P s:DFCI
+    quarto render case_selection.qmd -P phase:1 -P cohort:NSCLC -P site:DFCI
     ```
 
-Example run: 
-```
-python workflow_case_selection.py -p 1 -c NSCLC -s DFCI
-```
+* workflow case selection
+
+	```
+	python workflow_case_selection.py -p 1 -c NSCLC -s DFCI
+	```
 
 ## Usage: create GENIE export files
 
