@@ -46,33 +46,9 @@ export SYNAPSE_AUTH_TOKEN={your_personal_access_token_here}
 
 To display the command line interface:
 ```
-Rscript export_bpc_selected_cases.R -h
+python export_bpc_selected_cases.py -i syn31068082 -p 'phase 2' -c CRC -s DFCI
 ```
 
-The command line interface will display as follows:
-```
-Usage: export_bpc_selected_cases.R [options]
-
-
-Options:
-	-i INPUT, --input=INPUT
-		Synapse ID of the input file that has the BPC selected cases
-
-	-o OUTPUT, --output=OUTPUT
-		Synapse ID of the BPC output folder. Default: syn20798271
-
-	-p PHASE, --phase=PHASE
-		BPC phase. i.e. pilot, phase 1, phase 1 additional
-
-	-c COHORT, --cohort=COHORT
-		BPC cohort. i.e. NSCLC, CRC, BrCa, and etc.
-
-	-s SITE, --site=SITE
-		BPC site. i.e. DFCI, MSK, UHN, VICC, and etc.
-
-	-h, --help
-		Show this help message and exit
-```
 
 ## Usage: update table counts
 

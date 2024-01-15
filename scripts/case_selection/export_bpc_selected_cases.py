@@ -9,7 +9,7 @@ import os
 from synapseclient import Synapse
 from synapseclient import Activity, File
 import numpy as np
-
+from datetime import date
 
 # user input --------------------------
 parser = argparse.ArgumentParser()
@@ -46,6 +46,7 @@ cohort = args.cohort
 site = args.site
 
 # check user input -----------------
+# TODO why are the inputs different...
 phase_option = ["phase 1", "phase 1 additional", "phase 2"]
 cohort_option = ["NSCLC", "CRC", "BrCa", "PANC", "Prostate", "BLADDER"]
 site_option = ["DFCI", "MSK", "UHN", "VICC"]
@@ -68,6 +69,9 @@ syn.login()
 # always use the most recent consortium release - Feb 2022
 clinical_sample_id = "syn9734573"
 clinical_patient_id = "syn9734568"
+# HACK pin version
+clinical_sample_id = "syn51499964"
+clinical_patient_id = "syn51499962"
 
 # mapping tables
 sex_mapping = syn.tableQuery("SELECT * FROM syn7434222").asDataFrame()
@@ -92,17 +96,17 @@ temp = ", ".join([f"'{item}'" for item in selected_samples])
 # download clinical data
 # sample clinical data
 clinical_sample = pd.read_csv(
-    syn.get(clinical_sample_id, downloadFile=True, followLink=True).path,
-    skiprows=4,
-    delimiter="\t",
+    syn.get(clinical_sample_id, followLink=True).path,
+    comment="#",
+    sep="\t",
 )
 clinical_sample = clinical_sample[clinical_sample["SAMPLE_ID"].isin(selected_samples)]
 
 # patient clinical data
 clinical_patient = pd.read_csv(
-    syn.get(clinical_patient_id, downloadFile=True, followLink=True).path,
-    skiprows=4,
-    delimiter="\t",
+    syn.get(clinical_patient_id, followLink=True).path,
+    comment="#",
+    sep="\t",
 )
 
 # combined clinical data
@@ -117,6 +121,58 @@ samples_per_patient = [
 ]
 
 
+def remap_clinical_values(
+    clinicaldf: pd.DataFrame,
+    sex_mapping: pd.DataFrame,
+    race_mapping: pd.DataFrame,
+    ethnicity_mapping: pd.DataFrame,
+) -> pd.DataFrame:
+    """Remap clinical attributes from integer to string values
+
+    Args:
+        clinicaldf: Clinical data
+        sex_mapping: Sex mapping data
+        race_mapping: Race mapping data
+        ethnicity_mapping: Ethnicity mapping data
+
+    Returns:
+        Mapped clinical dataframe
+    """
+
+    race_mapping.index = race_mapping["CBIO_LABEL"]
+    race_dict = race_mapping.to_dict()
+
+    ethnicity_mapping.index = ethnicity_mapping["CBIO_LABEL"]
+    ethnicity_dict = ethnicity_mapping.to_dict()
+
+    sex_mapping.index = sex_mapping["CBIO_LABEL"]
+    sex_dict = sex_mapping.to_dict()
+
+    # Use pandas mapping feature
+    clinicaldf = clinicaldf.replace(
+        {
+            "PRIMARY_RACE": race_dict["CODE"],
+            "SECONDARY_RACE": race_dict["CODE"],
+            "TERTIARY_RACE": race_dict["CODE"],
+            "SEX": sex_dict["CODE"],
+            "ETHNICITY": ethnicity_dict["CODE"],
+        }
+    )
+
+    return clinicaldf
+
+
+subset_patient = clinical_patient[clinical_patient["PATIENT_ID"].isin(selected_cases)]
+# TODO: these mappings go from non-granular to granular CODES
+# TODO which _could be_ an issue.  Check about these mappings..
+subset_patient = remap_clinical_values(
+    clinicaldf=subset_patient,
+    sex_mapping=sex_mapping,
+    race_mapping=race_mapping,
+    ethnicity_mapping=ethnicity_mapping,
+)
+subset_patient.columns = map(str.lower, subset_patient.columns)
+
 # mapping data for each instrument
 # instrument - patient_characteristics
 patient_output = pd.DataFrame({"record_id": selected_cases})
@@ -124,41 +180,25 @@ patient_output["redcap_repeat_instrument"] = ""
 patient_output["redcap_repeat_instance"] = ""
 
 patient_output["genie_patient_id"] = patient_output["record_id"]
-patient_output["birth_year"] = clinical["birth_year"][
-    patient_output["genie_patient_id"].map(clinical["patient_id"])
-]
-patient_output["naaccr_ethnicity_code"] = clinical["ethnicity"][
-    patient_output["genie_patient_id"].map(clinical["patient_id"])
-]
-patient_output["naaccr_race_code_primary"] = clinical["primary_race"][
-    patient_output["genie_patient_id"].map(clinical["patient_id"])
-]
-patient_output["naaccr_race_code_secondary"] = clinical["secondary_race"][
-    patient_output["genie_patient_id"].map(clinical["patient_id"])
-]
-patient_output["naaccr_race_code_tertiary"] = clinical["tertiary_race"][
-    patient_output["genie_patient_id"].map(clinical["patient_id"])
-]
-patient_output["naaccr_sex_code"] = clinical["sex"][
-    patient_output["genie_patient_id"].map(clinical["patient_id"])
-]
-
-# mapping to code
-patient_output["naaccr_ethnicity_code"] = ethnicity_mapping["CODE"][
-    patient_output["naaccr_ethnicity_code"].map(ethnicity_mapping["CBIO_LABEL"])
-]
-patient_output["naaccr_race_code_primary"] = race_mapping["CODE"][
-    patient_output["naaccr_race_code_primary"].map(race_mapping["CBIO_LABEL"])
-]
-patient_output["naaccr_race_code_secondary"] = race_mapping["CODE"][
-    patient_output["naaccr_race_code_secondary"].map(race_mapping["CBIO_LABEL"])
-]
-patient_output["naaccr_race_code_tertiary"] = race_mapping["CODE"][
-    patient_output["naaccr_race_code_tertiary"].map(race_mapping["CBIO_LABEL"])
-]
-patient_output["naaccr_sex_code"] = sex_mapping["CODE"][
-    patient_output["naaccr_sex_code"].map(sex_mapping["CBIO_LABEL"])
-]
+patient_output.set_index("genie_patient_id", inplace=True, drop=False)
+patient_output.loc[subset_patient["patient_id"], "birth_year"] = subset_patient[
+    "birth_year"
+].to_list()
+patient_output.loc[
+    subset_patient["patient_id"], "naaccr_ethnicity_code"
+] = subset_patient["ethnicity"].to_list()
+patient_output.loc[
+    subset_patient["patient_id"], "naaccr_race_code_primary"
+] = subset_patient["primary_race"].to_list()
+patient_output.loc[
+    subset_patient["patient_id"], "naaccr_race_code_secondary"
+] = subset_patient["secondary_race"].to_list()
+patient_output.loc[
+    subset_patient["patient_id"], "naaccr_race_code_tertiary"
+] = subset_patient["tertiary_race"].to_list()
+patient_output.loc[subset_patient["patient_id"], "naaccr_sex_code"] = subset_patient[
+    "sex"
+].to_list()
 
 # recode
 # cannotReleaseHIPAA = NA
@@ -207,7 +247,14 @@ sample_info_df = pd.concat(sample_info_list)
 patient_output = pd.concat([patient_output, sample_info_df])
 
 # output and upload ----------------------------
-patient_output.to_csv(output_file_name, index=False, na_rep="")
+from genie import process_functions
+
+
+with open(output_file_name, "w") as out_f:
+    no_float_text = process_functions.removePandasDfFloat(patient_output)
+    convert_to_csv = no_float_text.replace("\t", ",")
+    out_f.write(convert_to_csv)
+# patient_output.to_csv(output_file_name, index=False, na_rep="")
 
 # create an Activity
 act = Activity(
@@ -233,4 +280,4 @@ syn_file = File(
 # syn.setProvenance(syn_file, act)
 
 # remove the local file
-os.remove(output_file_name)
+# os.remove(output_file_name)
