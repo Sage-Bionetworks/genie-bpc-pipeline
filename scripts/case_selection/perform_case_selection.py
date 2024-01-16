@@ -343,27 +343,8 @@ def build_parser():
     cohort = args.cohort
     site = args.site
 
-    # check user input
-    # config phases are not all strings
-    config_phases = [str(key) for key in config["phase"].keys()]
-    phase_str = ", ".join(config_phases)
-    assert (
-        phase in config_phases
-    ), f"Error: phase {phase} is not valid.  Valid values: {phase_str}"
+    validate_argparse_input(config=config, phase=phase, cohort=cohort, site=site)
 
-    cohort_in_config = config["phase"][phase]["cohort"].keys()
-    cohort_str = ", ".join(cohort_in_config)
-    assert (
-        cohort in cohort_in_config
-    ), f"Error: cohort {cohort} is not valid for phase {phase}.  Valid values: {cohort_str}"
-
-    sites_in_config = get_sites_in_config(
-        config, phase, cohort
-    )  # Assuming get_sites_in_config is a function in shared_fxns
-    site_str = ", ".join(sites_in_config)
-    assert (
-        site in sites_in_config
-    ), f"Error: site {site} is not valid for phase {phase} and cohort {cohort}.  Valid values: {site_str}"
     return {"phase": phase, "cohort": cohort, "site": site, "config": config}
 
 
@@ -379,8 +360,7 @@ def main(config, phase, cohort, site):
                 f"Production target is 0 for phase {phase} {site} {cohort}.  Please revise eligibility criteria."
             )
 
-    syn = synapseclient.Synapse()
-    syn.login()
+    syn = synapseclient.login()
 
     tic = time.time()
 

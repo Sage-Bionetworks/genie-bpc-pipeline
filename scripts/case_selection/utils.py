@@ -157,3 +157,42 @@ def get_synapse_entity_data_in_csv(
         entity = syn.get(synapse_id, version=version)
     data = pd.read_csv(entity.path, na_values=na_strings, sep=sep, header=header)
     return data
+
+
+def validate_argparse_input(config: dict, phase: str, cohort: str, site: str):
+    """
+    Validate the argparse input.
+
+    Args:
+        config (dict): The configuration dictionary.
+        phase (str): The phase value.
+        cohort (str): The cohort value.
+        site (str): The site value.
+
+    Raises:
+        ValueError: If the phase, cohort, or site values are invalid.
+    """
+    # check user input
+    # config phases are not all strings
+    config_phases = [str(key) for key in config["phase"].keys()]
+    phase_str = ", ".join(config_phases)
+    if phase not in config_phases:
+        raise ValueError(
+            f"Phase {phase} is not valid.  Valid values: {phase_str}"
+        )
+
+    cohort_in_config = config["phase"][phase]["cohort"].keys()
+    cohort_str = ", ".join(cohort_in_config)
+    if cohort not in cohort_in_config:
+        raise ValueError(
+            f"Cohort {cohort} is not valid for phase {phase}.  Valid values: {cohort_str}"
+        )
+
+    sites_in_config = get_sites_in_config(
+        config, phase, cohort
+    )  # Assuming get_sites_in_config is a function in shared_fxns
+    site_str = ", ".join(sites_in_config)
+    if site not in sites_in_config:
+        raise ValueError(
+            f"Site {site} is not valid for phase {phase} and cohort {cohort}.  Valid values: {site_str}"
+        )
