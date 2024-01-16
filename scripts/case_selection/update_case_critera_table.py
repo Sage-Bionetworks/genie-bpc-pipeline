@@ -5,51 +5,14 @@
 
 # setup ----------------------------
 
-import time
-import os
 import argparse
+import time
+
 import pandas as pd
-import yaml
 import synapseclient
-from synapseclient import Table
+import yaml
 
 from utils import create_synapse_table_version
-
-tic = time.time()
-
-# user input ----------------------------
-
-parser = argparse.ArgumentParser()
-parser.add_argument(
-    "-s",
-    "--save_synapse",
-    action="store_true",
-    default=False,
-    help="Save updated counts on Synapse (default: FALSE)",
-)
-parser.add_argument(
-    "-c",
-    "--comment",
-    type=str,
-    default="update to case selection criteria",
-    help="Comment for new table snapshot version (default: 'update to case selection criteria')",
-)
-parser.add_argument(
-    "-v",
-    "--verbose",
-    action="store_true",
-    default=False,
-    help="Output script messages to the user (default: FALSE)",
-)
-args = parser.parse_args()
-
-save_synapse = args.save_synapse
-comment = args.comment
-verbose = args.verbose
-
-# parameters
-file_config = "config.yaml"
-file_output = "bpc_case_selection_criteria.csv"
 
 
 # functions ----------------------------
@@ -187,6 +150,42 @@ def main():
     7. Writes the case selection criteria to a local file if save_synapse is False.
     8. Prints the runtime of the function.
     """
+    tic = time.time()
+
+    # user input ----------------------------
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "-s",
+        "--save_synapse",
+        action="store_true",
+        default=False,
+        help="Save updated counts on Synapse (default: FALSE)",
+    )
+    parser.add_argument(
+        "-c",
+        "--comment",
+        type=str,
+        default="update to case selection criteria",
+        help="Comment for new table snapshot version (default: 'update to case selection criteria')",
+    )
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        action="store_true",
+        default=False,
+        help="Output script messages to the user (default: FALSE)",
+    )
+    args = parser.parse_args()
+
+    save_synapse = args.save_synapse
+    comment = args.comment
+    verbose = args.verbose
+
+    # parameters
+    file_config = "config.yaml"
+    file_output = "bpc_case_selection_criteria.csv"
+
     syn = synapseclient.login()
 
     # read ----------------------------
@@ -222,7 +221,7 @@ def main():
                 target = get_target_count(config, phase, cohort, site)
 
                 row = [phase, cohort, site, min_seq_date, max_seq_date, oncotree, target]
-                tab = tab.append(pd.Series(row, index=labels), ignore_index=True)
+                tab = pd.concat([tab, pd.DataFrame([row], columns=labels)], ignore_index=True)
 
     if save_synapse:
         if verbose:
