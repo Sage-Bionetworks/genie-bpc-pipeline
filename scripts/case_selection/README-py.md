@@ -46,7 +46,7 @@ export SYNAPSE_AUTH_TOKEN={your_personal_access_token_here}
 
 To display the command line interface:
 ```
-python export_bpc_selected_cases.py -i syn31068082 -p 'phase 2' -c CRC -s DFCI
+python export_bpc_selected_cases.py -i syn31068082 -p 2 -c CRC -s DFCI
 ```
 
 

@@ -316,9 +316,6 @@ def build_parser():
     """
     Builds and returns a parser object for command line arguments.
 
-    Parameters:
-        None
-
     Returns:
         dict: A dictionary containing the parsed command line arguments, including the BPC phase, cohort, site, and config.
 

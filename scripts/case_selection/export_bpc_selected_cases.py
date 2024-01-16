@@ -12,6 +12,8 @@ import numpy as np
 from datetime import date
 from genie import process_functions
 
+import yaml
+from utils import validate_argparse_input
 
 def remap_clinical_values(
     clinicaldf: pd.DataFrame,
@@ -78,6 +80,7 @@ def main():
         "-p",
         "--phase",
         help="BPC phase. i.e. pilot, phase 1, phase 1 additional",
+        type=str,
         required=True,
     )
     parser.add_argument(
@@ -100,22 +103,24 @@ def main():
     phase = args.phase
     cohort = args.cohort
     site = args.site
-
+    with open("config.yaml", "r") as f:
+        config = yaml.safe_load(f)
+    validate_argparse_input(config=config, phase=phase, cohort=cohort, site=site)
     # check user input -----------------
     # TODO why are the inputs different...
-    phase_option = ["phase 1", "phase 1 additional", "phase 2"]
-    cohort_option = ["NSCLC", "CRC", "BrCa", "PANC", "Prostate", "BLADDER"]
-    site_option = ["DFCI", "MSK", "UHN", "VICC"]
+    # phase_option = ["phase 1", "phase 1 additional", "phase 2"]
+    # cohort_option = ["NSCLC", "CRC", "BrCa", "PANC", "Prostate", "BLADDER"]
+    # site_option = ["DFCI", "MSK", "UHN", "VICC"]
 
-    assert (
-        phase in phase_option
-    ), f"Error: {phase} is not a valid phase. Valid values: {', '.join(phase_option)}"
-    assert (
-        cohort in cohort_option
-    ), f"Error: {cohort} is not a valid cohort. Valid values: {', '.join(cohort_option)}"
-    assert (
-        site in site_option
-    ), f"Error: {site} is not a valid site. Valid values: {', '.join(site_option)}"
+    # assert (
+    #     phase in phase_option
+    # ), f"Error: {phase} is not a valid phase. Valid values: {', '.join(phase_option)}"
+    # assert (
+    #     cohort in cohort_option
+    # ), f"Error: {cohort} is not a valid cohort. Valid values: {', '.join(cohort_option)}"
+    # assert (
+    #     site in site_option
+    # ), f"Error: {site} is not a valid site. Valid values: {', '.join(site_option)}"
 
     # setup --------------------------
     syn = synapseclient.login()
@@ -134,7 +139,8 @@ def main():
     ethnicity_mapping = syn.tableQuery("SELECT * FROM syn7434242").asDataFrame()
 
     # output setup
-    phase_no_space = phase.replace(" ", "_")
+    # phase_no_space = phase.replace(" ", "_")
+    phase_no_space = f"phase_{phase}"
     output_entity_name = f"{site}_{cohort}_{phase_no_space}_genie_export.csv"
     output_file_name = f"{site}_{cohort}_{phase_no_space}_genie_export_{date.today()}.csv"
 
