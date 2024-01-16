@@ -114,21 +114,6 @@ def main():
     with open("config.yaml", "r") as f:
         config = yaml.safe_load(f)
     validate_argparse_input(config=config, phase=phase, cohort=cohort, site=site)
-    # check user input -----------------
-    # TODO why are the inputs different...
-    # phase_option = ["phase 1", "phase 1 additional", "phase 2"]
-    # cohort_option = ["NSCLC", "CRC", "BrCa", "PANC", "Prostate", "BLADDER"]
-    # site_option = ["DFCI", "MSK", "UHN", "VICC"]
-
-    # assert (
-    #     phase in phase_option
-    # ), f"Error: {phase} is not a valid phase. Valid values: {', '.join(phase_option)}"
-    # assert (
-    #     cohort in cohort_option
-    # ), f"Error: {cohort} is not a valid cohort. Valid values: {', '.join(cohort_option)}"
-    # assert (
-    #     site in site_option
-    # ), f"Error: {site} is not a valid site. Valid values: {', '.join(site_option)}"
 
     # setup --------------------------
     syn = synapseclient.login()
@@ -302,7 +287,8 @@ def main():
             used=[clinical_sample_id, clinical_patient_id, in_file],
             executed="https://github.com/Sage-Bionetworks/genie-bpc-pipeline/tree/develop/scripts/case_selection/export_bpc_selected_cases.R",
         )
-
+        # ! The annotations here are going to be different from
+        # ! pre-existing annotations
         # create a File
         syn_file = File(
             path=output_file_name,
