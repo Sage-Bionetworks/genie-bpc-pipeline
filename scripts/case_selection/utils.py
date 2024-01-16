@@ -194,3 +194,28 @@ def validate_argparse_input(config: dict, phase: str, cohort: str, site: str):
         raise ValueError(
             f"Site {site} is not valid for phase {phase} and cohort {cohort}.  Valid values: {site_str}"
         )
+
+
+def clear_synapse_table(syn, table_id):
+    res = syn.tableQuery(f"SELECT * FROM {table_id}").asDataFrame()
+    tbl = synapseclient.Table(schema=syn.get(table_id), values=res)
+    syn.delete(tbl)
+    return len(res)
+
+
+def update_synapse_table(syn, table_id, data):
+    entity = syn.get(table_id)
+    project_id = entity.properties.parentId
+    table_name = entity.properties.name
+    table_object = synapseclient.Table(table_name, project_id, data)
+    syn.store(table_object)
+    return len(data)
+
+
+def create_synapse_table_version(syn, table_id, data, comment="", append=True):
+    if not append:
+        _ = clear_synapse_table(syn, table_id)
+    _ = update_synapse_table(syn, table_id, data)
+    # n_version = snapshot_synapse_table(table_id, comment)
+    n_version = syn.create_snapshot_version(table_id, comment=comment)
+    return n_version

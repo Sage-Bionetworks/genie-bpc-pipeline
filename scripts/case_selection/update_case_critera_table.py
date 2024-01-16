@@ -13,6 +13,8 @@ import yaml
 import synapseclient
 from synapseclient import Table
 
+from utils import create_synapse_table_version
+
 tic = time.time()
 
 # user input ----------------------------
@@ -91,39 +93,6 @@ def get_target_count(config, phase, cohort, site):
     return int(target)
 
 
-# def snapshot_synapse_table(table_id, comment):
-#     syn = synapseclient.login()
-#     res = syn.restPOST(f"/entity/{table_id}/table/snapshot", body = f"{{'snapshotComment':'{comment}'}}")
-#     return res['snapshotVersionNumber']
-
-
-def clear_synapse_table(table_id):
-    syn = synapseclient.login()
-    res = syn.tableQuery(f"SELECT * FROM {table_id}").asDataFrame()
-    tbl = Table(schema=syn.get(table_id), values=res)
-    syn.delete(tbl)
-    return len(res)
-
-
-def update_synapse_table(table_id, data):
-    syn = synapseclient.login()
-    entity = syn.get(table_id)
-    project_id = entity.properties.parentId
-    table_name = entity.properties.name
-    table_object = synapseclient.Table(table_name, project_id, data)
-    syn.store(table_object)
-    return len(data)
-
-
-def create_synapse_table_version(table_id, data, comment="", append=True):
-    if not append:
-        n_rm = clear_synapse_table(table_id)
-    n_add = update_synapse_table(table_id, data)
-    # n_version = snapshot_synapse_table(table_id, comment)
-    n_version = syn.create_snapshot_version(table_id, comment=comment)
-    return n_version
-
-
 syn = synapseclient.login()
 
 # read ----------------------------
@@ -167,6 +136,7 @@ if save_synapse:
             f"Update case selection criteria table ({config['synapse']['selection_criteria']['id']})..."
         )
     n_version = create_synapse_table_version(
+        syn=syn,
         table_id=config["synapse"]["selection_criteria"]["id"],
         data=tab,
         comment=comment,
