@@ -11,9 +11,7 @@ import yaml
 from utils import get_production, get_adjusted, get_pressure, get_sdv, get_irr
 
 
-def get_current_production_record_count(synid_table_patient, cohort, phase, site=None):
-    syn = synapseclient.login()
-
+def get_current_production_record_count(syn, synid_table_patient, cohort, phase, site=None):
     if cohort in ["NSCLC", "CRC"] and phase == "2":
         cohort = f"{cohort}{phase}"
     if site is None:
@@ -27,7 +25,7 @@ def get_current_production_record_count(synid_table_patient, cohort, phase, site
     return len(record_ids)
 
 
-def clear_synapse_table(table_id):
+def clear_synapse_table(syn, table_id):
     """
     Clears a synapse table by deleting all rows.
 
@@ -37,15 +35,13 @@ def clear_synapse_table(table_id):
     Returns:
         int: The number of rows deleted.
     """
-    syn = synapseclient.login()
-
     results = syn.tableQuery(f"SELECT * FROM {table_id}")
     data = results.asDataFrame()
     syn.delete(data)
     return len(data)
 
 
-def update_synapse_table(table_id, data):
+def update_synapse_table(syn, table_id, data):
     """
     Updates a table in the Synapse platform with new data.
 
@@ -56,8 +52,6 @@ def update_synapse_table(table_id, data):
     Returns:
         int: The number of rows in the updated table.
     """
-    syn = synapseclient.login()
-
     entity = syn.get(table_id)
     project_id = entity.properties.parentId
     table_name = entity.properties.name
@@ -67,7 +61,7 @@ def update_synapse_table(table_id, data):
     return len(data)
 
 
-def create_new_table_version(table_id, data, comment=""):
+def create_new_table_version(syn, table_id, data, comment=""):
     """
     Create a new version of a table in Synapse.
 
@@ -79,9 +73,8 @@ def create_new_table_version(table_id, data, comment=""):
     Returns:
         int: The version number of the newly created version.
     """
-    syn = synapseclient.login()
-    _ = clear_synapse_table(table_id)
-    _ = update_synapse_table(table_id, data)
+    _ = clear_synapse_table(syn, table_id)
+    _ = update_synapse_table(syn, table_id, data)
     n_version = syn.create_snapshot_version(table_id, comment=comment)
     return n_version
 
@@ -110,8 +103,7 @@ def main():
     save_synapse = args.save_synapse
     comment = args.comment
 
-    syn = synapseclient.Synapse()
-    syn.login()
+    syn = synapseclient.login()
 
     workdir = "."
     if not os.path.exists("config.yaml"):
@@ -138,6 +130,7 @@ def main():
         for cohort in config["phase"][phase]["cohort"].keys():
             for site in config["phase"][phase]["cohort"][cohort].get("site", {}).keys():
                 n_current = get_current_production_record_count(
+                    syn=syn,
                     synid_table_patient=config["synapse"]["bpc_patient"]["id"],
                     cohort=cohort,
                     phase=phase,
@@ -148,25 +141,26 @@ def main():
                 n_pressure = get_pressure(config, phase, cohort, site)
                 n_sdv = get_sdv(config, phase, cohort, site)
                 n_irr = get_irr(config, phase, cohort, site)
-                # TODO: update to pd.concat
-                case_count_table_df = case_count_table_df.append(
-                    pd.Series(
-                        [
-                            cohort,
-                            site,
-                            phase,
-                            n_current,
-                            n_target,
-                            n_adjust,
-                            n_pressure,
-                            n_sdv,
-                            n_irr,
-                        ],
-                        index=labels,
-                    ),
+                case_count_table_df = pd.concat(
+                    [
+                        case_count_table_df,
+                        pd.Series(
+                            [
+                                cohort,
+                                site,
+                                phase,
+                                n_current,
+                                n_target,
+                                n_adjust,
+                                n_pressure,
+                                n_sdv,
+                                n_irr,
+                            ],
+                            index=labels,
+                        )
+                    ],
                     ignore_index=True,
                 )
-
     # sort
     case_count_table_df = case_count_table_df.sort_values(
         by=["phase", "cohort", "site"]
@@ -175,6 +169,7 @@ def main():
     # save ------------------------
     if save_synapse:
         n_version = create_new_table_version(
+            syn=syn,
             table_id=config["synapse"]["case_selection"]["id"],
             data=case_count_table_df,
             comment=comment,
