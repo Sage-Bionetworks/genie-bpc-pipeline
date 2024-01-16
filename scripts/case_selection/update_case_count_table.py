@@ -8,7 +8,14 @@ import synapseclient
 from synapseclient import Table
 import yaml
 
-from utils import get_production, get_adjusted, get_pressure, get_sdv, get_irr, create_synapse_table_version
+from utils import (
+    get_production,
+    get_adjusted,
+    get_pressure,
+    get_sdv,
+    get_irr,
+    create_synapse_table_version,
+)
 
 
 def get_current_production_record_count(

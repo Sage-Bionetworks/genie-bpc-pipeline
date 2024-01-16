@@ -5,9 +5,6 @@ import os
 import time
 from typing import List
 
-syn = synapseclient.Synapse()
-syn.login()
-
 
 def waitifnot(cond: bool, msg: List[str] = []):
     if not cond:
@@ -99,6 +96,7 @@ def now(timeOnly: bool = False, tz: str = "US/Pacific"):
 
 
 def get_synapse_folder_children(
+    syn,
     synapse_id: str,
     include_types: List[str] = [
         "folder",
@@ -117,12 +115,12 @@ def get_synapse_folder_children(
     return children
 
 
-def get_folder_synid_from_path(synid_folder_root: str, path: str):
+def get_folder_synid_from_path(syn, synid_folder_root: str, path: str):
     synid_folder_current = synid_folder_root
     subfolders = path.split("/")
     for i in range(len(subfolders)):
         synid_folder_children = get_synapse_folder_children(
-            synid_folder_current, include_types=["folder"]
+            syn, synid_folder_current, include_types=["folder"]
         )
         if subfolders[i] not in synid_folder_children:
             return None
@@ -130,13 +128,13 @@ def get_folder_synid_from_path(synid_folder_root: str, path: str):
     return synid_folder_current
 
 
-def get_file_synid_from_path(synid_folder_root: str, path: str):
+def get_file_synid_from_path(syn, synid_folder_root: str, path: str):
     path_part = path.split("/")
     file_name = path_part[-1]
     path_abbrev = "/".join(path_part[:-1])
-    synid_folder_dest = get_folder_synid_from_path(synid_folder_root, path_abbrev)
+    synid_folder_dest = get_folder_synid_from_path(syn, synid_folder_root, path_abbrev)
     synid_folder_children = get_synapse_folder_children(
-        synid_folder_dest, include_types=["file"]
+        syn, synid_folder_dest, include_types=["file"]
     )
     if file_name not in synid_folder_children:
         return None
@@ -144,6 +142,7 @@ def get_file_synid_from_path(synid_folder_root: str, path: str):
 
 
 def get_synapse_entity_data_in_csv(
+    syn,
     synapse_id: str,
     version: int = None,
     sep: str = ",",

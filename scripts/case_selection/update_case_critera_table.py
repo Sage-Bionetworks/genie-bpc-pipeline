@@ -220,8 +220,18 @@ def main():
                 oncotree = get_oncotree_codes(config, phase, cohort)
                 target = get_target_count(config, phase, cohort, site)
 
-                row = [phase, cohort, site, min_seq_date, max_seq_date, oncotree, target]
-                tab = pd.concat([tab, pd.DataFrame([row], columns=labels)], ignore_index=True)
+                row = [
+                    phase,
+                    cohort,
+                    site,
+                    min_seq_date,
+                    max_seq_date,
+                    oncotree,
+                    target,
+                ]
+                tab = pd.concat(
+                    [tab, pd.DataFrame([row], columns=labels)], ignore_index=True
+                )
 
     if save_synapse:
         if verbose:

@@ -17,6 +17,7 @@ import perform_case_selection
 
 
 def save_to_synapse(
+    syn,
     path,
     parent_id,
     file_name=None,
@@ -94,7 +95,9 @@ def main():
 
     # synapse
     synid_folder_output = get_folder_synid_from_path(
-        synid_folder_root=config["synapse"]["ids"]["id"], path=f"{cohort}/{site}"
+        syn=syn,
+        synid_folder_root=config["synapse"]["ids"]["id"],
+        path=f"{cohort}/{site}",
     )
 
     # provenance exec
@@ -143,6 +146,7 @@ def main():
     if save_synapse:
         if os.path.exists(file_selection):
             save_to_synapse(
+                syn=syn,
                 path=file_matrix,
                 parent_id=synid_folder_output,
                 prov_name="Eligibility matrix",
@@ -151,6 +155,7 @@ def main():
                 prov_exec=prov_exec_selection,
             )
             save_to_synapse(
+                syn=syn,
                 path=file_selection,
                 parent_id=synid_folder_output,
                 prov_name="Eligible cohort",
@@ -160,10 +165,12 @@ def main():
             )
 
             prov_used_report = get_file_synid_from_path(
+                syn=syn,
                 synid_folder_root=config["synapse"]["ids"]["id"],
                 path=f"{cohort}/{site}/{file_matrix}",
             )
             save_to_synapse(
+                syn=syn,
                 path=file_report,
                 parent_id=synid_folder_output,
                 prov_name="Summary of eligibility",
@@ -178,6 +185,7 @@ def main():
             os.remove(file_report)
         elif os.path.exists(file_add):
             save_to_synapse(
+                syn=syn,
                 path=file_add,
                 parent_id=synid_folder_output,
                 prov_name="Summary of eligibility",
