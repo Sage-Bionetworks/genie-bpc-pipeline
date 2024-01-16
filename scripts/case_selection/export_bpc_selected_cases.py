@@ -138,13 +138,19 @@ def remap_clinical_values(
     Returns:
         Mapped clinical dataframe
     """
-
+    # HACK: remove the duplicates for now because in R
+    # mapping many to one value will take the first value
+    # This will make the values we export the same for now
+    # Until further discussion of this issue.
+    race_mapping.drop_duplicates("CBIO_LABEL", inplace=True)
     race_mapping.index = race_mapping["CBIO_LABEL"]
     race_dict = race_mapping.to_dict()
 
+    ethnicity_mapping.drop_duplicates("CBIO_LABEL", inplace=True)
     ethnicity_mapping.index = ethnicity_mapping["CBIO_LABEL"]
     ethnicity_dict = ethnicity_mapping.to_dict()
 
+    sex_mapping.drop_duplicates("CBIO_LABEL", inplace=True)
     sex_mapping.index = sex_mapping["CBIO_LABEL"]
     sex_dict = sex_mapping.to_dict()
 
