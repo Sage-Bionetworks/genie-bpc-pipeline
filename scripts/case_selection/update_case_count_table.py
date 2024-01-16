@@ -11,7 +11,9 @@ import yaml
 from utils import get_production, get_adjusted, get_pressure, get_sdv, get_irr
 
 
-def get_current_production_record_count(syn, synid_table_patient, cohort, phase, site=None):
+def get_current_production_record_count(
+    syn, synid_table_patient, cohort, phase, site=None
+):
     if cohort in ["NSCLC", "CRC"] and phase == "2":
         cohort = f"{cohort}{phase}"
     if site is None:
@@ -158,7 +160,9 @@ def main():
                     columns=labels,
                 )
 
-                case_count_table_df = pd.concat([case_count_table_df, new_row], ignore_index=True)
+                case_count_table_df = pd.concat(
+                    [case_count_table_df, new_row], ignore_index=True
+                )
 
     # sort
     case_count_table_df = case_count_table_df.sort_values(

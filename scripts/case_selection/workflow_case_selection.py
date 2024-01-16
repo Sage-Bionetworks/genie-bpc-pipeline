@@ -15,6 +15,7 @@ from synapseclient import File, Activity
 from utils import *
 import perform_case_selection
 
+
 def save_to_synapse(
     path,
     parent_id,
