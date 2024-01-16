@@ -93,62 +93,67 @@ def get_target_count(config, phase, cohort, site):
     return int(target)
 
 
-syn = synapseclient.login()
+def main():
+    syn = synapseclient.login()
 
-# read ----------------------------
-# configuration file
-with open(file_config, "r") as stream:
-    config = yaml.safe_load(stream)
+    # read ----------------------------
+    # configuration file
+    with open(file_config, "r") as stream:
+        config = yaml.safe_load(stream)
 
-# main ----------------------------
-# storage
-labels = [
-    "phase",
-    "cohort",
-    "site",
-    "min_seq_date",
-    "max_seq_date",
-    "oncotree",
-    "target",
-]
-tab = pd.DataFrame(columns=labels)
+    # main ----------------------------
+    # storage
+    labels = [
+        "phase",
+        "cohort",
+        "site",
+        "min_seq_date",
+        "max_seq_date",
+        "oncotree",
+        "target",
+    ]
+    tab = pd.DataFrame(columns=labels)
 
-if verbose:
-    print("Gathering case selection criteria from configuration file...")
-
-phases = get_phases(config)
-for phase in phases:
-    cohorts = get_cohorts(config, phase)
-    for cohort in cohorts:
-        sites = get_sites(config, phase, cohort)
-        for site in sites:
-            min_seq_date = get_min_seq_date(config, phase, cohort, site)
-            max_seq_date = get_max_seq_date(config, phase, cohort, site)
-            oncotree = get_oncotree_codes(config, phase, cohort)
-            target = get_target_count(config, phase, cohort, site)
-
-            row = [phase, cohort, site, min_seq_date, max_seq_date, oncotree, target]
-            tab = tab.append(pd.Series(row, index=labels), ignore_index=True)
-
-if save_synapse:
     if verbose:
-        print(
-            f"Update case selection criteria table ({config['synapse']['selection_criteria']['id']})..."
+        print("Gathering case selection criteria from configuration file...")
+
+    phases = get_phases(config)
+    for phase in phases:
+        cohorts = get_cohorts(config, phase)
+        for cohort in cohorts:
+            sites = get_sites(config, phase, cohort)
+            for site in sites:
+                min_seq_date = get_min_seq_date(config, phase, cohort, site)
+                max_seq_date = get_max_seq_date(config, phase, cohort, site)
+                oncotree = get_oncotree_codes(config, phase, cohort)
+                target = get_target_count(config, phase, cohort, site)
+
+                row = [phase, cohort, site, min_seq_date, max_seq_date, oncotree, target]
+                tab = tab.append(pd.Series(row, index=labels), ignore_index=True)
+
+    if save_synapse:
+        if verbose:
+            print(
+                f"Update case selection criteria table ({config['synapse']['selection_criteria']['id']})..."
+            )
+        n_version = create_synapse_table_version(
+            syn=syn,
+            table_id=config["synapse"]["selection_criteria"]["id"],
+            data=tab,
+            comment=comment,
+            append=False,
         )
-    n_version = create_synapse_table_version(
-        syn=syn,
-        table_id=config["synapse"]["selection_criteria"]["id"],
-        data=tab,
-        comment=comment,
-        append=False,
-    )
-    if verbose:
-        print(f"Updated to version {n_version}...")
-else:
-    if verbose:
-        print(f"Writing case selection criteria to local file ({file_output})...")
-    tab.to_csv(file_output, index=False)
+        if verbose:
+            print(f"Updated to version {n_version}...")
+    else:
+        if verbose:
+            print(f"Writing case selection criteria to local file ({file_output})...")
+        tab.to_csv(file_output, index=False)
 
-# close out ----------------------------
-toc = time.time()
-print(f"Runtime: {round(toc - tic)} s")
+    # close out ----------------------------
+    toc = time.time()
+    print(f"Runtime: {round(toc - tic)} s")
+
+
+if __name__ == "__main__":
+    main()
