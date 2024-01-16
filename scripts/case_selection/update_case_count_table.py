@@ -14,6 +14,19 @@ from utils import get_production, get_adjusted, get_pressure, get_sdv, get_irr, 
 def get_current_production_record_count(
     syn, synid_table_patient, cohort, phase, site=None
 ):
+    """
+    Returns the count of current production records for a given cohort and phase.
+
+    Parameters:
+        syn (Synapse): The Synapse client object.
+        synid_table_patient (str): The Synapse table ID for the patient records.
+        cohort (str): The cohort name.
+        phase (str): The phase of the cohort.
+        site (str, optional): The site name. Defaults to None.
+
+    Returns:
+        int: The count of current production records.
+    """
     if cohort in ["NSCLC", "CRC"] and phase == "2":
         cohort = f"{cohort}{phase}"
     if site is None:
