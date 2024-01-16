@@ -12,88 +12,8 @@ import subprocess
 import time
 from synapseclient import File, Activity
 
-# Assuming shared_fxns.R is converted to shared_fxns.py
 from utils import *
 import perform_case_selection
-
-# parameters
-with open("config.yaml", "r") as f:
-    config = yaml.safe_load(f)
-
-# user input ----------------------------
-
-parser = argparse.ArgumentParser()
-parser.add_argument("-p", "--phase", help="BPC phase")
-parser.add_argument("-c", "--cohort", help="BPC cohort")
-parser.add_argument("-s", "--site", help="BPC site")
-parser.add_argument(
-    "-u",
-    "--save_synapse",
-    action="store_true",
-    default=False,
-    help="Save output to Synapse",
-)
-args = parser.parse_args()
-
-phase = args.phase
-cohort = args.cohort
-site = args.site
-save_synapse = args.save_synapse
-
-# check user input -----------------
-
-phase_str = ", ".join(config["phase"].keys())
-assert (
-    phase in config["phase"]
-), f"Error: phase {phase} is not valid.  Valid values: {phase_str}"
-
-cohort_in_config = config["phase"][phase]["cohort"].keys()
-cohort_str = ", ".join(cohort_in_config)
-assert (
-    cohort in cohort_in_config
-), f"Error: cohort {cohort} is not valid for phase {phase}.  Valid values: {cohort_str}"
-
-sites_in_config = get_sites_in_config(
-    config, phase, cohort
-)  # Assuming get_sites_in_config is a function in shared_fxns
-site_str = ", ".join(sites_in_config)
-assert (
-    site in sites_in_config
-), f"Error: site {site} is not valid for phase {phase} and cohort {cohort}.  Valid values: {site_str}"
-
-
-tic = time.time()
-
-syn = synapseclient.login()
-
-# file names
-file_report = f"{cohort}_{site}_phase{phase}_case_selection.html".lower()
-file_matrix = f"{cohort}_{site}_phase{phase}_eligibility_matrix.csv".lower()
-file_selection = f"{cohort}_{site}_phase{phase}_case_selection.csv".lower()
-file_add = f"{cohort}_{site}_phase{phase}_samples.csv".lower()
-
-# synapse
-synid_folder_output = get_folder_synid_from_path(
-    synid_folder_root=config["synapse"]["ids"]["id"], path=f"{cohort}/{site}"
-)
-
-# provenance exec
-prov_exec_selection = "https://github.com/Sage-Bionetworks/genie-bpc-pipeline/tree/develop/scripts/case_selection/perform_case_selection.R"
-prov_exec_add = prov_exec_selection
-prov_exec_report = "https://github.com/Sage-Bionetworks/genie-bpc-pipeline/tree/develop/scripts/case_selection/perform_case_selection.Rmd"
-
-# provancne used
-prov_used_selection = [
-    config["synapse"]["main_patient"]["id"],
-    config["synapse"]["main_sample"]["id"],
-    config["synapse"]["bpc_patient"]["id"],
-]
-prov_used_add = prov_used_selection + [config["synapse"]["bpc_sample"]["id"]]
-prov_used_report = ""
-
-# additional parameters
-flag_additional = "addition" in phase
-
 
 def save_to_synapse(
     path,
@@ -104,6 +24,21 @@ def save_to_synapse(
     prov_used=None,
     prov_exec=None,
 ):
+    """
+    Save a file to the Synapse platform.
+
+    Parameters:
+        path (str): The path to the file on the local system.
+        parent_id (str): The ID of the parent folder in Synapse where the file will be saved.
+        file_name (str, optional): The name of the file in Synapse. If not provided, the file will be saved with the same name as the local file.
+        prov_name (str, optional): The name of the activity associated with the file.
+        prov_desc (str, optional): The description of the activity associated with the file.
+        prov_used (list of str, optional): The list of entities used by the activity.
+        prov_exec (list of str, optional): The list of entities executed by the activity.
+
+    Returns:
+        bool: True if the file is successfully saved to Synapse, False otherwise.
+    """
     if file_name is None:
         file_name = path
     file = File(path=path, parentId=parent_id, name=file_name)
@@ -117,87 +52,147 @@ def save_to_synapse(
     return True
 
 
-# case selection ----------------------------
+def main():
+    # parameters
+    with open("config.yaml", "r") as f:
+        config = yaml.safe_load(f)
 
-# construct eligibility matrices + case lists
-# os.system(f"Rscript perform_case_selection.R -p {phase} -c {cohort} -s {site}")
-perform_case_selection.main(config=config, phase=phase, cohort=cohort, site=site)
+    # user input ----------------------------
 
-if not flag_additional:
-    # render eligibility report
-    # quarto render case_selection.qmd -P phase:1 -P cohort:NSCLC -P site:DFCI
-    quarto_render_cmd = [
-        "quarto",
-        "render",
-        "case_selection.qmd",
-        "-P",
-        f"phase:{phase}",
-        "-P",
-        f"cohort:{cohort}",
-        "-P",
-        f"site:{site}",
-        "--output",
-        file_report,
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-p", "--phase", help="BPC phase")
+    parser.add_argument("-c", "--cohort", help="BPC cohort")
+    parser.add_argument("-s", "--site", help="BPC site")
+    parser.add_argument(
+        "-u",
+        "--save_synapse",
+        action="store_true",
+        default=False,
+        help="Save output to Synapse",
+    )
+    args = parser.parse_args()
+
+    phase = args.phase
+    cohort = args.cohort
+    site = args.site
+    save_synapse = args.save_synapse
+    validate_argparse_input(config=config, phase=phase, cohort=cohort, site=site)
+
+    tic = time.time()
+
+    syn = synapseclient.login()
+
+    # file names
+    file_report = f"{cohort}_{site}_phase{phase}_case_selection.html".lower()
+    file_matrix = f"{cohort}_{site}_phase{phase}_eligibility_matrix.csv".lower()
+    file_selection = f"{cohort}_{site}_phase{phase}_case_selection.csv".lower()
+    file_add = f"{cohort}_{site}_phase{phase}_samples.csv".lower()
+
+    # synapse
+    synid_folder_output = get_folder_synid_from_path(
+        synid_folder_root=config["synapse"]["ids"]["id"], path=f"{cohort}/{site}"
+    )
+
+    # provenance exec
+    prov_exec_selection = "https://github.com/Sage-Bionetworks/genie-bpc-pipeline/tree/develop/scripts/case_selection/perform_case_selection.R"
+    prov_exec_add = prov_exec_selection
+    prov_exec_report = "https://github.com/Sage-Bionetworks/genie-bpc-pipeline/tree/develop/scripts/case_selection/perform_case_selection.Rmd"
+
+    # provancne used
+    prov_used_selection = [
+        config["synapse"]["main_patient"]["id"],
+        config["synapse"]["main_sample"]["id"],
+        config["synapse"]["bpc_patient"]["id"],
     ]
-    print(" ".join(quarto_render_cmd))
-    subprocess.run(quarto_render_cmd)
+    prov_used_add = prov_used_selection + [config["synapse"]["bpc_sample"]["id"]]
+    prov_used_report = ""
 
-# load to synapse --------------------
+    # additional parameters
+    flag_additional = "addition" in phase
+    # case selection ----------------------------
 
-# store case selection files
-if save_synapse:
-    if os.path.exists(file_selection):
-        save_to_synapse(
-            path=file_matrix,
-            parent_id=synid_folder_output,
-            prov_name="Eligibility matrix",
-            prov_desc="Reports eligibility criteria and values for all possible patients",
-            prov_used=prov_used_selection,
-            prov_exec=prov_exec_selection,
-        )
-        save_to_synapse(
-            path=file_selection,
-            parent_id=synid_folder_output,
-            prov_name="Eligible cohort",
-            prov_desc="Cohort of eligible patient IDs",
-            prov_used=prov_used_selection,
-            prov_exec=prov_exec_selection,
-        )
+    # construct eligibility matrices + case lists
+    perform_case_selection.main(config=config, phase=phase, cohort=cohort, site=site)
 
-        prov_used_report = get_file_synid_from_path(
-            synid_folder_root=config["synapse"]["ids"]["id"],
-            path=f"{cohort}/{site}/{file_matrix}",
-        )
-        save_to_synapse(
-            path=file_report,
-            parent_id=synid_folder_output,
-            prov_name="Summary of eligibility",
-            prov_desc="Summary of steps and information for selection eligible patients",
-            prov_used=prov_used_report,
-            prov_exec=prov_exec_report,
-        )
+    if not flag_additional:
+        # render eligibility report
+        # quarto render case_selection.qmd -P phase:1 -P cohort:NSCLC -P site:DFCI
+        quarto_render_cmd = [
+            "quarto",
+            "render",
+            "case_selection.qmd",
+            "-P",
+            f"phase:{phase}",
+            "-P",
+            f"cohort:{cohort}",
+            "-P",
+            f"site:{site}",
+            "--output",
+            file_report,
+        ]
+        print(" ".join(quarto_render_cmd))
+        subprocess.run(quarto_render_cmd)
 
-        # local clean-up
-        os.remove(file_matrix)
-        os.remove(file_selection)
-        os.remove(file_report)
-    elif os.path.exists(file_add):
-        save_to_synapse(
-            path=file_add,
-            parent_id=synid_folder_output,
-            prov_name="Summary of eligibility",
-            prov_desc="Summary of steps and information for selection eligible patients",
-            prov_used=prov_used_add,
-            prov_exec=prov_exec_add,
-        )
+    # load to synapse --------------------
 
-        # local clean-up
-        os.remove(file_add)
+    # store case selection files
+    if save_synapse:
+        if os.path.exists(file_selection):
+            save_to_synapse(
+                path=file_matrix,
+                parent_id=synid_folder_output,
+                prov_name="Eligibility matrix",
+                prov_desc="Reports eligibility criteria and values for all possible patients",
+                prov_used=prov_used_selection,
+                prov_exec=prov_exec_selection,
+            )
+            save_to_synapse(
+                path=file_selection,
+                parent_id=synid_folder_output,
+                prov_name="Eligible cohort",
+                prov_desc="Cohort of eligible patient IDs",
+                prov_used=prov_used_selection,
+                prov_exec=prov_exec_selection,
+            )
 
-# close out ----------------------------
+            prov_used_report = get_file_synid_from_path(
+                synid_folder_root=config["synapse"]["ids"]["id"],
+                path=f"{cohort}/{site}/{file_matrix}",
+            )
+            save_to_synapse(
+                path=file_report,
+                parent_id=synid_folder_output,
+                prov_name="Summary of eligibility",
+                prov_desc="Summary of steps and information for selection eligible patients",
+                prov_used=prov_used_report,
+                prov_exec=prov_exec_report,
+            )
 
-if save_synapse:
-    print(f"Output saved to Synapse ({synid_folder_output})")
+            # local clean-up
+            os.remove(file_matrix)
+            os.remove(file_selection)
+            os.remove(file_report)
+        elif os.path.exists(file_add):
+            save_to_synapse(
+                path=file_add,
+                parent_id=synid_folder_output,
+                prov_name="Summary of eligibility",
+                prov_desc="Summary of steps and information for selection eligible patients",
+                prov_used=prov_used_add,
+                prov_exec=prov_exec_add,
+            )
 
-toc = time.time()
-print(f"Runtime: {round(toc - tic)} s")
+            # local clean-up
+            os.remove(file_add)
+
+    # close out ----------------------------
+
+    if save_synapse:
+        print(f"Output saved to Synapse ({synid_folder_output})")
+
+    toc = time.time()
+    print(f"Runtime: {round(toc - tic)} s")
+
+
+if __name__ == "__main__":
+    main()
