@@ -141,26 +141,25 @@ def main():
                 n_pressure = get_pressure(config, phase, cohort, site)
                 n_sdv = get_sdv(config, phase, cohort, site)
                 n_irr = get_irr(config, phase, cohort, site)
-                case_count_table_df = pd.concat(
+                new_row = pd.DataFrame(
                     [
-                        case_count_table_df,
-                        pd.Series(
-                            [
-                                cohort,
-                                site,
-                                phase,
-                                n_current,
-                                n_target,
-                                n_adjust,
-                                n_pressure,
-                                n_sdv,
-                                n_irr,
-                            ],
-                            index=labels,
-                        )
+                        [
+                            cohort,
+                            site,
+                            phase,
+                            n_current,
+                            n_target,
+                            n_adjust,
+                            n_pressure,
+                            n_sdv,
+                            n_irr,
+                        ]
                     ],
-                    ignore_index=True,
+                    columns=labels,
                 )
+
+                case_count_table_df = pd.concat([case_count_table_df, new_row], ignore_index=True)
+
     # sort
     case_count_table_df = case_count_table_df.sort_values(
         by=["phase", "cohort", "site"]
