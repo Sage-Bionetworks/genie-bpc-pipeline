@@ -79,7 +79,7 @@ python update_case_criteria_table.py -h
 
 Example run: 
 ```
-python update_case_criteria_table.py -s  -c 'example run' -v
+python update_case_criteria_table.py -c 'example run' -v
 ```
 
 ## Configuration
