@@ -66,7 +66,7 @@ optional arguments:
 
 Example run: 
 ```
-python update_case_count_table.py -s -c 'nsclc phase 2 update'
+python update_case_count_table.py -c 'nsclc phase 2 update'
 ```
 
 

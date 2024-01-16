@@ -3,16 +3,15 @@
 # September 17, 2019
 
 import argparse
+from datetime import date
+
+from genie import process_functions
+import numpy as np
 import pandas as pd
 import synapseclient
-import os
-from synapseclient import Synapse
 from synapseclient import Activity, File
-import numpy as np
-from datetime import date
-from genie import process_functions
-
 import yaml
+
 from utils import validate_argparse_input
 
 
@@ -146,11 +145,6 @@ def main():
     selected_info = pd.read_csv(syn.get(in_file).path)
     selected_cases = selected_info["PATIENT_ID"]
     selected_samples = ";".join(selected_info["SAMPLE_IDS"]).split(";")
-
-    # create the data file ----------------------------
-
-    # Create query for selected cases
-    temp = ", ".join([f"'{item}'" for item in selected_samples])
 
     # download clinical data
     # sample clinical data
