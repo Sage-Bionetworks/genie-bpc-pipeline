@@ -177,9 +177,7 @@ def validate_argparse_input(config: dict, phase: str, cohort: str, site: str):
     config_phases = [str(key) for key in config["phase"].keys()]
     phase_str = ", ".join(config_phases)
     if phase not in config_phases:
-        raise ValueError(
-            f"Phase {phase} is not valid.  Valid values: {phase_str}"
-        )
+        raise ValueError(f"Phase {phase} is not valid.  Valid values: {phase_str}")
 
     cohort_in_config = config["phase"][phase]["cohort"].keys()
     cohort_str = ", ".join(cohort_in_config)

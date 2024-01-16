@@ -15,6 +15,7 @@ from genie import process_functions
 import yaml
 from utils import validate_argparse_input
 
+
 def remap_clinical_values(
     clinicaldf: pd.DataFrame,
     sex_mapping: pd.DataFrame,
@@ -61,6 +62,7 @@ def remap_clinical_values(
 
     return clinicaldf
 
+
 def main():
     # user input --------------------------
     parser = argparse.ArgumentParser()
@@ -84,10 +86,16 @@ def main():
         required=True,
     )
     parser.add_argument(
-        "-c", "--cohort", help="BPC cohort. i.e. NSCLC, CRC, BrCa, and etc.", required=True
+        "-c",
+        "--cohort",
+        help="BPC cohort. i.e. NSCLC, CRC, BrCa, and etc.",
+        required=True,
     )
     parser.add_argument(
-        "-s", "--site", help="BPC site. i.e. DFCI, MSK, UHN, VICC, and etc.", required=True
+        "-s",
+        "--site",
+        help="BPC site. i.e. DFCI, MSK, UHN, VICC, and etc.",
+        required=True,
     )
     parser.add_argument(
         "-u",
@@ -142,7 +150,9 @@ def main():
     # phase_no_space = phase.replace(" ", "_")
     phase_no_space = f"phase_{phase}"
     output_entity_name = f"{site}_{cohort}_{phase_no_space}_genie_export.csv"
-    output_file_name = f"{site}_{cohort}_{phase_no_space}_genie_export_{date.today()}.csv"
+    output_file_name = (
+        f"{site}_{cohort}_{phase_no_space}_genie_export_{date.today()}.csv"
+    )
 
     # download input file and get selected cases/samples
     selected_info = pd.read_csv(syn.get(in_file).path)
@@ -161,7 +171,9 @@ def main():
         comment="#",
         sep="\t",
     )
-    clinical_sample = clinical_sample[clinical_sample["SAMPLE_ID"].isin(selected_samples)]
+    clinical_sample = clinical_sample[
+        clinical_sample["SAMPLE_ID"].isin(selected_samples)
+    ]
 
     # patient clinical data
     clinical_patient = pd.read_csv(
@@ -178,10 +190,13 @@ def main():
 
     # Get all samples for those patients
     samples_per_patient = [
-        clinical["sample_id"][clinical["patient_id"] == x].tolist() for x in selected_cases
+        clinical["sample_id"][clinical["patient_id"] == x].tolist()
+        for x in selected_cases
     ]
 
-    subset_patient = clinical_patient[clinical_patient["PATIENT_ID"].isin(selected_cases)]
+    subset_patient = clinical_patient[
+        clinical_patient["PATIENT_ID"].isin(selected_cases)
+    ]
     # TODO: these mappings go from non-granular to granular CODES
     # TODO which _could be_ an issue.  Check about these mappings..
     subset_patient = remap_clinical_values(
@@ -215,9 +230,9 @@ def main():
     patient_output.loc[
         subset_patient["patient_id"], "naaccr_race_code_tertiary"
     ] = subset_patient["tertiary_race"].to_list()
-    patient_output.loc[subset_patient["patient_id"], "naaccr_sex_code"] = subset_patient[
-        "sex"
-    ].to_list()
+    patient_output.loc[
+        subset_patient["patient_id"], "naaccr_sex_code"
+    ] = subset_patient["sex"].to_list()
 
     # recode
     # cannotReleaseHIPAA = NA
@@ -254,7 +269,9 @@ def main():
             temp_df["cpt_seq_assay_id"] = clinical["seq_assay_id"][
                 clinical["sample_id"] == sample
             ]
-            temp_df["cpt_seq_date"] = clinical["seq_year"][clinical["sample_id"] == sample]
+            temp_df["cpt_seq_date"] = clinical["seq_year"][
+                clinical["sample_id"] == sample
+            ]
             temp_df["age_at_seq_report"] = clinical["age_at_seq_report_days"][
                 clinical["sample_id"] == sample
             ]
@@ -301,6 +318,7 @@ def main():
 
         # remove the local file
         # os.remove(output_file_name)
+
 
 if __name__ == "__main__":
     main()
