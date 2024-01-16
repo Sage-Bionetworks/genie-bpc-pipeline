@@ -53,6 +53,9 @@ def save_to_synapse(
 
 
 def main():
+    """
+    The main function that executes the entire pipeline.
+    """
     # parameters
     with open("config.yaml", "r") as f:
         config = yaml.safe_load(f)

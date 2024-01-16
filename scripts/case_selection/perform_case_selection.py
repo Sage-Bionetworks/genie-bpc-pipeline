@@ -18,23 +18,34 @@ import yaml
 from utils import *
 
 
-def is_double_value(x):
-    try:
-        float(x)
-        return True
-    except ValueError:
-        return False
-
-
-def is_double(x):
-    return [is_double_value(i) for i in x]
-
-
 def get_count_from_percentage(total, perc, min_count=1):
+    """
+    Calculates and returns the count obtained from a given percentage of a total value.
+
+    Parameters:
+        total (int): The total value.
+        perc (float): The percentage to calculate the count from.
+        min_count (int, optional): The minimum count to be returned. Defaults to 1.
+
+    Returns:
+        int: The count obtained from the percentage calculation.
+    """
     return max(min_count, round(total * perc / 100))
 
 
 def get_seq_dates(config, phase, cohort, site):
+    """
+    Retrieves the sequence dates based on the given configuration, phase, cohort, and site.
+
+    Parameters:
+        config (dict): The configuration dictionary.
+        phase (str): The phase to retrieve the sequence dates for.
+        cohort (str): The cohort to retrieve the sequence dates for.
+        site (str): The site to retrieve the sequence dates for.
+
+    Returns:
+        list: A list of sequence dates.
+    """
     seq_dates = []
     if config["phase"][phase]["cohort"][cohort]["site"][site].get("date") is not None:
         seq_dates = config["phase"][phase]["cohort"][cohort]["site"][site]["date"]
@@ -44,6 +55,16 @@ def get_seq_dates(config, phase, cohort, site):
 
 
 def get_patient_ids_in_release(syn, synid_file_release):
+    """
+    Retrieves a list of patient IDs from a specified release file.
+
+    Args:
+        syn (Synapse): An instance of the Synapse client.
+        synid_file_release (str): The Synapse ID of the release file.
+
+    Returns:
+        list: A list of patient IDs extracted from the release file.
+    """
     data = pd.read_csv(syn.get(synid_file_release).path)
     return data["record_id"].tolist()
 
@@ -346,6 +367,15 @@ def build_parser():
 
 
 def main(config, phase, cohort, site):
+    """
+    Generates a function comment for the given function body.
+
+    Parameters:
+    - config: The configuration object.
+    - phase: The phase of the process.
+    - cohort: The cohort being analyzed.
+    - site: The site being analyzed.
+    """
     # additional parameters
     flag_additional = "addition" in phase
 

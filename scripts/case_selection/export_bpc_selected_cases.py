@@ -64,6 +64,9 @@ def remap_clinical_values(
 
 
 def main():
+    """
+    The main function of the script. It handles user input, sets up the necessary variables and connections, and performs the main data processing steps.
+    """
     # user input --------------------------
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -122,9 +125,9 @@ def main():
     # always use the most recent consortium release - Feb 2022
     clinical_sample_id = "syn9734573"
     clinical_patient_id = "syn9734568"
-    # pin version to reproduce results
-    clinical_sample_id = "syn51499964"
-    clinical_patient_id = "syn51499962"
+    # # pin version to reproduce results to validate script
+    # clinical_sample_id = "syn51499964"
+    # clinical_patient_id = "syn51499962"
 
     # mapping tables
     sex_mapping = syn.tableQuery("SELECT * FROM syn7434222").asDataFrame()
