@@ -102,5 +102,5 @@ jobs:
         push: true
         file: scripts/case_selection/Dockerfile.python
         # tags: ${{ steps.meta.outputs.tags }}
-        tags: ghcr.io/sagebionetworks/genie-bpc-pipeline:case_selection
+        tags: ghcr.io/sage-bionetworks/genie-bpc-pipeline:case_selection
         # labels: ${{ steps.meta.outputs.labels }}
