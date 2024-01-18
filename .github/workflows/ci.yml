@@ -81,18 +81,18 @@ jobs:
         registry: ghcr.io
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
-    - id: meta
-      uses: docker/metadata-action@v4
-      with:
-        images: |
-          ghcr.io/sagebionetworks/genie-bpc-pipeline
-        tags: |
-          type=semver,pattern={{version}}
-          type=semver,pattern={{major}}.{{minor}}
-          type=semver,pattern={{major}}
-          type=ref,event=branch
-          type=sha
-          latest
+    # - id: meta
+    #   uses: docker/metadata-action@v4
+    #   with:
+    #     images: |
+    #       ghcr.io/sagebionetworks/genie-bpc-pipeline
+    #     tags: |
+    #       type=semver,pattern={{version}}
+    #       type=semver,pattern={{major}}.{{minor}}
+    #       type=semver,pattern={{major}}
+    #       type=ref,event=branch
+    #       type=sha
+    #       latest
     - name: Publish Docker Image
       uses: docker/build-push-action@v5
       with:
@@ -101,6 +101,6 @@ jobs:
         #   TARBALL_PATH=${{ needs.prepare.outputs.tarball-path }}
         push: true
         file: scripts/case_selection/Dockerfile.python
-        tags: case_selection
         # tags: ${{ steps.meta.outputs.tags }}
-        labels: ${{ steps.meta.outputs.labels }}
+        tags: ghcr.io/sagebionetworks/genie-bpc-pipeline:case_selection
+        # labels: ${{ steps.meta.outputs.labels }}
