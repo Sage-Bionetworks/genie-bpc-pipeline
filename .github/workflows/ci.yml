@@ -85,7 +85,7 @@ jobs:
       uses: docker/metadata-action@v4
       with:
         images: |
-          ghcr.io/sagebionetworks/genie-bpc-pipeline-case-selection
+          ghcr.io/sagebionetworks/genie-bpc-pipeline
         tags: |
           type=semver,pattern={{version}}
           type=semver,pattern={{major}}.{{minor}}
@@ -101,5 +101,6 @@ jobs:
         #   TARBALL_PATH=${{ needs.prepare.outputs.tarball-path }}
         push: true
         file: scripts/case_selection/Dockerfile.python
-        tags: ${{ steps.meta.outputs.tags }}
+        tags: case_selection
+        # tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
