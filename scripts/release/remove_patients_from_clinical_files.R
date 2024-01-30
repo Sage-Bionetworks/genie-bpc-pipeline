@@ -33,8 +33,8 @@ option_list <- list(
               help="Synapse ID of folder with clinical release files (required)"),
   make_option(c("-o", "--synid_folder_output"), type = "character", default = NA,
               help="Synapse ID of output folder for filtered release files (default: write locally)"),
-  make_option(c("-r", "--synid_table_rm"), type = "character", default = "syn29266682",
-              help="Synapse ID of table with patient IDs to remove (default: syn29266682)"),
+  make_option(c("-r", "--synid_table_rm"), type = "character", default = "syn52915299",
+              help="Synapse ID of table with patient IDs to remove (default: syn52915299)"),
   make_option(c("-c", "--cohort"), type = "character", default = ALL,
               help=glue("BPC cohort code of patients to remove (default: {ALL})")),
   make_option(c("-v", "--verbose"), action="store_true", default = FALSE, 
@@ -246,9 +246,9 @@ synid_file_children <- get_synapse_folder_children(synapse_id = synid_folder_inp
 
 query <- ""
 if (cohort == ALL) {
-  query <- glue("SELECT record_id FROM {synid_table_rm}")
+  query <- glue("SELECT patient_id FROM {synid_table_rm}")
 } else {
-  query <- glue("SELECT record_id FROM {synid_table_rm} WHERE cohort = '{cohort}'")
+  query <- glue("SELECT patient_id FROM {synid_table_rm} WHERE cohort = '{cohort}'")
 }
 pt_rm <- as.character(unlist(as.data.frame(synTableQuery(query, includeRowIdAndRowVersion = F))))
 
