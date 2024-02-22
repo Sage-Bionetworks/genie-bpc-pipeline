@@ -480,16 +480,6 @@ format_rca <- function(x, dd) {
     x[,col_dt] <- lapply(x[,col_dt], convert_string_to_date, format = "%Y-%m-%d")
   }
   
-  # modify boolean values values
-  mapping_yesno <- data.frame(codes = names(config$mapping$yesno_rca),
-                              values = as.character(config$mapping$yesno_rca),
-                              stringsAsFactors = F)
-  idx_ind <- dd$`Variable / Field Name`[which(dd$`Field Type` == "yesno")]
-  #x[,idx_ind] <- lapply(x[,idx_ind, drop = F], FUN = function(x) {return(uncode_data_column(x, mapping = mapping_yesno))})
-  for (idx in idx_ind) {
-    x[,idx] <- as.character(unlist(uncode_data_column(x[,idx], mapping = mapping_yesno)))
-  }
-  
   # modify instrument
   mapping_instrument <- data.frame(codes = names(config$mapping$instrument),
                                    values = as.character(config$mapping$instrument),
