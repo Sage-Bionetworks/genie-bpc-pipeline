@@ -179,9 +179,6 @@ mapping:
     6: "Form Removed"
     7: "Form Locked"
     8: "Form Signed"
-  yesno_rca:
-    0: "No"
-    1: "Yes"
   instrument:
     ca_directed_drugs: "Ca Directed Drugs"
     cancer_diagnosis: "Cancer Diagnosis"
