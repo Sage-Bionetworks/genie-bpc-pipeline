@@ -415,18 +415,22 @@ phase:
           DFCI:
             production: 435
             adjusted: 435
+            irr: 0
           MSK:
             production: 636
             adjusted: 636
-          PROV:
-            production: 105
-            adjusted: 105
+            irr: 0
           UCSF:
             production: 30
             adjusted: 30
+            irr: 0
           UHN:
             production: 42
             adjusted: 42
+            irr: 0
+          #PROV:
+          #  production: 105
+          #  adjusted: 105
           #VICC:
           #  production: 0
           #  adjusted: 0
@@ -436,9 +440,9 @@ phase:
           #VHIO:
           #  production: 0
           #  adjusted: 0
-          WAKE:
-            production: 0
-            adjusted: 0
+          #WAKE:
+          #  production: 0
+          #  adjusted: 0
         date: 
           seq_min: Jan-2012
           seq_max: Oct-2021
@@ -457,30 +461,37 @@ phase:
           DFCI:
             production: 300
             adjusted: 300
+            irr: 0
           MSK:
             production: 500
             adjusted: 500
-          JHU:
-            production: 0
-            adjusted: 0
+            irr: 0
+          #JHU:
+          #  production: 0
+          #  adjusted: 0
           PROV:
             production: 133
             adjusted: 133
+            irr: 0
           UCSF:
             production: 88
             adjusted: 88
+            irr: 0
           UHN:
             production: 80
             adjusted: 80
-          VICC:
-            production: 0
-            adjusted: 0
+            irr: 0
+          #VICC:
+          #  production: 0
+          #  adjusted: 0
           VHIO:
             production: 70
             adjusted: 70
+            irr: 0
           WAKE:
             production: 79
             adjusted: 79
+            irr: 0
         date: 
           seq_min: Jan-2014
           seq_max: Feb-2022
@@ -500,30 +511,37 @@ phase:
           DFCI:
             production: 300
             adjusted: 300
+            irr: 0
           MSK:
             production: 500
             adjusted: 500
+            irr: 0
           PROV:
             production: 103
             adjusted: 103
+            irr: 0
           UCSF:
             production: 103
             adjusted: 103
+            irr: 0
           UHN:
             production: 40
             adjusted: 40
-          VICC:
-            production: 0
-            adjusted: 0
+            irr: 0
+          #VICC:
+          #  production: 0
+          #  adjusted: 0
           JHU:
             production: 177
             adjusted: 177
-          VHIO:
-            production: 0
-            adjusted: 0
+            irr: 0
+          #VHIO:
+          #  production: 0
+          #  adjusted: 0
           WAKE:
             production: 29
             adjusted: 29
+            irr: 0
         date: 
           seq_min: Oct-2017
           seq_max: Oct-2022
@@ -538,30 +556,39 @@ phase:
           DFCI:
             production: 315
             adjusted: 315
+            irr: 0
           MSK:
             production: 515
             adjusted: 515
+            irr: 0
           PROV:
             production: 100
             adjusted: 100
+            irr: 0
           UCSF:
             production: 45
             adjusted: 45
+            irr: 0
           UHN:
             production: 100
             adjusted: 100
-          VICC:
-            production: 0
-            adjusted: 0
+            irr: 0
+          #VICC:
+          #  production: 0
+          #  adjusted: 0
+          #  irr: 0
           VHIO:
             production: 45
             adjusted: 45
+            irr: 0
           JHU: 
             production: 38
             adjusted: 38
+            irr: 0
           WAKE:
             production: 92
             adjusted: 92
+            irr: 0
         date: 
           seq_min: Apr-2012
           seq_max: Feb-2023
