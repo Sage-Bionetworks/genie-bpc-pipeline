@@ -20,14 +20,6 @@ Cache your Synapse personal access token (PAT) as an environmental variable:
 export SYNAPSE_AUTH_TOKEN={your_personal_access_token_here}
 ```
 
-or store in ~/.synapseConfig with the following format:
-```
-[authentication]
-
-# either authtoken OR username and password
-authtoken = {your_personal_access_token_here}
-```
-
 ## Usage: case selection
 
 To display the command line interface:

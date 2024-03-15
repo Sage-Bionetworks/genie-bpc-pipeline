@@ -93,7 +93,7 @@ default:
       pressure: 10
       seed: 4556
 phase:
-  1:
+  '1':
     cohort: 
       BLADDER:
         name: BLADDER
@@ -325,7 +325,7 @@ phase:
             - MACR
             - SRCCR
             - READ
-  2:
+  '2':
     cohort: 
       NSCLC:
         name: NSCLC
