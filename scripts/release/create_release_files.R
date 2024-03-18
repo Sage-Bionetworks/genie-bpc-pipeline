@@ -101,7 +101,7 @@ filter_for_release <- function(dataset, selected_dataset, selected_cohort,
   
   # filter the data by cohort and release columns
   release_dat <- dataset %>%
-    filter(cohort==selected_cohort) %>%
+    filter(cohort_internal==selected_cohort) %>%
     filter(!record_id %in% retracted_patient) %>%
     select(all_of(release_cols))
   
@@ -226,7 +226,7 @@ if (verbose) {
 if (verbose) {
   print(glue("{now(timeOnly = T)}: loading retracted patients ({syn_id_retraction}) for the release..."))
 }
-retracted_table <- synTableQuery(glue("SELECT patient_id FROM {syn_id_retraction} WHERE cohort = '{selected_cohort}'"))$asDataFrame()
+retracted_table <- synTableQuery(glue("SELECT patient_id FROM {syn_id_retraction} WHERE cohort like '%{selected_cohort}%'"))$asDataFrame()
 retracted_pt_list <- retracted_table$patient_id
 
 # main -----------------
