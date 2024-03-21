@@ -86,8 +86,8 @@ upload:
       # data1: syn30821507
     UHN:
       data1: syn27351619
-    # VICC:
-      # data1: syn27351623
+    VICC:
+      data1: syn27351623
   CRC2:
     DFCI:
       data1: syn29418170
