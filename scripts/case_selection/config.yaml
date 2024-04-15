@@ -459,12 +459,12 @@ phase:
         name: OVARIAN
         site: 
           DFCI:
-            production: 300
-            adjusted: 300
+            production: 418
+            adjusted: 418
             irr: 0
           MSK:
-            production: 500
-            adjusted: 500
+            production: 555
+            adjusted: 555
             irr: 0
           #JHU:
           #  production: 0
@@ -472,10 +472,12 @@ phase:
           PROV:
             production: 133
             adjusted: 133
+            pressure: 5
             irr: 0
           UCSF:
-            production: 88
-            adjusted: 88
+            production: 30
+            adjusted: 30
+            pressure: 5
             irr: 0
           UHN:
             production: 80
@@ -487,11 +489,12 @@ phase:
           VHIO:
             production: 70
             adjusted: 70
+            pressure: 5
             irr: 0
-          WAKE:
-            production: 79
-            adjusted: 79
-            irr: 0
+          #WAKE:
+          #  production: 0
+          #  adjusted: 0
+          #  irr: 0
         date: 
           seq_min: Jan-2014
           seq_max: Feb-2022
