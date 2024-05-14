@@ -7,7 +7,8 @@
         "Prostate": "syn25610393",
         "BLADDER": "syn26721150",
         "NSCLC2": "syn51318735",
-        "CRC2": "syn52943208"
+        "CRC2": "syn52943208",
+        "RENAL": "syn59474241"
     },
     "irr":{
         "BrCa": "syn24241519",
@@ -15,6 +16,7 @@
         "Prostate": "syn26275497",
         "BLADDER": "syn26721151",
         "NSCLC2": "syn51318736",
-        "CRC2": "syn52943210"
+        "CRC2": "syn52943210",
+        "RENAL": "syn59474249"
     }
 }

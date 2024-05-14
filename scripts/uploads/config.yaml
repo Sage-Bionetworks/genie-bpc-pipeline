@@ -107,18 +107,18 @@ upload:
   RENAL:
     DFCI:
       data1: syn29418122
-    DUKE:
-      data1: syn30821482
+    #DUKE:
+    #  data1: syn30821482
     MSK:
       data1: syn29418128
-    PROV:
-      data1: syn30821484
+    #PROV:
+    #  data1: syn30821484
     UCSF:
       data1: syn30821486
     UHN:
       data1: syn29418131
-    VICC:
-      data1: syn29418134
+    #VICC:
+    #  data1: syn29418134
   MELANOMA:
     DFCI:
       data1: syn29418138
