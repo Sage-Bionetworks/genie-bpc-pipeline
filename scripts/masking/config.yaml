@@ -80,6 +80,12 @@ cohort:
       - DFCI
       - MSK
       - UHN
+  RENAL:
+    sites:
+      - DFCI
+      - MSK
+      - UHN
+      - UCSF
 map:
   cohort_name:
     BLADDER: BLADDER
@@ -90,5 +96,6 @@ map:
     Prostate: Prostate
     NSCLC2: NSCLC2
     CRC2: CRC2
+    RENAL: RENAL
 misc:
   debug: TRUE
