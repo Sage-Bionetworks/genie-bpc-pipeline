@@ -76,15 +76,19 @@ def _create_new_row(df, cohort):
     Create new row for updating the data element catalog
     """
     # add new and update old variables to data element catalog on Synapse
-        # add: variable, instrument, dataType='curated', type, label, cohort_dd, synColType, synColSize, numCols, colLabels
+    # add: variable, instrument, dataType='curated', type, label, cohort_dd, synColType, synColSize, numCols, colLabels
     df['synColType'] = df.apply(lambda row: _get_syn_col_type(row.type,row.validation), axis=1)
     df_choices = df[df['type'].isin(['dropdown','radio','checkbox'])]
-    df_choices[['choices_num','max_len','choices_key']] = df_choices['choices'].apply(_get_choices_info)
+    df_choices.loc[:, ['choices_num','max_len','choices_key']] = df_choices['choices'].apply(_get_choices_info)
+    # df_choices[['choices_num','max_len','choices_key']] = df_choices['choices'].apply(_get_choices_info)
     non_checkbox_index = df_choices.index[df_choices.type.isin(['dropdown','radio'])]
     checkbox_index = df_choices.index[df_choices.type == "checkbox"]
     df.loc[non_checkbox_index,'synColSize'] = df_choices.loc[non_checkbox_index,'max_len']
-    df.loc[checkbox_index,['synColSize','numCols','colLabels']] = df_choices.loc[non_checkbox_index,['max_len','choices_num','choices_key']]
-    df.loc[df.type=="yesno",'synColSize'] = 20
+    if len(checkbox_index) > 0:
+        df.loc[checkbox_index, ['synColSize','numCols','colLabels']] = df_choices.loc[non_checkbox_index,['max_len','choices_num','choices_key']]
+    df.loc[df.type=="yesno", 'synColSize'] = 20
+    # df.loc[checkbox_index,['synColSize','numCols','colLabels']] = df_choices.loc[non_checkbox_index,['max_len','choices_num','choices_key']]
+    # df.loc[df.type=="yesno",'synColSize'] = 20
     df['dataType'] = 'curated'
     df[cohort+'_dd'] = True
     df.drop(columns=['choices','validation'],axis=1,inplace=True)
@@ -122,7 +126,8 @@ def _update_by_data_dictionary(data_dictionary, data_element_catalog, logger):
     vars_to_update.loc[index_to_update,'numCols'] = vars_checkbox_update.loc[index_to_update,'numCols']
     vars_to_update.loc[index_to_update,'colLabels'] = vars_checkbox_update.loc[index_to_update,'colLabels']
     vars_checkbox_update.drop(index=index_to_update,inplace=True)
-    vars_to_update_df = vars_to_update.append(vars_checkbox_update)
+    vars_to_update_df = pandas.concat([vars_to_update, vars_checkbox_update])
+    # vars_to_update_df = vars_to_update.append(vars_checkbox_update)
     logger.info("Number of updated variables: %s" % vars_to_update_df.shape[0])
     logger.info("Updated Synapse column size: %s \n" % vars_to_update.shape[0]+'\n'.join(vars_to_update['variable']))
     logger.info("Updated Synapse column number only: %s \n" % vars_checkbox_update.shape[0]+'\n'.join(vars_checkbox_update['variable']))
