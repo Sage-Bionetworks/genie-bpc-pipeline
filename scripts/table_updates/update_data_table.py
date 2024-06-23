@@ -44,15 +44,12 @@ def _store_data(syn, table_id, label_data, table_type, logger, dry_run):
     # remove rows with no data
     cols_to_skip =['cohort','record_id','redcap_data_access_group']
     if "redcap_repeat_instance" in table_columns:
-        if table_schema.form in [['prissmm_pathology'],['ca_directed_radtx']]:
+        if table_schema.form in [['prissmm_pathology'],['ca_directed_radtx'],['cancer_diagnosis']]:
             cols_to_skip = ['cohort','record_id','redcap_repeat_instance']
         else:
             cols_to_skip.append("redcap_repeat_instance")
     rows_to_drop = temp_data.index[temp_data.apply(lambda row: check_empty_row(row,cols_to_skip),axis=1)]
     temp_data.drop(index=rows_to_drop,inplace=True)
-    # remove data in ca_directed_radtx if cohort = CRC, BrCa
-    #if table_schema.form == ['ca_directed_radtx']:
-    #    temp_data.drop(temp_data.index[temp_data.cohort.isin(["CRC","BrCa"])],inplace=True)
     # remove .0 from all columns
     temp_data = temp_data.applymap(lambda x: float_to_int(x))
     # update table
