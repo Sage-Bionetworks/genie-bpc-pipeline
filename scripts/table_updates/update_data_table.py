@@ -114,10 +114,12 @@ def _to_redact_birth_year(df_col_birth_year, df_col_dt_compare, df_col_vital_sta
     else:
         df_col_dt_compare = df_col_dt_compare.fillna(datetime.datetime.now().strftime("%Y-%m-%d"))  
         df_col_dt_compare = df_col_dt_compare.apply(lambda x: datetime.datetime.strptime(str(x),"%Y-%m-%d").date())
-    dates_diff = df_col_dt_compare - df_col_birth_year.apply(lambda x: datetime.date(datetime.date.today().year, 1, 1) if math.isnan(x) else datetime.date(int(x), 1, 1))
-    date_diff_bool = dates_diff.dt.days > get_phi_cutoff("day")
+    df_col_birth_year = df_col_birth_year.fillna(1900) # arbitrary year > 89 yrs old
+    df_col_birth_date = df_col_birth_year.apply(lambda x: datetime.date(int(x), 1, 1))
+    dates_diff = df_col_dt_compare - df_col_birth_date
+    dates_phi_bool = dates_diff.map(lambda x: x.days > get_phi_cutoff("day"))
     vital_status_bool = df_col_vital_status == 'No'
-    to_redact = date_diff_bool & vital_status_bool
+    to_redact = dates_phi_bool & vital_status_bool
     return to_redact[to_redact].index
 
 def _to_redact_seq_age(df_col_seq_age, df_col_vital_status):
