@@ -184,9 +184,13 @@ tbl_old <- as.data.frame(synTableQuery(query, includeRowIdAndRowVersion = F))
 
 tbl_new <- tbl_old
 
-idx <- which(tbl_old$cohort == cohort)
-tbl_new[idx, "previous_date"] <- tbl_old[idx, "current_date"]
-tbl_new[idx, "current_date"] <- date
+if (cohort %in% tbl_old$cohort){
+  idx <- which(tbl_old$cohort == cohort)
+  tbl_new[idx, "previous_date"] <- tbl_old[idx, "current_date"]
+  tbl_new[idx, "current_date"] <- date
+}else{
+  tbl_new <- tbl_new %>% add_row(cohort=cohort, current_date=date)
+}
 
 # save ---------------------------------
 
