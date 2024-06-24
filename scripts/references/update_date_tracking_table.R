@@ -189,7 +189,7 @@ if (cohort %in% tbl_old$cohort){
   tbl_new[idx, "previous_date"] <- tbl_old[idx, "current_date"]
   tbl_new[idx, "current_date"] <- date
 }else{
-  tbl_new <- tbl_new %>% add_row(cohort=cohort, current_date=date)
+  tbl_new <- tbl_new %>% add_row(cohort=cohort, previous_date=date, current_date=date)
 }
 
 # save ---------------------------------
