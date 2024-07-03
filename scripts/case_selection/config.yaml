@@ -176,8 +176,8 @@ phase:
             production: 0
             adjusted: 0
           VICC:
-            production: 225
-            adjusted: 225
+            production: 226
+            adjusted: 226
             sdv: 45
             irr: 11
         date:
