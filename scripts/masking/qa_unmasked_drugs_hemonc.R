@@ -50,7 +50,6 @@ tic <- as.double(Sys.time())
 library(synapser)
 library(glue)
 library(yaml)
-library(readxl)
 
 workdir <- "."
 if (!file.exists("config.yaml")) {
@@ -293,10 +292,11 @@ get_redacted_patients <- function(synapse_id, cohort, site) {
 #' @return Data frame with regimen previously reviewed status
 get_previously_reviewed_regimens <- function(synapse_id, site,
                                              values_not_reviewed = c(NA, "pending")) {
+  path = synGet(synapse_id)$path
   if (grepl("\\.csv$", path, ignore.case = TRUE)) {
-    data <- read.csv(synGet(synapse_id)$path, stringsAsFactors = F, na.strings = "", check.names = F)
+    data <- read.csv(path, stringsAsFactors = F, na.strings = "", check.names = F)
   } else {
-    data <- read_excel(synGet(synapse_id)$path, stringsAsFactors = F, na.strings = "", check.names = F)
+    stop("Your file is not a csv", synapse_id)
   }
   idx_id <- which(is.element(colnames(data), c("record_id", "Record ID")))
   idx_reg <- which(is.element(colnames(data), c("Regimen Number", "regimen_number")))
