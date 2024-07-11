@@ -8,6 +8,7 @@ Installation and Setup
 ### Python version
 Make sure you have Python 3.8 installed
 
+
 ### Install the required packages
     (sudo) pip install -r requirements.txt
 
@@ -16,6 +17,15 @@ Please make sure you have the [.synapseConfig file](https://help.synapse.org/doc
 
 ### Service catalog instance
 Use a t3.2xlarge ec2 instance for large memory requirement.
+
+Putting it all together.
+
+```
+# Make sure you have anaconda installed
+conda create -n genie-table-update python=3.8
+conda activate genie-table-update
+pip install -r requirements.txt
+```
 
 Usage
 -----
