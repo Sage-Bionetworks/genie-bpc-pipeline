@@ -1,7 +1,7 @@
 # Description: Creates sign off sheets by cohort and site with flags to mark issues with drug masking 
 #   and generates parallel reports to highlight issues.  
-# Author: Haley Hunter-Zinck
-# Date: September 2, 2021
+# Author: Thomas Yu
+# Date: July 10, 2024
 # Inputs: 
 #  cohort: Cohort on which to run drug masking report
 #  date: date of latest upload (for file labeling only)
@@ -47,8 +47,6 @@ option_list <- list(
               help="Upload date for folder labels"),
   make_option(c("-s", "--save_synapse"), action="store_true", default=FALSE,
               help="Save output to Synapse"),
-  make_option(c("-a", "--synapse_auth"), type = "character", default = NA,
-              help="Path to .synapseConfig file or Synapse PAT (default: normal synapse login behavior")
 )
 
 # user arguments
@@ -56,7 +54,6 @@ opt <- parse_args(OptionParser(option_list=option_list))
 cohort <- opt$cohort
 date <- opt$date
 save_synapse <- opt$save_synapse
-auth <- opt$synapse_auth
 
 # flags
 flag_run_analysis <- T
@@ -228,69 +225,8 @@ now <- function(timeOnly = F, tz = "US/Pacific") {
   return(format(Sys.time(), "%Y-%m-%d %H:%M:%S"))
 }
 
-#' Extract personal access token from .synapseConfig
-#' located at a custom path. 
-#' 
-#' @param path Path to .synapseConfig
-#' @return personal acccess token
-get_auth_token <- function(path) {
-  
-  lines <- scan(path, what = "character", sep = "\t", quiet = T)
-  line <- grep(pattern = "^authtoken = ", x = lines, value = T)
-  
-  token <- strsplit(line, split = ' ')[[1]][3]
-  return(token)
-}
-
-#' Override of synapser::synLogin() function to accept 
-#' custom path to .synapseConfig file or personal authentication
-#' token.  If no arguments are supplied, performs standard synLogin().
-#' 
-#' @param auth full path to .synapseConfig file or authentication token
-#' @param silent verbosity control on login
-#' @return TRUE for successful login; F otherwise
-#' Override of synapser::synLogin() function to accept 
-#' custom path to .synapseConfig file or personal authentication
-#' token.  If no arguments are supplied, performs standard synLogin().
-#' 
-#' @param auth full path to .synapseConfig file or authentication token
-#' @param silent verbosity control on login
-#' @return TRUE for successful login; F otherwise
-# synLogin <- function(auth = NA, silent = T) {
-  
-#   # default synLogin behavior
-#   if (is.na(auth)) {
-#     syn <- synapser::synLogin(silent = silent)
-#     return(T)
-#   }
-  
-#   token = auth
-  
-#   # extract token from .synapseConfig
-#   if (grepl(x = auth, pattern = "\\.synapseConfig$")) {
-#     token = get_auth_token(auth)
-    
-#     if (is.na(token)) {
-#       return(F)
-#     }
-#   }
-  
-#   # login
-#   syn <- tryCatch({
-#     synapser::synLogin(authToken = token, silent = silent)
-#   }, error = function(cond) {
-#     return(F)
-#   })
-  
-#   if (is.null(syn)) {
-#     return(T)
-#   }
-#   return(syn)
-# }
-
 # synapse login -------------------
 
-# login_status <- synLogin(auth = auth)
 synapser::synLogin()
 
 # main ----------------------------
@@ -306,7 +242,7 @@ for (site in sites) {
   # generate report data and save to Synapse
   if (flag_run_analysis) {
     
-    system(glue("Rscript {workdir}/qa_unmasked_drugs_hemonc.R -c {cohort} -s {site} -d {date} -a {auth}"))
+    system(glue("Rscript {workdir}/qa_unmasked_drugs_hemonc.R -c {cohort} -s {site} -d {date}"))
     
     if (save_synapse) {
       

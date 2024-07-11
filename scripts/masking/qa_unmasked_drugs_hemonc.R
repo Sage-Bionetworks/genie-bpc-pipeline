@@ -32,9 +32,7 @@ option_list <- list(
   make_option(c("-s", "--site"), type="character", 
               help="Site on which to run analysis"),
   make_option(c("-d", "--date"), type="character", 
-              help="Upload date for folder labels"),
-  make_option(c("-a", "--synapse_auth"), type = "character", default = NA,
-              help="Path to .synapseConfig file or Synapse PAT (default: normal synapse login behavior")
+              help="Upload date for folder labels")
 )
 opt <- parse_args(OptionParser(option_list=option_list))
 waitifnot(!is.null(opt$cohort) && !is.null(opt$site) && !is.null(opt$date),
@@ -44,7 +42,6 @@ waitifnot(!is.null(opt$cohort) && !is.null(opt$site) && !is.null(opt$date),
 cohort <- opt$cohort
 site <- opt$site
 date <- opt$date
-auth <- opt$synapse_auth
 
 # setup -----------------------------------------
 
@@ -295,7 +292,9 @@ get_redacted_patients <- function(synapse_id, cohort, site) {
 #' @return Data frame with regimen previously reviewed status
 get_previously_reviewed_regimens <- function(synapse_id, site,
                                              values_not_reviewed = c(NA, "pending")) {
-  
+  if (!grepl("\\.csv$", path, ignore.case = TRUE)) {
+    stop("Error: The file does not have a .csv extension. ", synapse_id)
+  }
   data <- read.csv(synGet(synapse_id)$path, stringsAsFactors = F, na.strings = "", check.names = F)
   idx_id <- which(is.element(colnames(data), c("record_id", "Record ID")))
   idx_reg <- which(is.element(colnames(data), c("Regimen Number", "regimen_number")))
@@ -418,69 +417,8 @@ get_fda_approval_status <- function(bpc_drug_names, date = Sys.Date(),
   return(fda_status)
 }
 
-#' Extract personal access token from .synapseConfig
-#' located at a custom path. 
-#' 
-#' @param path Path to .synapseConfig
-#' @return personal acccess token
-get_auth_token <- function(path) {
-  
-  lines <- scan(path, what = "character", sep = "\t", quiet = T)
-  line <- grep(pattern = "^authtoken = ", x = lines, value = T)
-  
-  token <- strsplit(line, split = ' ')[[1]][3]
-  return(token)
-}
-
-#' Override of synapser::synLogin() function to accept 
-#' custom path to .synapseConfig file or personal authentication
-#' token.  If no arguments are supplied, performs standard synLogin().
-#' 
-#' @param auth full path to .synapseConfig file or authentication token
-#' @param silent verbosity control on login
-#' @return TRUE for successful login; F otherwise
-#' Override of synapser::synLogin() function to accept 
-#' custom path to .synapseConfig file or personal authentication
-#' token.  If no arguments are supplied, performs standard synLogin().
-#' 
-#' @param auth full path to .synapseConfig file or authentication token
-#' @param silent verbosity control on login
-#' @return TRUE for successful login; F otherwise
-synLogin <- function(auth = NA, silent = T) {
-  
-  # default synLogin behavior
-  if (is.na(auth)) {
-    syn <- synapser::synLogin(silent = silent)
-    return(T)
-  }
-  
-  token = auth
-  
-  # extract token from .synapseConfig
-  if (grepl(x = auth, pattern = "\\.synapseConfig$")) {
-    token = get_auth_token(auth)
-    
-    if (is.na(token)) {
-      return(F)
-    }
-  }
-  
-  # login
-  syn <- tryCatch({
-    synapser::synLogin(authToken = token, silent = silent)
-  }, error = function(cond) {
-    return(F)
-  })
-  
-  if (is.null(syn)) {
-    return(T)
-  }
-  return(syn)
-}
 
 # synapse login -------------------
-
-#login_status <- synLogin(auth = auth)
 synapser::synLogin()
 
 # query and compute -------------------------------------------------
