@@ -57,7 +57,7 @@ def _update_table_schema(syn, form, curated_data_element, logger, dry_run):
         current_cols = syn.getColumns(row['id'])
         current_cols = pandas.DataFrame(current_cols)
         current_cols['table_id'] = row['id']
-        current_cols_df = current_cols_df.append(current_cols)
+        current_cols_df = pandas.concat([current_cols_df, current_cols])
     # get the table id with the least columns
     tbl_with_least_cols = current_cols_df['table_id'].value_counts()
     tbl_with_least_cols_id = tbl_with_least_cols.idxmin()
