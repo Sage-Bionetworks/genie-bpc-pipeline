@@ -85,9 +85,6 @@ Options:
 	-s, --save_synapse
 		Save output to Synapse
 
-	-a SYNAPSE_AUTH, --synapse_auth=SYNAPSE_AUTH
-		Path to .synapseConfig file or Synapse PAT (default: '~/.synapseConfig')
-
 	-h, --help
 		Show this help message and exit
 ```
