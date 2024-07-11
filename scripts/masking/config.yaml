@@ -75,6 +75,7 @@ cohort:
       - DFCI
       - MSK
       - UHN
+      - VICC
   CRC2:
     sites:
       - DFCI
