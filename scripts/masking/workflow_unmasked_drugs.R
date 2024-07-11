@@ -46,7 +46,7 @@ option_list <- list(
   make_option(c("-d", "--date"), type="character", 
               help="Upload date for folder labels"),
   make_option(c("-s", "--save_synapse"), action="store_true", default=FALSE,
-              help="Save output to Synapse"),
+              help="Save output to Synapse")
 )
 
 # user arguments

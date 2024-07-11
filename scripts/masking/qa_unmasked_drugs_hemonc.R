@@ -50,6 +50,7 @@ tic <- as.double(Sys.time())
 library(synapser)
 library(glue)
 library(yaml)
+library(readxl)
 
 workdir <- "."
 if (!file.exists("config.yaml")) {
@@ -292,10 +293,11 @@ get_redacted_patients <- function(synapse_id, cohort, site) {
 #' @return Data frame with regimen previously reviewed status
 get_previously_reviewed_regimens <- function(synapse_id, site,
                                              values_not_reviewed = c(NA, "pending")) {
-  if (!grepl("\\.csv$", path, ignore.case = TRUE)) {
-    stop("Error: The file does not have a .csv extension. ", synapse_id)
+  if (grepl("\\.csv$", path, ignore.case = TRUE)) {
+    data <- read.csv(synGet(synapse_id)$path, stringsAsFactors = F, na.strings = "", check.names = F)
+  } else {
+    data <- read_excel(synGet(synapse_id)$path, stringsAsFactors = F, na.strings = "", check.names = F)
   }
-  data <- read.csv(synGet(synapse_id)$path, stringsAsFactors = F, na.strings = "", check.names = F)
   idx_id <- which(is.element(colnames(data), c("record_id", "Record ID")))
   idx_reg <- which(is.element(colnames(data), c("Regimen Number", "regimen_number")))
   idx_rev <- which(is.element(colnames(data), c("QA manager sign off", "qa_manager_signoff")))
@@ -455,6 +457,8 @@ synid_drug_signoff <- get_synid_drug_signoff_file(synid_root = synid_folder_qc,
 if(!is.na(synid_drug_signoff)) {
   regimen_reviewed <- get_previously_reviewed_regimens(synapse_id = synid_drug_signoff, 
                                       site = site)
+} else {
+  print("No QA reports found!")
 }
 
 
