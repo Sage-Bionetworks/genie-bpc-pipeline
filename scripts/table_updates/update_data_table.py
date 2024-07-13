@@ -289,15 +289,18 @@ def main():
     with open(project_config) as config_file:
         cohort_info = json.load(config_file)
         logger.info("Read cohort information successful.")
-        config_file.close()
     
     # get master table
+    # This is the internal tables with non redacted
     table_id, condition = list(TABLE_INFO[table_type])
     master_table = download_synapse_table(syn, table_id, condition)
+    # This contains external tables with redacted
     TABLE_INFO["redacted"] = ('syn21446696',"table_type='data' and double_curated is false")
-    
-   # download data files 
-   # TODO: find the cohort that has new data
+
+    # download data files
+    # TODO: find the cohort that has new data
+    # This is a mapping to all the intake data. e.g: ProstateBPCIntake_data
+    # found here: https://www.synapse.org/Synapse:syn23286928
     cohort_info_selected = cohort_info[table_type]
     cohort_data_list = []
     for cohort in cohort_info_selected:

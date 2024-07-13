@@ -69,7 +69,8 @@ def get_data(syn, label_data_id, cohort):
     Returns:
         Dataframe: label data
     """
-    label_data = pandas.read_csv(syn.get(label_data_id).path,low_memory=False)
+    na_values = [" ", "#N/A", "#N/A N/A", "#NA", "-1.#IND", "-1.#QNAN", "-NaN", "-nan", "1.#IND", "1.#QNAN", "<NA>", "N/A", "NA", "NULL", "NaN", "n/a", "nan", "null"]
+    label_data = pandas.read_csv(syn.get(label_data_id).path, low_memory=False, na_values=na_values)
     label_data['cohort'] = cohort
     return(label_data)
 
