@@ -24,6 +24,7 @@ params.comment = 'NSCLC public release update'
 params.production = false
 params.schema_ignore_params = ""
 params.help = false
+params.pipeline_step = "update_data_table"
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -87,16 +88,20 @@ workflow {
    ch_cohort = Channel.value(params.cohort)
    ch_comment = Channel.value(params.comment)
 
-   run_quac_upload_report_error(ch_cohort)
-   run_quac_upload_report_warning(run_quac_upload_report_error.out, ch_cohort, params.production)
-   merge_and_uncode_rca_uploads(run_quac_upload_report_warning.out, ch_cohort, params.production)
-   // remove_patients_from_merged(merge_and_uncode_rca_uploads.out, ch_cohort, params.production)
-   update_data_table(merge_and_uncode_rca_uploads.out, ch_comment, params.production)
-   update_date_tracking_table(update_data_table.out, ch_cohort, ch_comment, params.production)
-   run_quac_table_report(update_date_tracking_table.out, ch_cohort, params.production)
-   run_quac_comparison_report(run_quac_table_report.out, ch_cohort, params.production)
-   create_masking_report(run_quac_comparison_report.out, ch_cohort, params.production)
-   update_case_count_table(create_masking_report.out, ch_comment, params.production)
+   if (params.pipeline_step == "update_data_table") {
+    update_data_table(merge_and_uncode_rca_uploads.out, ch_comment, params.production)
+   } else {
+    run_quac_upload_report_error(ch_cohort)
+    run_quac_upload_report_warning(run_quac_upload_report_error.out, ch_cohort, params.production)
+    merge_and_uncode_rca_uploads(run_quac_upload_report_warning.out, ch_cohort, params.production)
+    // remove_patients_from_merged(merge_and_uncode_rca_uploads.out, ch_cohort, params.production)
+    update_data_table(merge_and_uncode_rca_uploads.out, ch_comment, params.production)
+    update_date_tracking_table(update_data_table.out, ch_cohort, ch_comment, params.production)
+    run_quac_table_report(update_date_tracking_table.out, ch_cohort, params.production)
+    run_quac_comparison_report(run_quac_table_report.out, ch_cohort, params.production)
+    create_masking_report(run_quac_comparison_report.out, ch_cohort, params.production)
+    update_case_count_table(create_masking_report.out, ch_comment, params.production)
+   }
 }
 
 /*
