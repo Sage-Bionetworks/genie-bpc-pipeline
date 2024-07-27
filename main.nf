@@ -89,7 +89,7 @@ workflow {
    ch_comment = Channel.value(params.comment)
 
    if (params.pipeline_step == "update_data_table") {
-    update_data_table(merge_and_uncode_rca_uploads.out, ch_comment, params.production)
+    update_data_table("default", ch_comment, params.production)
    } else {
     run_quac_upload_report_error(ch_cohort)
     run_quac_upload_report_warning(run_quac_upload_report_error.out, ch_cohort, params.production)
