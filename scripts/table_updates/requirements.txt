@@ -1,1 +1,1 @@
-synapseclient[pandas] == 4.3.0
+synapseclient[pandas] == 2.7.2
