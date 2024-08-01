@@ -340,7 +340,6 @@ def custom_fix_for_cancer_panel_test_table(
     cpt_dat = cpt_dat_query.asDataFrame()
     cpt_dat.index = cpt_dat.index.map(str)
     cpt_dat["index"] = cpt_dat.index
-    # genie_sample_dat = syn.tableQuery('SELECT SAMPLE_ID, SEQ_YEAR FROM syn7517674').asDataFrame()
     genie_sample_dat = get_main_genie_clinical_sample_file(
         syn,
         release=config["main_genie_release_version"],
