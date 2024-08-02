@@ -51,11 +51,7 @@ def get_main_genie_clinical_sample_file(
         (release_files["release"] == release)
         & (release_files["name"] == "data_clinical_sample.txt")
     ]["fileSynId"].values[0]
-    clinical_link_ent = syn.get(clinical_link_synid)
-    clinical_ent = syn.get(
-        clinical_link_ent["linksTo"]["targetId"],
-        version=clinical_link_ent["linksTo"]["targetVersionNumber"],
-    )
+    clinical_ent = syn.get(clinical_link_synid, followLink=True)
     clinical_df = pandas.read_csv(clinical_ent.path, sep="\t", skiprows=4)
     assert (
         not clinical_df.empty
