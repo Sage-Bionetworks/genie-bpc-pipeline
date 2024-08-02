@@ -31,14 +31,19 @@ TABLE_INFO = {
 
 
 def get_main_genie_clinical_sample_file(
-    syn: synapseclient.Synapse, release: str, release_files_table_synid: str
+    syn: synapseclient.Synapse,
+    release: str,
+    release_files_table_synid: str,
+    logger: logging.Logger = None,
 ) -> pandas.DataFrame:
     """This retrieves the main genie clinical sample file from consortium release
 
     Args:
+        syn (synapseclient.Synapse): synapse client connection
         release (str): release version to pull from for main genie
         release_files_table_synid (str): synapse id of the data relese files table
         from main genie
+        logger (logging.Logger): custom logger. Optional.
 
     Returns:
         pandas.DataFrame: the read in clinical file as dataframe
@@ -46,7 +51,6 @@ def get_main_genie_clinical_sample_file(
     release_files = syn.tableQuery(
         f"SELECT * FROM {release_files_table_synid}"
     ).asDataFrame()
-    #assert_frame_equal(release_files, release_files)
     clinical_link_synid = release_files[
         (release_files["release"] == release)
         & (release_files["name"] == "data_clinical_sample.txt")
@@ -60,6 +64,9 @@ def get_main_genie_clinical_sample_file(
         f"Clinical file pulled from {clinical_link_synid} link is missing an expected column. "
         "Expected columns: ['SAMPLE_ID', 'SEQ_YEAR']"
     )
+    if logger:
+        logger.info(f"CLINICAL_SAMPLE_FILE_LINK:{clinical_link_synid}")
+        logger.info(f"RELEASE_FILES_TABLE_SYNID:{release_files_table_synid}")
     return clinical_df[["SAMPLE_ID", "SEQ_YEAR"]]
 
 
@@ -340,6 +347,7 @@ def custom_fix_for_cancer_panel_test_table(
         syn,
         release=config["main_genie_release_version"],
         release_files_table_synid=config["main_genie_data_release_files"],
+        logger=logger,
     )
     cpt_seq_dat = cpt_dat.merge(
         genie_sample_dat,
@@ -370,6 +378,7 @@ def custom_fix_for_cancer_panel_test_table(
         sample_type_mapping_dict
     )
     syn.store(Table(cpt_table_schema, cpt_dat, etag=cpt_dat_query.etag))
+    logger.info(f"SAMPLE_MAPPING_TYPE:{config['main_genie_sample_mapping_table']}")
     logger.info("Completed")
 
 
