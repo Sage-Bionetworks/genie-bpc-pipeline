@@ -748,6 +748,7 @@ center_config:
     output: syn25872288
     irr: syn24241519
     primary: syn23286608
+    patient_level_dataset: syn26253365
     DFCI:
       data1: syn26160187
       #header1: syn25981842
@@ -761,6 +762,7 @@ center_config:
     output: syn25878117
     irr: null
     primary: syn23285418
+    patient_level_dataset: syn26046793
     DFCI:
       data1: syn25961098
       #header1: syn25961099
@@ -772,6 +774,7 @@ center_config:
     output: syn25872287
     irr: null
     primary: syn23285494
+    patient_level_dataset: syn25985884
     DFCI:
       data1: syn25582436
       #header1: syn25582427
@@ -784,7 +787,8 @@ center_config:
   PANC:
     output: syn25882184
     irr: syn25610271
-    primary: syn24175803 
+    primary: syn24175803
+    patient_level_dataset: null
     DFCI:
       data1: syn25544638
       header1: syn25544639
@@ -798,6 +802,7 @@ center_config:
     output: syn25976290
     irr: syn26275497
     primary: syn25610393
+    patient_level_dataset: null
     DFCI:
       data1: syn26230815
       header1: syn25592217
@@ -811,6 +816,7 @@ center_config:
     output: syn26709456
     irr: syn26721151
     primary: syn26721150
+    patient_level_dataset: null
     DFCI:
       data1: syn26250078
       header1: syn26250090
@@ -824,6 +830,7 @@ center_config:
     output: syn30821567
     irr: syn51318736
     primary: syn51318735
+    patient_level_dataset: syn25985884
     DFCI:
       data1: syn27351603
     # DUKE:
@@ -842,6 +849,7 @@ center_config:
     output: syn30821568
     irr: syn52943210
     primary: syn52943208
+    patient_level_dataset: syn26046793
     DFCI:
       data1: syn29418170
       # data2: syn52623830
@@ -861,6 +869,7 @@ center_config:
     output: syn30821570
     irr: syn59474249
     primary: syn59474241
+    patient_level_dataset: null
     DFCI:
       data1: syn29418122
     #DUKE:
@@ -879,6 +888,7 @@ center_config:
     output: syn30821572
     irr: null
     primary: null
+    patient_level_dataset: null
     DFCI:
       data1: syn29418138
     MSK:
@@ -901,6 +911,7 @@ center_config:
     output: syn30821569
     irr: null
     primary: null
+    patient_level_dataset: null
     DFCI:
       data1: syn29418091
     #DUKE:
@@ -921,6 +932,7 @@ center_config:
     output: syn30821571
     irr: null
     primary: null
+    patient_level_dataset: null
     DFCI:
       data1: syn29418106
     #DUKE:
@@ -943,81 +955,6 @@ center_config:
     #  data1: syn29418117
 
 
-      
-  #   phase2:
-  #     cohorts:
-  #     - BLADDER
-  #     - BrCa
-  #     - CRC
-  #     - CRC2
-  #     - NSCLC
-  #     - NSCLC2
-  #     - PANC
-  #     - Prostate
-  #     - MELANOMA
-  #     - ESOPHAGO
-  #     - OVARIAN
-  #     - RENAL
-  #     contacts:
-  #       DFCI:
-  #       - xindi.guo
-  #       - thomas.yu
-  #       - chelsea.nayan
-  #       - alyssa.acebedo
-  #       - Mi31953
-  #       - apostle
-  #       - karimfarhat
-  #       - Ashnewc
-  #       - ddand
-  #       - daniel_quinn
-  #       - myp74
-  #       DUKE:
-  #       - thomas.yu
-  #       - xindi.guo
-  #       - chelsea.nayan
-  #       - alyssa.acebedo
-  #       - Mi31953
-  #       MSK:
-  #       - xindi.guo
-  #       - thomas.yu
-  #       - chelsea.nayan
-  #       - alyssa.acebedo
-  #       - Mi31953
-  #       - pillais
-  #       - julia.e.rudolph
-  #       PROV:
-  #       - thomas.yu
-  #       - xindi.guo
-  #       - chelsea.nayan
-  #       - alyssa.acebedo
-  #       - Mi31953
-  #       SAGE:
-  #       - xindi.guo
-  #       - thomas.yu
-  #       - chelsea.nayan
-  #       UCSF:
-  #       - thomas.yu
-  #       - xindi.guo
-  #       - chelsea.nayan
-  #       - alyssa.acebedo
-  #       - Mi31953
-  #       - mturski18
-  #       - elanaweingord
-  #       UHN:
-  #       - xindi.guo
-  #       - thomas.yu
-  #       - chelsea.nayan
-  #       - alyssa.acebedo
-  #       - Mi31953
-  #       - celeste.yu
-  #       VICC:
-  #       - thomas.yu
-  #       - xindi.guo
-  #       - chelsea.nayan
-  #       - alyssa.acebedo
-  #       - Mi31953
-  #       - Michele
-  #       - nonnapotter
   #     reports:
   #     - upload
   #     - masking
@@ -1548,28 +1485,6 @@ center_config:
   #                 adjusted: 42
   #                 irr: 0
   #                 production: 42
-  #     release:
-  #       cohort:
-  #         BLADDER:
-  #           patient_level_dataset: NA
-  #         BrCa:
-  #           patient_level_dataset: syn26253365
-  #         CRC:
-  #           patient_level_dataset: syn26046793
-  #         ESOPHAGO:
-  #           patient_level_dataset: NA
-  #         MELANOMA:
-  #           patient_level_dataset: NA
-  #         NSCLC:
-  #           patient_level_dataset: syn25985884
-  #         OVARIAN:
-  #           patient_level_dataset: NA
-  #         PANC:
-  #           patient_level_dataset: NA
-  #         Prostate:
-  #           patient_level_dataset: NA
-  #         RENAL:
-  #           patient_level_dataset: NA
   #   phase2:
   #     column_name:
   #       field_type: Field Type
