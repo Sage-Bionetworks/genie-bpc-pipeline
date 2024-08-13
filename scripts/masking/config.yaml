@@ -86,6 +86,33 @@ cohort:
       - MSK
       - UHN
       - UCSF
+  OVARIAN:
+    sites:
+      - DFCI
+      - MSK
+      - UHN
+      - UCSF
+      - VHIO
+      - PROV
+  MELANOMA:
+    sites:
+      - DFCI
+      - MSK
+      - UHN
+      - UCSF
+      - PROV
+      - JHU
+      - WAKE
+  ESOPHAGO:
+    sites:
+      - DFCI
+      - MSK
+      - UHN
+      - UCSF
+      - PROV
+      - JHU
+      - WAKE
+      - VHIO
 map:
   cohort_name:
     BLADDER: BLADDER
@@ -97,5 +124,8 @@ map:
     NSCLC2: NSCLC2
     CRC2: CRC2
     RENAL: RENAL
+    OVARIAN: OVARIAN
+    ESOPHAGO: ESOPHAGO
+    MELANOMA: MELANOMA
 misc:
   debug: TRUE
