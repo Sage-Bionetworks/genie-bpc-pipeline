@@ -877,8 +877,8 @@ center_config:
     #  data1: syn29418134
   MELANOMA:
     output: syn30821572
-    irr:
-    primary: 
+    irr: null
+    primary: null
     DFCI:
       data1: syn29418138
     MSK:
