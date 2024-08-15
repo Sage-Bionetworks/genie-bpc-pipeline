@@ -185,7 +185,7 @@ synapse:
     id: syn23286928
     name: curated
     type: folder
-center_config:
+cohort:
   BrCa:
     output: syn25872288
     irr: syn24241519
