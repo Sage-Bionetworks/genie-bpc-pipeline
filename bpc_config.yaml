@@ -1,0 +1,397 @@
+synapse:
+  exports:
+    description: folder containing subfolders containing BPC upload files
+    id: syn20852283
+    name: External REDCap exports
+    type: folder
+  reports:
+    description: folder containing all QA reports by cohort
+    id: syn25832316
+    name: QA Check
+    type: folder
+  testing:
+    description: folder containing subfolders containing test upload files
+    id: syn27538188
+    name: External REDCap exports
+    type: folder
+  concept:
+    description: HemOnc concept relationship table
+    id: syn26119153
+    name: hemonc_cc_concept
+    type: table
+  curation:
+    description: BPC Internal table with curation metadata
+    id: syn21446698
+    name: Curation and QA
+    type: table
+  drug:
+    description: BPC drug regimen data
+    id: syn21446703
+    name: Ca Directed Drugs
+    type: table
+  genie_patient:
+    description: Main GENIE reference of patient IDs
+    id: syn7517669
+    name: Patient Clinical Database
+    type: table
+  genie_sample:
+    description: Main GENIE reference of sample IDs
+    id: syn7517674
+    name: Sample Clinical Database
+    type: table
+  map:
+    description: Table mapping BPC drug names to HemOnc ontology drug names
+    id: syn26125434
+    name: hemonc_map_bpc
+    type: table
+  prissmm:
+    description: PRISSMM data dictionary versions by cohort and date
+    id: syn22684834
+    name: PRISSM Documentation Versions
+    type: table
+  relationship:
+    description: HemOnc ontology relationship table
+    id: syn26119155
+    name: hemonc_cc_relationship
+    type: table
+  release:
+    description: umbrella folder for all BPC releases
+    id: syn21241322
+    name: AACR Project GENIE BPC Data
+    type: folder
+  rm_pat:
+    description: BPC samples to remove from BPC cohorts
+    id: syn25998970
+    name: BPC Patient Retraction
+    type: table
+  rm_sam:
+    description: BPC samples to remove from BPC cohorts
+    id: syn25779833
+    name: BPC Sample Retraction
+    type: table
+  sor:
+    description: Description of all data elements by MSK stats team
+    id: syn22294851
+    name: GENIE_BPC_Release_Scope
+    type: xlsx
+  tables_view:
+    description: All tables of raw data elements for GENIE BPC
+    id: syn21446696
+    name: Data table Information
+    type: table
+  target_count:
+    description: Target cohort counts by site
+    id: syn26228746
+    name: Case Selection Counts
+    type: table
+  test_project:
+    description: Project to which test script can write temporary fixtures
+    id: syn25921894
+    name: hhz_test_project
+    type: project
+  test_table_view:
+    description: Table view in test project for testing
+    id: syn26215556
+    name: test_view
+    type: table
+  version_date:
+    description: Date of previous upload by cohort
+    id: syn25837005
+    name: Previous Upload Tracking
+    type: table
+  version_release:
+    description: Release metadata and link to clinical data file folders.
+    id: syn27628075
+    name: Release Information
+    type: table
+  bpc_internal:
+    description: BPC internal project space
+    id: syn21435590
+    name: GENIE BioPharma Collaborative Internal
+    type: project
+  bpc_patient:
+    description: consolidated BPC patient characteristics info
+    id: syn21446700
+    name: Patient Characteristics
+    type: table
+  bpc_removal_patient:
+    description: patients removed from BPC for quality or other reasons
+    id: syn25998970
+    name: BPC Patient Retraction
+    type: table
+  bpc_removal_sample:
+    description: samples removed from BPC for quality or other reasons
+    id: syn25779833
+    name: BPC Sample Retraction
+    type: table
+  bpc_sample:
+    description: BPC sample table
+    id: syn21446709
+    name: Cancer Panel Test
+    type: table
+  case_selection:
+    description: Case selection counts reference table in BPC Internal project
+    id: syn26228746
+    name: Case Selection Counts
+    type: table
+  ids:
+    description: folder holding IDs for case selection by cohort and site
+    id: syn20781633
+    name: IDs for export request
+    type: folder
+  main_patient:
+    description: main GENIE table of all patients with patient info
+    id: syn7517669
+    name: Patient Clinical Database
+    type: table
+  main_sample:
+    description: main GENIE table of all samples with sample info
+    id: syn7517674
+    name: Sample Clinical Database
+    type: table
+  main_genie_data_release_files: 
+    description: 16.6-consortium
+    id: syn16804261
+    name: Main GENIE data release files
+    type: 
+  # main_genie_release_version: 16.6-consortium
+  #   description: 
+  #   id: syn16804261
+  #   name: Main GENIE data release files
+  #   type: 
+  main_genie_sample_mapping_table: 
+    description: Main GENIE sample mapping table
+    id: syn7434273
+    name: Main GENIE sample mapping table
+    type: table
+  selection:
+    description: reference table of case selection counts for GENIE BPC cohorts
+    id: syn26228746
+    name: Case Selection Counts
+    type: table
+  selection_criteria:
+    description: Case selection criteria reference table in BPC Internal project
+    id: syn31003441
+    name: Case Selection Criteria
+    type: table
+  grs:
+    description: BPC REDCap mapping between coded and uncoded values to supplement data dictionaries
+    id: syn24184523
+    name: Global_Response_Set
+    type: file
+  rca_files:
+    description: REDCap academic formatted files of merged BPC data ready for
+      import to Synapse tables
+    id: syn23286928
+    name: curated
+    type: folder
+cohort:
+  BrCa:
+    output: syn25872288
+    irr: syn24241519
+    primary: syn23286608
+    patient_level_dataset: syn26253365
+    DFCI:
+      data1: syn26160187
+      #header1: syn25981842
+      #data2: syn26160184
+      #header2: syn25981841
+    MSK:
+      data1: syn24202045
+    VICC:
+      data1: syn24201984
+  CRC:
+    output: syn25878117
+    irr: null
+    primary: syn23285418
+    patient_level_dataset: syn26046793
+    DFCI:
+      data1: syn25961098
+      #header1: syn25961099
+    MSK:
+      data1: syn25953196
+    VICC:
+      data1: syn25961124
+  NSCLC:
+    output: syn25872287
+    irr: null
+    primary: syn23285494
+    patient_level_dataset: syn25985884
+    DFCI:
+      data1: syn25582436
+      #header1: syn25582427
+    MSK:
+      data1: syn25557012
+    UHN:
+      data1: syn25686838
+    VICC:
+      data1: syn25579921
+  PANC:
+    output: syn25882184
+    irr: syn25610271
+    primary: syn24175803
+    patient_level_dataset: null
+    DFCI:
+      data1: syn25544638
+      header1: syn25544639
+    MSK:
+      data1: syn25541828
+    UHN:
+      data1: syn26033209
+    VICC:
+      data1: syn25541702
+  Prostate:
+    output: syn25976290
+    irr: syn26275497
+    primary: syn25610393
+    patient_level_dataset: null
+    DFCI:
+      data1: syn26230815
+      header1: syn25592217
+    MSK:
+      data1: syn26230493
+    UHN:
+      data1: syn26212729
+    VICC:
+      data1: syn26231094
+  BLADDER:
+    output: syn26709456
+    irr: syn26721151
+    primary: syn26721150
+    patient_level_dataset: null
+    DFCI:
+      data1: syn26250078
+      header1: syn26250090
+    MSK:
+      data1: syn26250083
+    UHN:
+      data1: syn26250084
+    VICC:
+      data1: syn26250085
+  NSCLC2:
+    output: syn30821567
+    irr: syn51318736
+    primary: syn51318735
+    patient_level_dataset: syn25985884
+    DFCI:
+      data1: syn27351603
+    # DUKE:
+      # data1: syn30821503
+    MSK:
+      data1: syn27351615
+    # PROV:
+      # data1: syn30821505
+    # UCSF:
+      # data1: syn30821507
+    UHN:
+      data1: syn27351619
+    VICC:
+      data1: syn27351623
+  CRC2:
+    output: syn30821568
+    irr: syn52943210
+    primary: syn52943208
+    patient_level_dataset: syn26046793
+    DFCI:
+      data1: syn29418170
+      # data2: syn52623830
+    #DUKE:
+    #  data1: syn30821496
+    MSK:
+      data1: syn29418172
+    PROV:
+      data1: syn30821498
+    #UCSF:
+    #  data1: syn30821500
+    UHN:
+      data1: syn29418174
+    VICC:
+      data1: syn29418176
+  RENAL:
+    output: syn30821570
+    irr: syn59474249
+    primary: syn59474241
+    patient_level_dataset: null
+    DFCI:
+      data1: syn29418122
+    #DUKE:
+    #  data1: syn30821482
+    MSK:
+      data1: syn29418128
+    #PROV:
+    #  data1: syn30821484
+    UCSF:
+      data1: syn30821486
+    UHN:
+      data1: syn29418131
+    #VICC:
+    #  data1: syn29418134
+  MELANOMA:
+    output: syn30821572
+    irr: null
+    primary: null
+    patient_level_dataset: null
+    DFCI:
+      data1: syn29418138
+    MSK:
+      data1: syn29418140
+    PROV:
+      data1: syn30821491
+    UCSF:
+      data1: syn30821493
+    UHN:
+      data1: syn29418143
+    JHU:
+      data1: syn62015775
+    VHIO:
+      data1: syn62015776
+    WAKE:
+      data1: syn62015777
+    #VICC:
+    #  data1: syn29418146
+  OVARIAN:
+    output: syn30821569
+    irr: null
+    primary: null
+    patient_level_dataset: null
+    DFCI:
+      data1: syn29418091
+    #DUKE:
+    #  data1: syn30821466
+    MSK:
+      data1: syn29418095
+    PROV:
+      data1: syn30821470
+    UCSF:
+      data1: syn30821472
+    UHN:
+      data1: syn29418098
+    VHIO:
+      data1: syn62015745
+    #VICC:
+    #  data1: syn29418100
+  ESOPHAGO:
+    output: syn30821571
+    irr: null
+    primary: null
+    patient_level_dataset: null
+    DFCI:
+      data1: syn29418106
+    #DUKE:
+    #  data1: syn30821475
+    MSK:
+      data1: syn29418110
+    PROV:
+      data1: syn30821477
+    UCSF:
+      data1: syn30821479
+    UHN:
+      data1: syn29418113
+    JHU:
+      data1: syn62015787
+    VHIO:
+      data1: syn62015794
+    WAKE:
+      data1: syn62015795
+    #VICC:
+    #  data1: syn29418117
