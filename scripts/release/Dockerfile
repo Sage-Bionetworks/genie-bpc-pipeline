@@ -1,9 +1,9 @@
-FROM r-base:4.0.5
+FROM rstudio/r-base:4.0-bullseye
 
 WORKDIR /usr/local/src/myscripts
 
 ENV RENV_VERSION 0.14.0
-RUN rm /etc/apt/apt.conf.d/default
+# RUN rm /etc/apt/apt.conf.d/default
 RUN apt-get update -y && apt-get install -y dpkg-dev zlib1g-dev libssl-dev libffi-dev curl libcurl4-openssl-dev procps
 
 RUN R -e "install.packages('synapser', repos=c('http://ran.synapse.org', 'http://cran.fhcrc.org'))"
