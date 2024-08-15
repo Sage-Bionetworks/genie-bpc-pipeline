@@ -1,6 +1,8 @@
 /*
 Run the clinical release
 */
+nextflow.enable.dsl = 2
+
 process run_clinical_release {
 
    container 'sagebionetworks/genie-bpc-pipeline-clinical-release'
@@ -35,4 +37,6 @@ params.production = false
 params.schema_ignore_params = ""
 params.help = false
 
-run_clinical_release(previous: '', cohort: params.cohort, production: params.production)
+workflow {
+   run_clinical_release('', params.cohort, params.production)
+}
