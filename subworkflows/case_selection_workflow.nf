@@ -18,7 +18,7 @@ include { run_export_bpc_selected_cases } from '../modules/run_export_bpc_select
 
 workflow export_bpc_cases {
     // run_workflow_case_selection(params.phase, params.cohort, params.center, params.production)
-    run_export_bpc_selected_cases(params.bpc_input, params.bpc_output, params.phase, params.cohort, params.center)
+    run_export_bpc_selected_cases(params.bpc_input, params.bpc_output, export_phase, params.cohort, params.center)
 }
 
 
