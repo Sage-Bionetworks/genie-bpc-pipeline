@@ -21,14 +21,14 @@ process run_workflow_case_selection {
     script:
     if (production) {
         """
-        cd /case_selection
-        python3 workflow_case_selection.py --phase $phase --cohort $cohort --site $center -u
+        cd /usr/local/src/myscripts/
+        Rscript workflow_case_selection.R --phase $phase --cohort $cohort --site $center -u
         """
     }
     else {
         """
-        cd /case_selection
-        python3 workflow_case_selection.py -p $phase -c $cohort -s $center
+        cd /usr/local/src/myscripts/
+        Rscript workflow_case_selection.R -p $phase -c $cohort -s $center
         """
     }
 }
