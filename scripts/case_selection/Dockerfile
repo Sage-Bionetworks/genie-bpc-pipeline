@@ -19,3 +19,9 @@ RUN R -e "remotes::install_github('rstudio/renv@${RENV_VERSION}')"
 COPY . .
 
 RUN R -e "renv::restore()"
+
+#install pandoc 1.19.2.1 (dashboard use)
+# RUN wget https://github.com/jgm/pandoc/releases/download/1.19.2.1/pandoc-1.19.2.1-1-amd64.deb
+# RUN dpkg -i pandoc-1.19.2.1-1-amd64.deb
+RUN wget https://github.com/jgm/pandoc/releases/download/3.0.1/pandoc-3.0.1-1-amd64.deb
+RUN dpkg -i pandoc-3.0.1-1-amd64.deb
