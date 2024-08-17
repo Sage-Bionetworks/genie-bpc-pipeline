@@ -52,7 +52,7 @@ site <- opt$site
 
 phase_option <- c("phase 1","phase 1 additional","phase 2")
 cohort_option <- c("NSCLC","CRC","BrCa","PANC","Prostate","BLADDER", "MELANOMA", "RENAL", "OVARIAN", "ESOPHAGO")
-site_option <- c("DFCI","MSK","UHN","VICC","UCSF")
+site_option <- c("DFCI","MSK","UHN","VICC","UCSF","PROV","VHIO","JHU","WAKE")
 
 phase_str <- paste0(phase_option, collapse = ", ")
 stopifnot(is.element(phase, phase_option),
