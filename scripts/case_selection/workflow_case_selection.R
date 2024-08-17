@@ -177,10 +177,7 @@ if (file.exists(file_selection)) {
 
 
 # close out ----------------------------
-
-if (save_synapse) {
-  print(glue("Output saved to Synapse ({synid_folder_output})"))
-}
+print(glue("Output saved to Synapse ({synid_folder_output})"))
 
 toc = as.double(Sys.time())
 print(glue("Runtime: {round(toc - tic)} s"))
