@@ -22,8 +22,8 @@ option_list <- list(
               help="BPC cohort"),
   make_option(c("-s", "--site"), type = "character",
               help="BPC site"),
-  make_option(c("-u", "--save_synapse"), action="store_true", default = FALSE, 
-              help="Save output to Synapse")
+  make_option(c("--production"), action="store_true", default = FALSE,
+              help="Save output to production folder")
 )
 opt <- parse_args(OptionParser(option_list=option_list))
 waitifnot(!is.null(opt$phase) && !is.null(opt$cohort) && !is.null(opt$site),
@@ -32,7 +32,7 @@ waitifnot(!is.null(opt$phase) && !is.null(opt$cohort) && !is.null(opt$site),
 phase <- opt$phase
 cohort <- opt$cohort
 site <- opt$site
-save_synapse <- opt$save_synapse
+is_production <- opt$production
 
 # check user input -----------------
 
@@ -125,49 +125,56 @@ if (!flag_additional) {
 }
 
 # load to synapse --------------------
-
+ # This is the staging folder to upload files to
+if (!is_production) {
+  synid_folder_output <- "syn62149812"
+}
 # store case selection files 
-if (save_synapse) {
+
+if (file.exists(file_selection)) {
+  save_to_synapse(path = file_matrix,
+                  parent_id = synid_folder_output,
+                  prov_name = "Eligibility matrix",
+                  prov_desc = "Reports eligibility criteria and values for all possible patients",
+                  prov_used = prov_used_selection,
+                  prov_exec = prov_exec_selection)
+  save_to_synapse(path = file_selection,
+                  parent_id = synid_folder_output,
+                  prov_name = "Eligible cohort",
+                  prov_desc = "Cohort of eligible patient IDs",
+                  prov_used = prov_used_selection,
+                  prov_exec = prov_exec_selection)
+
+  prov_used_report <- get_file_synid_from_path(synid_folder_root = config$synapse$ids$id,
+                                                path = glue("{cohort}/{site}/{file_matrix}"))
+  save_to_synapse(path = file_report,
+                  parent_id = synid_folder_output,
+                  prov_name = "Summary of eligibility",
+                  prov_desc = "Summary of steps and information for selection eligible patients",
+                  prov_used = prov_used_report,
+                  prov_exec = prov_exec_report)
   
-  if (file.exists(file_selection)) {
-    save_to_synapse(path = file_matrix, 
-                    parent_id = synid_folder_output,
-                    prov_name = "Eligibility matrix", 
-                    prov_desc = "Reports eligibility criteria and values for all possible patients", 
-                    prov_used = prov_used_selection,
-                    prov_exec = prov_exec_selection)
-    save_to_synapse(path = file_selection, 
-                    parent_id = synid_folder_output,  
-                    prov_name = "Eligible cohort", 
-                    prov_desc = "Cohort of eligible patient IDs", 
-                    prov_used = prov_used_selection, 
-                    prov_exec = prov_exec_selection)
-    
-    prov_used_report <- get_file_synid_from_path(synid_folder_root = config$synapse$ids$id,
-                                                 path = glue("{cohort}/{site}/{file_matrix}"))
-    save_to_synapse(path = file_report, 
-                    parent_id = synid_folder_output,
-                    prov_name = "Summary of eligibility", 
-                    prov_desc = "Summary of steps and information for selection eligible patients", 
-                    prov_used = prov_used_report, 
-                    prov_exec = prov_exec_report)
-    
-    # local clean-up
+  # local clean-up
+  if (is_production) {
     file.remove(file_matrix)
     file.remove(file_selection)
     file.remove(file_report)
-  } else if (file.exists(file_add)) {
-    save_to_synapse(path = file_add, 
-                    parent_id = synid_folder_output,
-                    prov_name = "Summary of eligibility", 
-                    prov_desc = "Summary of steps and information for selection eligible patients", 
-                    prov_used = prov_used_add, 
-                    prov_exec = prov_exec_add)
-    
-    # local clean-up
+  }
+
+} else if (file.exists(file_add)) {
+  save_to_synapse(path = file_add,
+                  parent_id = synid_folder_output,
+                  prov_name = "Summary of eligibility",
+                  prov_desc = "Summary of steps and information for selection eligible patients",
+                  prov_used = prov_used_add,
+                  prov_exec = prov_exec_add)
+
+  # local clean-up
+  if (is_production) {
     file.remove(file_add)
   }
 }
+
 
 # close out ----------------------------
 
