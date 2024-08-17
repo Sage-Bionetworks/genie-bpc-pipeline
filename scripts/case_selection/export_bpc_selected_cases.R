@@ -51,21 +51,21 @@ site <- opt$site
 # file_view_schema <- synGetColumns(file_view_id)$asList()
 
 phase_option <- c("phase 1","phase 1 additional","phase 2")
-cohort_option <- c("NSCLC","CRC","BrCa","PANC","Prostate","BLADDER")
-site_option <- c("DFCI","MSK","UHN","VICC")
+cohort_option <- c("NSCLC","CRC","BrCa","PANC","Prostate","BLADDER", "MELANOMA", "RENAL", "OVARIAN", "ESOPHAGO")
+site_option <- c("DFCI","MSK","UHN","VICC","UCSF")
 
 phase_str <- paste0(phase_option, collapse = ", ")
-waitifnot(is.element(phase, phase_option),
+stopifnot(is.element(phase, phase_option),
           msg=c(glue("Error: {phase} is not a valid phase. Valid values: {phase_str}"),
                   "Usage: export_bpc_selected_cases.R -h"))
 
 cohort_str <- paste0(cohort_option, collapse = ", ")
-waitifnot(is.element(cohort, cohort_option),
+stopifnot(is.element(cohort, cohort_option),
           msg=c(glue("Error: {cohort} is not a valid cohort. Valid values: {cohort_str}"),
                   "Usage: export_bpc_selected_cases.R -h"))
 
 site_str <- paste0(site_option, collapse = ", ")
-waitifnot(is.element(site, site_option),
+stopifnot(is.element(site, site_option),
           msg=c(glue("Error: {site} is not a valid site. Valid values: {site_str}"),
                   "Usage: export_bpc_selected_cases.R -h"))
 
