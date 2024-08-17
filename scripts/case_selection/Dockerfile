@@ -1,4 +1,4 @@
-FROM r-base:4.0.0
+FROM r-base:4.0.5
 
 WORKDIR /usr/local/src/myscripts
 
