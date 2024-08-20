@@ -70,7 +70,7 @@ stopifnot(is.element(site, site_option),
                   "Usage: export_bpc_selected_cases.R -h"))
 
 # setup ----------------------------
-
+print("get clinical data")
 # clinical data
 # always use the most recent consortium release - Feb 2022
 clinical_sample_id <- "syn9734573"
@@ -112,10 +112,16 @@ clinical <- sqldf(sql)
 
 # change the columns to lower case
 colnames(clinical) <- tolower(colnames(clinical))
-
+print("get all samples for selected patients")
 # Get all samples for those patients
-samples_per_patient <- sapply(selected_cases, function(x){as.character(clinical$sample_id[clinical$patient_id %in% x])})
+# samples_per_patient <- sapply(selected_cases, function(x){as.character(clinical$sample_id[clinical$patient_id %in% x])})
+missing_patients <- selected_cases[!selected_cases %in% !clinical$patient_id]
+print("Missing patients froim consortium release:")
+print(missing_patients)
 
+samples_per_patient <- clinical$sample_id[clinical$patient_id %in% selected_cases]
+
+print("map data for each instrument")
 # mapping data for each instrument
 # instrument - patient_characteristics
 patient_output <- data.frame("record_id" = selected_cases)
@@ -136,7 +142,7 @@ patient_output$naaccr_race_code_primary <- race_mapping$CODE[match(patient_outpu
 patient_output$naaccr_race_code_secondary <- race_mapping$CODE[match(patient_output$naaccr_race_code_secondary, race_mapping$CBIO_LABEL)]
 patient_output$naaccr_race_code_tertiary <- race_mapping$CODE[match(patient_output$naaccr_race_code_tertiary, race_mapping$CBIO_LABEL)]
 patient_output$naaccr_sex_code <- sex_mapping$CODE[match(patient_output$naaccr_sex_code,sex_mapping$CBIO_LABEL)]
-
+print("recode")
 # recode
 # cannotReleaseHIPAA = NA
 patient_output$birth_year[which(patient_output$birth_year == "cannotReleaseHIPAA")] <- NA
@@ -148,7 +154,7 @@ patient_output$naaccr_race_code_primary[which(patient_output$naaccr_race_code_pr
 patient_output$naaccr_race_code_secondary[which(patient_output$naaccr_race_code_secondary == -1)] <- 88
 patient_output$naaccr_race_code_tertiary[which(patient_output$naaccr_race_code_tertiary == -1)] <- 88
 
-
+print("instrument cancer panel test")
 # instrument - cancer_panel_test
 sample_info_list <- lapply(samples_per_patient,function(x){
   sample_list = list()
@@ -172,7 +178,7 @@ sample_info_list <- lapply(samples_per_patient,function(x){
 
 sample_info_df <- rbind.fill(sample_info_list)
 patient_output <- rbind.fill(patient_output,sample_info_df)
-
+print("output and upload")
 # output and upload ----------------------------
 write.csv(patient_output,file = output_file_name,quote = TRUE,row.names = FALSE,na = "")
 act <- Activity(name = 'export main GENIE data', 
