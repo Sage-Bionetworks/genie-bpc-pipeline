@@ -2,7 +2,7 @@
 Run workflow case selection
 */
 process run_export_bpc_selected_cases {
-    container 'sagebionetworks/genie-bpc-pipeline-case-selection:develop'
+    container 'sagebionetworks/genie-bpc-pipeline-case-selection'
     secret 'SYNAPSE_AUTH_TOKEN'
     debug true
 
