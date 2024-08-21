@@ -193,7 +193,7 @@ act <- Activity(name = 'export main GENIE data',
 syn_file <- File(output_file_name, 
                  parent=out_folder,
                  name=output_entity_name,
-                 annotations=list(phase=phase,cohort=cohort,site=site))
+                 annotations=list(phase=sub("phase ", "", phase),cohort=cohort,site=site))
 syn_file <- synStore(syn_file)
 synSetProvenance(syn_file,act)
 file.remove(output_file_name)
