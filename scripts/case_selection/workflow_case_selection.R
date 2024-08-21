@@ -26,7 +26,7 @@ option_list <- list(
               help="Save output to production folder")
 )
 opt <- parse_args(OptionParser(option_list=option_list))
-stopifnot(!is.null(opt$phase) && !is.null(opt$cohort) && !is.null(opt$site),
+waitifnot(!is.null(opt$phase) && !is.null(opt$cohort) && !is.null(opt$site),
           msg = "Usage: Rscript workflow_case_selection.R -h")
 
 phase <- opt$phase
@@ -37,13 +37,13 @@ is_production <- opt$production
 # check user input -----------------
 
 phase_str <- paste0(names(config$phase), collapse = ", ")
-stopifnot(is.element(phase, names(config$phase)),
+waitifnot(is.element(phase, names(config$phase)),
           msg = c(glue("Error: phase {phase} is not valid.  Valid values: {phase_str}"),
                   "Usage: Rscript workflow_case_selection.R -h"))
 
 cohort_in_config <- names(config$phase[[phase]]$cohort)
 cohort_str <- paste0(cohort_in_config, collapse = ", ")
-stopifnot(is.element(cohort, cohort_in_config),
+waitifnot(is.element(cohort, cohort_in_config),
           msg = c(glue("Error: cohort {cohort} is not valid for phase {phase}.  Valid values: {cohort_str}"),
                   "Usage: Rscript workflow_case_selection.R -h"))
 
