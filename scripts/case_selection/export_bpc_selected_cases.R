@@ -36,7 +36,7 @@ option_list <- list(
 )
 opt <- parse_args(OptionParser(option_list=option_list))
 
-if (!is.null(opt$input) && !is.null(opt$phase) && !is.null(opt$cohort) && !is.null(opt$site)) {
+if (!is.null(opt$input) || !is.null(opt$phase) || !is.null(opt$cohort) || !is.null(opt$site)) {
   stop("Usage: Rscript export_bpc_selected_cases.R -h")
 }
 
