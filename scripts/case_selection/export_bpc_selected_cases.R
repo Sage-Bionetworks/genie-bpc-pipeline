@@ -77,7 +77,7 @@ if (!is.element(site, site_option)) {
 # setup ----------------------------
 print("get clinical data")
 # clinical data
-# always use the most recent consortium release - Feb 2022
+# HACK: always use the most recent consortium release at the time of execution of this code
 clinical_sample_id <- "syn9734573"
 clinical_patient_id <- "syn9734568"
 
