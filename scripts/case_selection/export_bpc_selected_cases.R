@@ -120,7 +120,7 @@ colnames(clinical) <- tolower(colnames(clinical))
 print("get all samples for selected patients")
 # Get all samples for those patients
 # samples_per_patient <- sapply(selected_cases, function(x){as.character(clinical$sample_id[clinical$patient_id %in% x])})
-missing_patients <- selected_cases[!selected_cases %in% !clinical$patient_id]
+missing_patients <- selected_cases[!selected_cases %in% clinical$patient_id]
 print("Missing patients from consortium release:")
 print(missing_patients)
 
