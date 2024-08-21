@@ -35,8 +35,10 @@ option_list <- list(
               help="BPC site. i.e. DFCI, MSK, UHN, VICC, and etc.")
 )
 opt <- parse_args(OptionParser(option_list=option_list))
-waitifnot(!is.null(opt$input) &&!is.null(opt$phase) && !is.null(opt$cohort) && 
-            !is.null(opt$site), msg = "Usage: Rscript export_bpc_selected_cases.R -h")
+
+if (!is.null(opt$input) || !is.null(opt$phase) || !is.null(opt$cohort) || !is.null(opt$site)) {
+  stop("Usage: Rscript export_bpc_selected_cases.R -h")
+}
 
 in_file <- opt$input
 out_folder <- opt$output
@@ -54,20 +56,23 @@ phase_option <- c("phase 1","phase 1 additional","phase 2")
 cohort_option <- c("NSCLC","CRC","BrCa","PANC","Prostate","BLADDER", "MELANOMA", "RENAL", "OVARIAN", "ESOPHAGO")
 site_option <- c("DFCI","MSK","UHN","VICC","UCSF","PROV","VHIO","JHU","WAKE")
 
+# Check if phase is valid
 phase_str <- paste0(phase_option, collapse = ", ")
-stopifnot(is.element(phase, phase_option),
-          msg=c(glue("Error: {phase} is not a valid phase. Valid values: {phase_str}"),
-                  "Usage: export_bpc_selected_cases.R -h"))
+if (!is.element(phase, phase_option)) {
+  stop(glue("Error: {phase} is not a valid phase. Valid values: {phase_str}\nUsage: export_bpc_selected_cases.R -h"))
+}
 
+# Check if cohort is valid
 cohort_str <- paste0(cohort_option, collapse = ", ")
-stopifnot(is.element(cohort, cohort_option),
-          msg=c(glue("Error: {cohort} is not a valid cohort. Valid values: {cohort_str}"),
-                  "Usage: export_bpc_selected_cases.R -h"))
+if (!is.element(cohort, cohort_option)) {
+  stop(glue("Error: {cohort} is not a valid cohort. Valid values: {cohort_str}\nUsage: export_bpc_selected_cases.R -h"))
+}
 
+# Check if site is valid
 site_str <- paste0(site_option, collapse = ", ")
-stopifnot(is.element(site, site_option),
-          msg=c(glue("Error: {site} is not a valid site. Valid values: {site_str}"),
-                  "Usage: export_bpc_selected_cases.R -h"))
+if (!is.element(site, site_option)) {
+  stop(glue("Error: {site} is not a valid site. Valid values: {site_str}\nUsage: export_bpc_selected_cases.R -h"))
+}
 
 # setup ----------------------------
 print("get clinical data")
