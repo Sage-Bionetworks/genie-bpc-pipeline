@@ -106,7 +106,7 @@ temp <- sapply(strsplit(temp, '[, ]+'), function(x) toString(shQuote(x)))
 # download clinical data
 # sample clinical data
 clinical_sample <- read.delim(synGet(clinical_sample_id, downloadFile = TRUE, followLink = TRUE)$path, skip = 4, header = TRUE)
-clinical_sample <- sqldf(paste("SELECT * FROM clinical_sample where SAMPLE_ID in (",temp,")",sep = ""))
+clinical_sample <- sqldf("SELECT * FROM clinical_sample")
 
 # patient clinical data
 clinical_patient <- read.delim(synGet(clinical_patient_id, downloadFile = TRUE, followLink = TRUE)$path, skip = 4, header = TRUE)
