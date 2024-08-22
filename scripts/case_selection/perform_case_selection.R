@@ -273,12 +273,22 @@ get_eligible_cohort <- function(x, randomize = T) {
   mod$flag_eligible <- apply(x[,col_flags], 1, all)
   
   # determine eligible samples (all flags TRUE)
-  eligible <- as.data.frame(mod %>%
-    filter(flag_eligible) %>% 
-    group_by(PATIENT_ID) %>%
-    summarize(SAMPLE_IDS = paste0(SAMPLE_ID, collapse = ";"))%>%
-    select(PATIENT_ID, SAMPLE_IDS))
+  # eligible <- as.data.frame(mod %>%
+  #   filter(flag_eligible) %>%
+  #   group_by(PATIENT_ID) %>%
+  #   summarize(SAMPLE_IDS = paste0(SAMPLE_ID, collapse = ";"))%>%
+  #   select(PATIENT_ID, SAMPLE_IDS))
   
+  eligible <- mod %>%
+    group_by(PATIENT_ID) %>%
+    summarize(
+      SAMPLE_IDS = paste0(SAMPLE_ID, collapse = ";"),
+      all_false = all(!flag_eligible)  # Check if all flags are FALSE
+    ) %>%
+    filter(!all_false) %>%  # Filter out patients where all flags are FALSE
+    select(PATIENT_ID, SAMPLE_IDS) %>%
+    as.data.frame()
+
   if (nrow(eligible) == 0) {
     stop(glue("Number of eligible samples for phase {phase} {site} {cohort} is 0.  Please revise eligibility criteria."))
   }
