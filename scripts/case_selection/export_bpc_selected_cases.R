@@ -183,6 +183,33 @@ sample_info_list <- lapply(samples_per_patient,function(x){
 
 sample_info_df <- rbind.fill(sample_info_list)
 patient_output <- rbind.fill(patient_output,sample_info_df)
+
+print("validate output")
+n_unique_patients_export = length(unique(sample_info_df$record_id))
+n_unique_samples_export = length(unique(sample_info_df$cpt_genie_sample_id))
+n_unique_selected_patients = length(unique(selected_cases))
+n_unique_selected_samples = length(unique(samples_per_patient))
+n_missing_patients = length(missing_patients)
+
+print(paste("export file N unique patients", n_unique_patients_export))
+print(paste("export file N unique samples", n_unique_samples_export))
+print(paste("N Unique selected patients", n_unique_selected_patients))
+print(paste("N Unique selected samples", n_unique_selected_samples))
+
+if (n_unique_samples_export != n_unique_selected_samples){
+  stop("Number of unique samples in export file does not match number of selected samples")
+}
+if (n_unique_patients_export != n_unique_selected_patients - n_missing_patients){
+  stop("Number of unique patients in export file does not match number of selected patients")
+}
+if (!all(patient_output$record_id %in% selected_cases)){
+  stop("Some patients in export file are not in selected patients")
+}
+# There is expected NA, because the export file is technically two csvs concatenated together
+if (!all(unique(na.omit(patient_output$cpt_genie_sample_id)) %in% samples_per_patient)){
+  stop("Some samples in export file are not in selected samples")
+}
+
 print("output and upload")
 # output and upload ----------------------------
 write.csv(patient_output,file = output_file_name,quote = TRUE,row.names = FALSE,na = "")
