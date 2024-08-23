@@ -77,9 +77,9 @@ if (!is.element(site, site_option)) {
 # setup ----------------------------
 print("get clinical data")
 # clinical data
-# HACK: always use the most recent consortium release at the time of execution of this code
-clinical_sample_id <- "syn9734573"
-clinical_patient_id <- "syn9734568"
+# This is hardcoded 17.2-consortium release
+clinical_sample_id <- "syn62173557"
+clinical_patient_id <- "syn62173556"
 
 # mapping tables
 sex_mapping <- synTableQuery("SELECT * FROM syn7434222")$asDataFrame()
