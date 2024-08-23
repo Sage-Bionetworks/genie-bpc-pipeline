@@ -115,7 +115,12 @@ save_to_synapse <- function(path,
 # case selection ----------------------------
 
 # construct eligibility matrices + case lists
-system(glue("Rscript perform_case_selection.R -p {phase} -c {cohort} -s {site}"))
+exit_status <- system(glue("Rscript perform_case_selection.R -p {phase} -c {cohort} -s {site}"))
+
+# Check if the command failed
+if (exit_status != 0) {
+  stop(glue("The command Rscript perform_case_selection.R failed with exit status {exit_status}. Script will terminate."))
+}
 
 if (!flag_additional) {
   # render eligibility report

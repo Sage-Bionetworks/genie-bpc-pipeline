@@ -410,6 +410,34 @@ if (debug) {
   print(glue("{now(timeOnly = T)}: writing eligibility matrix and case selection to file..."))
 }
 
+
+n_unique_patients_eligible_matrix = length(unique(eligibility_matrix$PATIENT_ID))
+n_unique_samples_eligible_matrix = length(unique(eligibility_matrix$SAMPLE_ID))
+n_unique_selected_patients = length(unique(eligible_cohort$PATIENT_ID))
+n_unique_selected_samples = length(unique(eligible_cohort$SAMPLE_ID))
+
+if (debug) {
+  print("validation")
+  print(paste("export file N unique patients", n_unique_patients_eligible_matrix))
+  print(paste("export file N unique samples", n_unique_samples_eligible_matrix))
+  print(paste("N Unique selected patients", n_unique_selected_patients))
+  print(paste("N Unique selected samples", n_unique_selected_samples))
+}
+if (n_unique_samples_eligible_matrix != n_unique_selected_samples){
+  stop("Number of unique samples in eligibility matrix file does not match number of selected samples")
+}
+if (n_unique_patients_eligible_matrix != n_unique_selected_patients){
+  stop("Number of unique patients in eligibility matrix file does not match number of selected patients")
+}
+if (!all(eligibility_matrix$PATIENT_ID %in% eligibility_matrix$PATIENT_ID)){
+  stop("Some patients in eligibility matrix file are not in selected patients")
+}
+# There is expected NA, because the export file is technically two csvs concatenated together
+if (!all(eligibility_matrix$SAMPLE_ID %in% eligibility_matrix$SAMPLE_ID)){
+  stop("Some samples in eligibility matrix file are not in selected samples")
+}
+
+
 if (flag_additional) {
   write.csv(added_sam, file = file_add, row.names = F)
 } else {
