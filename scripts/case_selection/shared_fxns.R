@@ -206,3 +206,33 @@ get_synapse_entity_data_in_csv <- function(synapse_id,
                    header = header)
   return(data)
 }
+
+
+#' Extract and Combine Unique Sample IDs from a List
+#'
+#' This function takes a list of strings, splits each string by the ';' delimiter,
+#' and combines all the resulting elements into a single list of unique sample IDs.
+#'
+#' @param sample_ids_list A list of strings where each string may contain delimited sample IDs.
+#'
+#' @return A character vector of unique sample IDs.
+#'
+#' @examples
+#' \dontrun{
+#' # Example list of sample IDs
+#' sample_ids <- list("ID1;ID2;ID3", "ID4;ID5", "ID2;ID6")
+#' all_sample_ids <- extract_sample_ids(sample_ids)
+#' print(all_sample_ids)
+#' }
+#'
+#' @export
+extract_sample_ids <- function(sample_ids_list) {
+  all_sample_ids <- list()
+  for (sample_id_str in sample_ids_list) {
+    split_ids <- strsplit(sample_id_str, ";")[[1]]
+    all_sample_ids <- c(all_sample_ids, split_ids)
+  }
+
+  all_sample_ids <- unique(all_sample_ids)
+  return(all_sample_ids)
+}
