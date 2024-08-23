@@ -119,17 +119,16 @@ clinical <- sqldf(sql)
 colnames(clinical) <- tolower(colnames(clinical))
 print("get all samples for selected patients")
 # Get all samples for those patients
-# samples_per_patient <- sapply(selected_cases, function(x){as.character(clinical$sample_id[clinical$patient_id %in% x])})
 missing_patients <- selected_cases[!selected_cases %in% clinical$patient_id]
-print("Missing patients from consortium release:")
-print(missing_patients)
-
+missing_samples <- selected_samples[!selected_samples %in% clinical$sample_id]
+# Some patients/samples may not exist so filter those out
+existing_patients = selected_cases[selected_cases %in% clinical$patient_id]
 samples_per_patient <- clinical$sample_id[clinical$patient_id %in% selected_cases]
 
 print("map data for each instrument")
 # mapping data for each instrument
 # instrument - patient_characteristics
-patient_output <- data.frame("record_id" = selected_cases)
+patient_output <- data.frame("record_id" = existing_patients)
 patient_output$redcap_repeat_instrument <- rep("")
 patient_output$redcap_repeat_instance <- rep("")
 
@@ -188,15 +187,21 @@ print("validate output")
 n_unique_patients_export = length(unique(sample_info_df$record_id))
 n_unique_samples_export = length(unique(sample_info_df$cpt_genie_sample_id))
 n_unique_selected_patients = length(unique(selected_cases))
-n_unique_selected_samples = length(unique(samples_per_patient))
+n_unique_selected_samples = length(unique(selected_samples))
 n_missing_patients = length(missing_patients)
-
+n_missing_samples = length(missing_samples)
+print("Missing patients from consortium release:")
+print(missing_patients)
+print("Missing samples from consortium release:")
+print(missing_samples)
+print(paste("N missing patients: ", n_missing_patients))
+print(paste("N missing samples: ", n_missing_samples))
 print(paste("export file N unique patients", n_unique_patients_export))
 print(paste("export file N unique samples", n_unique_samples_export))
 print(paste("N Unique selected patients", n_unique_selected_patients))
 print(paste("N Unique selected samples", n_unique_selected_samples))
 
-if (n_unique_samples_export != n_unique_selected_samples){
+if (n_unique_samples_export != n_unique_selected_samples - n_missing_samples){
   stop("Number of unique samples in export file does not match number of selected samples")
 }
 if (n_unique_patients_export != n_unique_selected_patients - n_missing_patients){
