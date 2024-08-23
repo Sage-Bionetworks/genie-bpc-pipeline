@@ -410,31 +410,44 @@ if (debug) {
   print(glue("{now(timeOnly = T)}: writing eligibility matrix and case selection to file..."))
 }
 
+case_selection_samples <- extract_sample_ids(case_selection$SAMPLE_IDS)
+selected_samples <- extract_sample_ids(eligible_cohort$SAMPLE_ID)
 
 n_unique_patients_eligible_matrix = length(unique(eligibility_matrix$PATIENT_ID))
 n_unique_samples_eligible_matrix = length(unique(eligibility_matrix$SAMPLE_ID))
+n_unique_patients_case_selection = length(unique(case_selection$PATIENT_ID))
+n_unique_samples_case_selection = length(unique(case_selection_samples))
 n_unique_selected_patients = length(unique(eligible_cohort$PATIENT_ID))
-n_unique_selected_samples = length(unique(eligible_cohort$SAMPLE_ID))
+n_unique_selected_samples = length(unique(selected_samples))
 
 if (debug) {
   print("validation")
-  print(paste("export file N unique patients", n_unique_patients_eligible_matrix))
-  print(paste("export file N unique samples", n_unique_samples_eligible_matrix))
+  print(paste("eligibility matrix file N unique patients", n_unique_patients_eligible_matrix))
+  print(paste("eligibility matrix file N unique samples", n_unique_samples_eligible_matrix))
+  print(paste("case selection file N unique patients", n_unique_patients_case_selection))
+  print(paste("case selection file N unique samples", n_unique_samples_case_selection))
   print(paste("N Unique selected patients", n_unique_selected_patients))
   print(paste("N Unique selected samples", n_unique_selected_samples))
 }
-if (n_unique_samples_eligible_matrix != n_unique_selected_samples){
-  stop("Number of unique samples in eligibility matrix file does not match number of selected samples")
+if (n_unique_samples_case_selection != n_unique_selected_samples){
+  stop("Number of unique samples in case selection file does not match number of selected samples")
 }
-if (n_unique_patients_eligible_matrix != n_unique_selected_patients){
-  stop("Number of unique patients in eligibility matrix file does not match number of selected patients")
+if (n_unique_patients_case_selection != n_unique_selected_patients){
+  stop("Number of unique patients in case selection file does not match number of selected patients")
 }
-if (!all(eligibility_matrix$PATIENT_ID %in% eligibility_matrix$PATIENT_ID)){
-  stop("Some patients in eligibility matrix file are not in selected patients")
+
+if (!all(case_selection$PATIENT_ID %in% eligible_cohort$PATIENT_ID)){
+  stop("Some patients in eligibility matrix file are not in elgibile cohort")
 }
-# There is expected NA, because the export file is technically two csvs concatenated together
-if (!all(eligibility_matrix$SAMPLE_ID %in% eligibility_matrix$SAMPLE_ID)){
-  stop("Some samples in eligibility matrix file are not in selected samples")
+if (!all(case_selection$SAMPLE_IDS %in% eligible_cohort$SAMPLE_ID)){
+  stop("Some samples in eligibility matrix file are not in elgibile cohort")
+}
+
+if (!all(case_selection$PATIENT_ID %in% eligibility_matrix$PATIENT_ID)){
+  stop("Some patients in case selection file are not in eligibility matrix")
+}
+if (!all(case_selection_samples %in% eligibility_matrix$SAMPLE_ID)){
+  stop("Some samples in case selection file are not in eligibility matrix")
 }
 
 
