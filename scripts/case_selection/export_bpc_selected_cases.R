@@ -194,25 +194,25 @@ print("Patient(s) removed from the BPC export file:")
 print(missing_patients)
 print("Sample(s) removed from the BPC export file:")
 print(missing_samples)
-print(paste("N missing patients: ", n_missing_patients))
-print(paste("N missing samples: ", n_missing_samples))
-print(paste("export file N unique patients", n_unique_patients_export))
-print(paste("export file N unique samples", n_unique_samples_export))
-print(paste("N Unique selected patients", n_unique_selected_patients))
-print(paste("N Unique selected samples", n_unique_selected_samples))
+print(paste("N missing patients:", n_missing_patients))
+print(paste("N missing samples:", n_missing_samples))
+print(paste("N unique patients in export file", n_unique_patients_export))
+print(paste("N unique samples in export file", n_unique_samples_export))
+print(paste("N Unique patients in case selection", n_unique_selected_patients))
+print(paste("N Unique samples in case selection", n_unique_selected_samples))
 
 if (n_unique_samples_export != n_unique_selected_samples - n_missing_samples){
-  stop("Number of unique samples in export file does not match number of selected samples")
+  stop("Number of unique samples in export file does not match number of samples in case selection")
 }
 if (n_unique_patients_export != n_unique_selected_patients - n_missing_patients){
-  stop("Number of unique patients in export file does not match number of selected patients")
+  stop("Number of unique patients in export file does not match number of patients in case selection")
 }
 if (!all(patient_output$record_id %in% selected_cases)){
-  stop("Some patients in export file are not in selected patients")
+  stop("Some patients in export file are not in case selection")
 }
 # There is expected NA, because the export file is technically two csvs concatenated together
 if (!all(unique(na.omit(patient_output$cpt_genie_sample_id)) %in% samples_per_patient)){
-  stop("Some samples in export file are not in selected samples")
+  stop("Some samples in export file are not in case selection")
 }
 
 print("output and upload")
