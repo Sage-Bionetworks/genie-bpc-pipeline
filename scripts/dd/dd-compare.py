@@ -1,6 +1,12 @@
-# Purpose: Takes in two PRISSMM data dictionaries and print out a simple comparison report
-# Author: Sage Bionetworks
-# Date: 29AUG2024
+"""
+Purpose: Takes in two PRISSMM data dictionaries and print out a simple comparison report
+Author: Sage Bionetworks
+Date: 29AUG2024
+
+Environments:
+pandas==3.9
+synapseclient==4.1.1
+"""
 
 import pandas as pd
 import synapseclient
@@ -13,21 +19,30 @@ syn.login()
 
 # Set the default PRISSMM data dictionaries
 
-default1 = syn.get('syn52903784').path #v4.0.1
-default2 = syn.get('syn61600728').path #v4.1.4
+default1 = 'syn52903784' #v4.0.1
+default2 = 'syn61600728' #v4.1.4
 
 # Initialize arg parser
 parser = argparse.ArgumentParser(description="Compare two data dictionaries.")
-parser.add_argument('--df1', type=str, default=default1, help='File path to the older data dictionary CSV')
-parser.add_argument('--df2', type=str, default=default2, help='File path to the newer data dictionary CSV')
+parser.add_argument('--synid1', type=str, default=default1, help='synapse ID of the first PRISSMM data dictionary CSV')
+parser.add_argument('--synid2', type=str, default=default2, help='synapse ID of the second PRISSMM data dictionary CSV')
 
 # Parse the arguments
 args = parser.parse_args()
 
-entity1 = syn.get(args.df1)
-entity2 = syn.get(args.df2)
+entity1 = syn.get(args.synid1)
+entity2 = syn.get(args.synid2)
 
-# Function to clean up the multiline content while preserving specific rows
+"""
+Function to clean up the multiline content while preserving specific rows
+
+Example multiline input:
+image_casite6,prissmm_imaging,,dropdown,"Where is the cancer located?
+Cancer Site 6", ...
+
+Example cleaned output:
+image_casite6,prissmm_imaging,,dropdown,"Where is the cancer located? Cancer Site 6", ...
+"""
 def clean_multiline_content(file_content):
     cleaned_lines = []
     temp_line = ''
@@ -53,7 +68,7 @@ def clean_multiline_content(file_content):
                 
     return cleaned_lines
 
-# Function to read and clean a CSV file, then load into a DataFrame
+# Function to read and clean a CSV file, then load into a pandas DataFrame
 def read_and_clean_csv(file_path):
     with open(file_path, 'r') as file:
         content = file.readlines()
@@ -72,9 +87,6 @@ def read_and_clean_csv(file_path):
 # Clean and read both CSV files into DataFrames
 df1 = read_and_clean_csv(entity1.path)
 df2 = read_and_clean_csv(entity2.path)
-
-#print(df1)
-#print(df2)
 
 folder_name1 = syn.get(entity1.parentId).name
 folder_name2 = syn.get(entity2.parentId).name
@@ -113,11 +125,11 @@ else:
 
     # Handle Added Variables
     for variable in added_variables:
-        comparison_results.append([variable, f"Variable added in {folder_name2}", "", "", ""])
+        comparison_results.append([variable, f"Added (in {folder_name2})", "Variable / Field Name", "N/A", "N/A"])
 
     # Handle Removed Variables
     for variable in removed_variables:
-        comparison_results.append([variable, f"Variable missing in {folder_name2}", "", "", ""])
+        comparison_results.append([variable, f"Missing (from {folder_name2})", "Variable / Field Name", "N/A", "N/A"])
 
     # Handle Updated Variables
     common_variables = variables_df1 & variables_df2
@@ -135,7 +147,7 @@ else:
                 if not ((pd.isna(value_df1) or value_df1 == "") and (pd.isna(value_df2) or value_df2 == "")):
                     comparison_results.append([
                         variable,
-                        "Variable field modified",
+                        "Modified",
                         column,
                         value_df1 if pd.notna(value_df1) else "",
                         value_df2 if pd.notna(value_df2) else ""
@@ -146,13 +158,12 @@ else:
         comparison_results,
         columns=[
             "Variable / Field Name",
-            "Field Comparison",
+            "Update Type",
             "REDCap Column",
-            f"Value in {folder_name1}",
-            f"Value in {folder_name2}"
+            f"Value ({folder_name1})",
+            f"Value ({folder_name2})"
         ]
     )
-
 
     # Save the comparison results to a CSV file
     comparison_df.to_csv("comparison.csv", index=False)
