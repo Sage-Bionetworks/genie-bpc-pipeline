@@ -1,14 +1,14 @@
 ---
 synapse:
   main_patient: 
-    id: syn7517669
-    name: Patient Clinical Database
-    type: table
+    id: syn9734568
+    name: Patient Clinical File
+    type: file
     description: main GENIE table of all patients with patient info
   main_sample: 
-    id: syn7517674
-    name: Sample Clinical Database
-    type: table
+    id: syn9734573
+    name: Sample Clinical File
+    type: file
     description: main GENIE table of all samples with sample info
   bpc_patient:
     id: syn21446700
