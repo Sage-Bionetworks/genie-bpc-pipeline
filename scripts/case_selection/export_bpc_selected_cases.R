@@ -32,7 +32,11 @@ option_list <- list(
               type = "character",
               help="BPC cohort. i.e. NSCLC, CRC, BrCa, and etc."),
   make_option(c("-s", "--site"), type = "character",
-              help="BPC site. i.e. DFCI, MSK, UHN, VICC, and etc.")
+              help="BPC site. i.e. DFCI, MSK, UHN, VICC, and etc."),
+  make_option(c("-mp", "--main_patient"), default = 'syn9734568', 
+              help="Main GENIE file of all patients with patient info. Defaults to the lastest version of the Main Genie Release."),
+  make_option(c("-ms", "--main_sample"), default = 'syn9734573', 
+              help="Main GENIE file of all samples with sample info. Defaults to the lastest version of the Main Genie Release."),
 )
 opt <- parse_args(OptionParser(option_list=option_list))
 
@@ -45,6 +49,8 @@ out_folder <- opt$output
 phase <- opt$phase
 cohort <- opt$cohort
 site <- opt$site
+main_patient <- opt$main_patient
+main_sample <- opt$main_sample
 
 # check user input -----------------
 
@@ -77,10 +83,6 @@ if (!is.element(site, site_option)) {
 # setup ----------------------------
 print("get clinical data")
 # clinical data
-# This is hardcoded 17.2-consortium release
-clinical_sample_id <- "syn62173557"
-clinical_patient_id <- "syn62173556"
-
 # mapping tables
 sex_mapping <- synTableQuery("SELECT * FROM syn7434222")$asDataFrame()
 race_mapping <- synTableQuery("SELECT * FROM syn7434236")$asDataFrame()
@@ -105,11 +107,11 @@ temp <- sapply(strsplit(temp, '[, ]+'), function(x) toString(shQuote(x)))
 
 # download clinical data
 # sample clinical data
-clinical_sample <- read.delim(synGet(clinical_sample_id, downloadFile = TRUE, followLink = TRUE)$path, skip = 4, header = TRUE)
+clinical_sample <- read.delim(synGet(main_sample, downloadFile = TRUE, followLink = TRUE)$path, skip = 4, header = TRUE)
 clinical_sample <- sqldf(paste("SELECT * FROM clinical_sample where SAMPLE_ID in (",temp,")",sep = ""))
 
 # patient clinical data
-clinical_patient <- read.delim(synGet(clinical_patient_id, downloadFile = TRUE, followLink = TRUE)$path, skip = 4, header = TRUE)
+clinical_patient <- read.delim(synGet(main_patient, downloadFile = TRUE, followLink = TRUE)$path, skip = 4, header = TRUE)
 
 # combined clinical data
 sql <- "select * from clinical_sample left join clinical_patient on clinical_sample.PATIENT_ID = clinical_patient.PATIENT_ID"
@@ -219,8 +221,8 @@ print("output and upload")
 # output and upload ----------------------------
 write.csv(patient_output,file = output_file_name,quote = TRUE,row.names = FALSE,na = "")
 act <- Activity(name = 'export main GENIE data', 
-                description='Export selected BPC patient data from main GENIE database',
-                used = c(clinical_sample_id, clinical_patient_id, in_file),
+                description='Export selected BPC patient data from main GENIE clinical files',
+                used = c(main_sample, main_patient, in_file),
                 executed = 'https://github.com/Sage-Bionetworks/genie-bpc-pipeline/tree/develop/scripts/case_selection/export_bpc_selected_cases.R')
 syn_file <- File(output_file_name, 
                  parent=out_folder,

@@ -7,6 +7,8 @@ params:
   phase: x
   cohort: x
   site: x
+  main_patient: "`r paste(x, 'Main Genie clinical patient file version:', synGet(x, followLink = TRUE)$versionComment, sep = ' ')`"
+  main_sample: "`r paste(x, 'Main Genie clinical sample file version:', synGet(x, followLink = TRUE)$versionComment, sep = ' ')`"
 ---
 
 ```{r setup, include=FALSE}
@@ -30,6 +32,8 @@ config <- read_yaml("config.yaml")
 phase <- as.character(params$phase)
 cohort <- params$cohort
 site <- params$site
+main_patient <- params$main_patient
+main_sample <- params$main_sample
 
 # file names
 file_matrix <- tolower(glue("{cohort}_{site}_phase{phase}_eligibility_matrix.csv"))
@@ -78,6 +82,10 @@ case_selection <- read.csv(file_selection)
 
 **Site**: `r site`
 
+**Main GENIE Clinical Patient File**: `r main_patient`
+
+**Main GENIE Clinical Sample File**: `r main_sample`
+
 # Eligibility
 
 Eligible samples are defined with following criteria:
@@ -94,9 +102,7 @@ Eligible samples are defined with following criteria:
 5. Patient or sample was not previously excluded for quality control or other reasons.
 
 ```{r eligibility}
-
-query <- glue("SELECT COUNT(*) FROM {config$synapse$main_patient$id} WHERE CENTER = '{site}'")
-n_main_genie <- as.integer(as.data.frame(synTableQuery(query, includeRowIdAndRowVersion = T)))
+n_main_genie <- read.csv(synGet(main_patient, followLink = TRUE)$path, sep = "\t", header = TRUE, skip=4) %>% filter(CENTER == site) %>%  nrow()
 
 print(glue("Total number of main GENIE cases for site: {n_main_genie}"))
 print(glue("Total number of BPC eligible cases: {nrow(case_selection)}"))

@@ -23,7 +23,12 @@ option_list <- list(
   make_option(c("-c", "--cohort"), type = "character",
               help="BPC cohort"),
   make_option(c("-s", "--site"), type = "character",
-              help="BPC site")
+              help="BPC site"),
+  make_option(c("-mp", "--main_patient"), default = 'syn9734568', 
+              help="Main GENIE file of all patients with patient info. Defaults to the lastest version of the Main Genie Release."),
+  make_option(c("-ms", "--main_sample"), default = 'syn9734573', 
+              help="Main GENIE file of all samples with sample info. Defaults to the lastest version of the Main Genie Release."),
+  
 )
 opt <- parse_args(OptionParser(option_list=option_list))
 waitifnot(!is.null(opt$phase) && !is.null(opt$cohort) && !is.null(opt$site),
@@ -32,6 +37,8 @@ waitifnot(!is.null(opt$phase) && !is.null(opt$cohort) && !is.null(opt$site),
 phase <- opt$phase
 cohort <- opt$cohort
 site <- opt$site
+main_patient <- opt$main_patient
+main_sample <- opt$main_sample
 
 # check user input -----------------
 
@@ -168,20 +175,11 @@ get_site_list <- function(site) {
 get_eligibility_data <- function(synid_table_patient, synid_table_sample, site) {
   
   # read table data
-  patient_data <- as.data.frame(synTableQuery(query = glue("SELECT PATIENT_ID, 
-                                                                  CENTER,
-                                                                  YEAR_DEATH,
-                                                                  INT_CONTACT
-                                                                  FROM {synid_table_patient}"),
-                                             includeRowIdAndRowVersion = F)) 
-  sample_data <- as.data.frame(synTableQuery(query = glue("SELECT PATIENT_ID, 
-                                                                  SAMPLE_ID,
-                                                                  ONCOTREE_CODE,
-                                                                  SEQ_DATE,
-                                                                  SEQ_YEAR,
-                                                                  AGE_AT_SEQ_REPORT
-                                                                  FROM {synid_table_sample}"),
-                                              includeRowIdAndRowVersion = F)) 
+  patient_data <- read.csv(synGet(synid_table_patient, followLink = TRUE)$path, sep = "\t", header = TRUE, skip=4) %>% 
+    select("PATIENT_ID", "CENTER", "YEAR_DEATH", "INT_CONTACT")
+  
+  sample_data <- read.csv(synGet(synid_table_sample, followLink = TRUE)$path, sep = "\t", header = TRUE, skip=4) %>% 
+    select("PATIENT_ID", "SAMPLE_ID", "ONCOTREE_CODE", "SEQ_DATE", "SEQ_YEAR", "AGE_AT_SEQ_REPORT")
   
   sites <- get_site_list(site)
   
@@ -335,8 +333,8 @@ if (debug) {
   print(glue("{now(timeOnly = T)}: querying data to determine eligibility..."))
 }
 
-eligibility_data <- get_eligibility_data(synid_table_patient = config$synapse$main_patient$id, 
-                                         synid_table_sample = config$synapse$main_sample$id, 
+eligibility_data <- get_eligibility_data(synid_table_patient = main_patient, 
+                                         synid_table_sample = main_sample, 
                                          site = site)
 
 if (debug) {
