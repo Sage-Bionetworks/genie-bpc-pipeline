@@ -4,12 +4,12 @@ synapse:
     id: syn9734568
     name: Patient Clinical File
     type: file
-    description: main GENIE table of all patients with patient info
+    description: main GENIE file of all patients with patient info
   main_sample: 
     id: syn9734573
     name: Sample Clinical File
     type: file
-    description: main GENIE table of all samples with sample info
+    description: main GENIE file of all samples with sample info
   bpc_patient:
     id: syn21446700
     name: Patient Characteristics
