@@ -50,16 +50,22 @@ Options:
 	-s SITE, --site=SITE
 		BPC site
 
-	-u, --save_synapse
-		Save output to Synapse
+	-mp MAIN_PATIENT, --main_patient=MAIN_PATIENT
+		Main GENIE clinical patient file
 
+	-ms MAIN_SAMPLE, --main_sample=MAIN_SAMPLE
+		Main GENIE clinical sample file
+		
+	--production
+	  Save output to production folder
+		
 	-h, --help
 		Show this help message and exit
 ```
 
 Example run: 
 ```
-Rscript workflow_case_selection.R  -p 1 -c NSCLC -s DFCI -u
+Rscript workflow_case_selection.R  -p 1 -c NSCLC -s DFCI -mp syn62173556 -ms syn62173557 --production
 ```
 
 ## Usage: create GENIE export files
@@ -89,6 +95,12 @@ Options:
 
 	-s SITE, --site=SITE
 		BPC site. i.e. DFCI, MSK, UHN, VICC, and etc.
+		
+	-mp MAIN_PATIENT, --main_patient=MAIN_PATIENT
+		Main GENIE clinical patient file
+
+	-ms MAIN_SAMPLE, --main_sample=MAIN_SAMPLE
+		Main GENIE clinical sample file
 
 	-h, --help
 		Show this help message and exit
