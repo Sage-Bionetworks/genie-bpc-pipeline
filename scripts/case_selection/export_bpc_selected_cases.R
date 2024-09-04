@@ -33,10 +33,8 @@ option_list <- list(
               help="BPC cohort. i.e. NSCLC, CRC, BrCa, and etc."),
   make_option(c("-s", "--site"), type = "character",
               help="BPC site. i.e. DFCI, MSK, UHN, VICC, and etc."),
-  make_option(c("-mp", "--main_patient"), default = 'syn9734568', 
-              help="Main GENIE file of all patients with patient info. Defaults to the lastest version of the Main Genie Release."),
-  make_option(c("-ms", "--main_sample"), default = 'syn9734573', 
-              help="Main GENIE file of all samples with sample info. Defaults to the lastest version of the Main Genie Release."),
+  make_option(c("-r", "--release"), type = "character",
+              help="Main GENIE clinical file release version name, e.g. 17.2-consortium."),
 )
 opt <- parse_args(OptionParser(option_list=option_list))
 
@@ -49,8 +47,7 @@ out_folder <- opt$output
 phase <- opt$phase
 cohort <- opt$cohort
 site <- opt$site
-main_patient <- opt$main_patient
-main_sample <- opt$main_sample
+release <- opt$release
 
 # check user input -----------------
 
@@ -106,6 +103,30 @@ temp <- toString(selected_samples)
 temp <- sapply(strsplit(temp, '[, ]+'), function(x) toString(shQuote(x)))
 
 # download clinical data
+#' Get Main GENIE clinical patient and sample files using release version name
+#'
+#' @param release Release version name for a GENIE consortium release
+#'                
+#' @return A named list of Main GENIE clinical patient and sample file Synapse IDs.
+get_main_genie_clinical_ids <- function(release){
+  query <- glue("SELECT id FROM syn17019650 WHERE name = '{release}'")
+  release_folder_id <- as.character(unlist(as.data.frame(synTableQuery(query, includeRowIdAndRowVersion = F))))
+  release_files <- as.list(synGetChildren(release_folder_id, includeTypes = list("link")))
+  main_clinical <- list()
+  for (release_file in release_files){
+    if (release_file$name == "data_clinical_patient.txt"){
+      main_clinical["main_patient"] = release_file$id
+    }
+    if (release_file$name == "data_clinical_sample.txt"){
+      main_clinical["main_sample"] = release_file$id
+    }
+  }
+  return(main_clinical)
+}
+main_clinical <- get_main_genie_clinical_ids(release = release)
+main_patient <- main_clinical['main_patient']
+main_sample <- main_clinical['main_sample']
+
 # sample clinical data
 clinical_sample <- read.delim(synGet(main_sample, downloadFile = TRUE, followLink = TRUE)$path, skip = 4, header = TRUE)
 clinical_sample <- sqldf(paste("SELECT * FROM clinical_sample where SAMPLE_ID in (",temp,")",sep = ""))

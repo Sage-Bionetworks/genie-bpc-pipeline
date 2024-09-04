@@ -22,10 +22,8 @@ option_list <- list(
               help="BPC cohort"),
   make_option(c("-s", "--site"), type = "character",
               help="BPC site"),
-  make_option(c("-mp", "--main_patient"), default = 'syn9734568', 
-              help="Main GENIE file of all patients with patient info. Defaults to the lastest version of the Main Genie Release."),
-  make_option(c("-ms", "--main_sample"), default = 'syn9734573', 
-              help="Main GENIE file of all samples with sample info. Defaults to the lastest version of the Main Genie Release."),
+  make_option(c("-r", "--release"), type = "character",
+              help="Main GENIE clinical file release version name, e.g. 17.2-consortium."),
   make_option(c("--production"), action="store_true", default = FALSE,
               help="Save output to production folder")
 )
@@ -37,8 +35,7 @@ if (is.null(opt$phase) || is.null(opt$cohort) || is.null(opt$site)) {
 phase <- opt$phase
 cohort <- opt$cohort
 site <- opt$site
-main_patient <- opt$main_patient
-main_sample <- opt$main_sample
+release <- opt$release
 is_production <- opt$production
 
 # check user input -----------------
@@ -82,6 +79,32 @@ prov_exec_selection <- "https://github.com/Sage-Bionetworks/genie-bpc-pipeline/t
 prov_exec_add <- prov_exec_selection
 prov_exec_report <- "https://github.com/Sage-Bionetworks/genie-bpc-pipeline/tree/develop/scripts/case_selection/perform_case_selection.Rmd"
 
+#' Get Main GENIE clinical patient and sample files using release version name
+#'
+#' @param release Release version name for a GENIE consortium release
+#'                
+#' @return A named list of Main GENIE clinical patient and sample file Synapse IDs.
+get_main_genie_clinical_ids <- function(release){
+  query <- glue("SELECT id FROM syn17019650 WHERE name = '{release}'")
+  release_folder_id <- as.character(unlist(as.data.frame(synTableQuery(query, includeRowIdAndRowVersion = F))))
+  release_files <- as.list(synGetChildren(release_folder_id, includeTypes = list("link")))
+  main_clinical <- list()
+  for (release_file in release_files){
+    if (release_file$name == "data_clinical_patient.txt"){
+      main_clinical["main_patient"] = release_file$id
+    }
+    if (release_file$name == "data_clinical_sample.txt"){
+      main_clinical["main_sample"] = release_file$id
+    }
+  }
+  return(main_clinical)
+}
+
+# get main genie clinical file ids
+main_clinical <- get_main_genie_clinical_ids(release = release)
+main_patient <- main_clinical['main_patient']
+main_sample <- main_clinical['main_sample']
+
 # provancne used
 prov_used_selection <- c(main_patient, main_sample, config$synapse$bpc_patient$id)
 prov_used_add <- c(prov_used_selection, config$synapse$bpc_sample$id)
@@ -121,7 +144,7 @@ save_to_synapse <- function(path,
 # case selection ----------------------------
 
 # construct eligibility matrices + case lists
-exit_status <- system(glue("Rscript perform_case_selection.R -p {phase} -c {cohort} -s {site} -mp {main_patient} -ms {main_sample}"))
+exit_status <- system(glue("Rscript perform_case_selection.R -p {phase} -c {cohort} -s {site} -r {release}"))
 
 # Check if the command failed
 if (exit_status != 0) {
@@ -132,7 +155,7 @@ if (!flag_additional) {
   # render eligibility report
   rmarkdown::render("perform_case_selection.Rmd", 
                     output_file = file_report,
-                    params = list(phase = phase, cohort = cohort, site = site, main_patient = main_patient, main_sample = main_sample))
+                    params = list(phase = phase, cohort = cohort, site = site, release = release))
 }
 
 # load to synapse --------------------

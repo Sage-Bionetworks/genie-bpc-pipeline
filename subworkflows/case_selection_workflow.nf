@@ -10,8 +10,7 @@ params.center = "DFCI"
 params.production = false
 params.bpc_input = "syn53294194"
 params.bpc_output = "syn62147862"
-params.main_patient = ""
-params.main_sample = ""
+params.release = ""
 export_phase = "phase " + params.phase
 
 // import modules
@@ -20,12 +19,12 @@ include { run_export_bpc_selected_cases } from '../modules/run_export_bpc_select
 
 workflow export_bpc_cases {
     // run_workflow_case_selection(params.phase, params.cohort, params.center, params.production)
-    run_export_bpc_selected_cases(params.bpc_input, params.bpc_output, export_phase, params.cohort, params.center, params.main_patient, params.main_sample)
+    run_export_bpc_selected_cases(params.bpc_input, params.bpc_output, export_phase, params.cohort, params.center, params.release)
 }
 
 
 workflow case_selection {
-    run_workflow_case_selection(params.phase, params.cohort, params.center, params.main_patient, params.main_sample, params.production)
+    run_workflow_case_selection(params.phase, params.cohort, params.center, params.release, params.production)
     // run_export_bpc_selected_cases(params.bpc_input, params.bpc_output, params.phase, params.cohort, params.center)
 }
 

@@ -7,8 +7,7 @@ params:
   phase: x
   cohort: x
   site: x
-  main_patient: "`r paste(x, 'Main Genie clinical patient file version:', synGet(x, followLink = TRUE)$versionComment, sep = ' ')`"
-  main_sample: "`r paste(x, 'Main Genie clinical sample file version:', synGet(x, followLink = TRUE)$versionComment, sep = ' ')`"
+  release: x
 ---
 
 ```{r setup, include=FALSE}
@@ -32,8 +31,7 @@ config <- read_yaml("config.yaml")
 phase <- as.character(params$phase)
 cohort <- params$cohort
 site <- params$site
-main_patient <- params$main_patient
-main_sample <- params$main_sample
+release <- params$release
 
 # file names
 file_matrix <- tolower(glue("{cohort}_{site}_phase{phase}_eligibility_matrix.csv"))
@@ -65,6 +63,27 @@ traverse <- function(root, oncotree) {
   
   return(c(root, desc))
 }
+
+#' Get Main GENIE clinical patient and sample files using release version name
+#'
+#' @param release Release version name for a GENIE consortium release
+#'                
+#' @return A named list of Main GENIE clinical patient and sample file Synapse IDs.
+get_main_genie_clinical_ids <- function(release){
+  query <- glue("SELECT id FROM syn17019650 WHERE name = '{release}'")
+  release_folder_id <- as.character(unlist(as.data.frame(synTableQuery(query, includeRowIdAndRowVersion = F))))
+  release_files <- as.list(synGetChildren(release_folder_id, includeTypes = list("link")))
+  main_clinical <- list()
+  for (release_file in release_files){
+    if (release_file$name == "data_clinical_patient.txt"){
+      main_clinical["main_patient"] = release_file$id
+    }
+    if (release_file$name == "data_clinical_sample.txt"){
+      main_clinical["main_sample"] = release_file$id
+    }
+  }
+   return(main_clinical)
+}
 ```
 
 ```{r read, include = F}
@@ -82,9 +101,7 @@ case_selection <- read.csv(file_selection)
 
 **Site**: `r site`
 
-**Main GENIE Clinical Patient File**: `r main_patient`
-
-**Main GENIE Clinical Sample File**: `r main_sample`
+**Main GENIE Release**: `r release`
 
 # Eligibility
 
@@ -102,6 +119,8 @@ Eligible samples are defined with following criteria:
 5. Patient or sample was not previously excluded for quality control or other reasons.
 
 ```{r eligibility}
+main_clinical <- get_main_genie_clinical_ids(release)
+main_patient <- main_clinical["main_patient"]
 n_main_genie <- read.csv(synGet(main_patient, followLink = TRUE)$path, sep = "\t", header = TRUE, skip=4) %>% filter(CENTER == site) %>%  nrow()
 
 print(glue("Total number of main GENIE cases for site: {n_main_genie}"))
