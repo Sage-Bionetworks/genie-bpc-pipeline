@@ -79,32 +79,27 @@ prov_exec_selection <- "https://github.com/Sage-Bionetworks/genie-bpc-pipeline/t
 prov_exec_add <- prov_exec_selection
 prov_exec_report <- "https://github.com/Sage-Bionetworks/genie-bpc-pipeline/tree/develop/scripts/case_selection/perform_case_selection.Rmd"
 
-#' Get Main GENIE clinical patient and sample files using release version name
+#' Get Main GENIE clinical file using release version name
 #'
 #' @param release Release version name for a GENIE consortium release
 #'                
-#' @return A named list of Main GENIE clinical patient and sample file Synapse IDs.
-get_main_genie_clinical_ids <- function(release){
+#' @return A named list of Main GENIE clinical file Synapse ID.
+get_main_genie_clinical_id <- function(release){
   query <- glue("SELECT id FROM syn17019650 WHERE name = '{release}'")
   release_folder_id <- as.character(unlist(as.data.frame(synTableQuery(query, includeRowIdAndRowVersion = F))))
   release_files <- as.list(synGetChildren(release_folder_id, includeTypes = list("link")))
-  main_clinical <- list()
   for (release_file in release_files){
-    if (release_file$name == "data_clinical_patient.txt"){
-      main_clinical["main_patient"] = release_file$id
-    }
-    if (release_file$name == "data_clinical_sample.txt"){
-      main_clinical["main_sample"] = release_file$id
+    if (release_file$name == "data_clinical.txt"){
+      return(release_file$id)
     }
   }
-  return(main_clinical)
 }
 
 # get main genie clinical file ids
-main_clinical <- get_main_genie_clinical_ids(release = release)
+main_clinical <- get_main_genie_clinical_id(release = release)
 
 # provancne used
-prov_used_selection <- c(main_clinical$main_patient, main_clinical$main_sample, config$synapse$bpc_patient$id)
+prov_used_selection <- c(main_clinical, config$synapse$bpc_patient$id)
 prov_used_add <- c(prov_used_selection, config$synapse$bpc_sample$id)
 prov_used_report <- ""
 

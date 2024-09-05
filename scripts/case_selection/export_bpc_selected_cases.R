@@ -103,37 +103,28 @@ temp <- toString(selected_samples)
 temp <- sapply(strsplit(temp, '[, ]+'), function(x) toString(shQuote(x)))
 
 # download clinical data
-#' Get Main GENIE clinical patient and sample files using release version name
+#' Get Main GENIE clinical file using release version name
 #'
 #' @param release Release version name for a GENIE consortium release
 #'                
-#' @return A named list of Main GENIE clinical patient and sample file Synapse IDs.
-get_main_genie_clinical_ids <- function(release){
+#' @return A named list of Main GENIE clinical file Synapse ID.
+get_main_genie_clinical_id <- function(release){
   query <- glue("SELECT id FROM syn17019650 WHERE name = '{release}'")
   release_folder_id <- as.character(unlist(as.data.frame(synTableQuery(query, includeRowIdAndRowVersion = F))))
   release_files <- as.list(synGetChildren(release_folder_id, includeTypes = list("link")))
-  main_clinical <- list()
   for (release_file in release_files){
-    if (release_file$name == "data_clinical_patient.txt"){
-      main_clinical["main_patient"] = release_file$id
-    }
-    if (release_file$name == "data_clinical_sample.txt"){
-      main_clinical["main_sample"] = release_file$id
+    if (release_file$name == "data_clinical.txt"){
+      return(release_file$id)
     }
   }
-  return(main_clinical)
 }
-main_clinical <- get_main_genie_clinical_ids(release = release)
+main_clinical <- get_main_genie_clinical_id(release = release)
 
-# sample clinical data
-clinical_sample <- read.delim(synGet(main_clinical$main_sample, downloadFile = TRUE, followLink = TRUE)$path, skip = 4, header = TRUE)
-clinical_sample <- sqldf(paste("SELECT * FROM clinical_sample where SAMPLE_ID in (",temp,")",sep = ""))
-
-# patient clinical data
-clinical_patient <- read.delim(synGet(main_clinical$main_patient, downloadFile = TRUE, followLink = TRUE)$path, skip = 4, header = TRUE)
+# load and subset clinical data
+clinical <- read.delim(synGet(main_clinical, downloadFile = TRUE, followLink = TRUE)$path, header = TRUE)
+clinical <- sqldf(paste("SELECT * FROM clinical where SAMPLE_ID in (",temp,")",sep = ""))
 
 # combined clinical data
-sql <- "select * from clinical_sample left join clinical_patient on clinical_sample.PATIENT_ID = clinical_patient.PATIENT_ID"
 clinical <- sqldf(sql)
 
 # change the columns to lower case
@@ -241,7 +232,7 @@ print("output and upload")
 write.csv(patient_output,file = output_file_name,quote = TRUE,row.names = FALSE,na = "")
 act <- Activity(name = 'export main GENIE data', 
                 description='Export selected BPC patient data from main GENIE clinical files',
-                used = c(main_clinical$main_sample, main_clinical$main_patient, in_file),
+                used = c(main_clinical, in_file),
                 executed = 'https://github.com/Sage-Bionetworks/genie-bpc-pipeline/tree/develop/scripts/case_selection/export_bpc_selected_cases.R')
 syn_file <- File(output_file_name, 
                  parent=out_folder,

@@ -158,51 +158,39 @@ get_site_list <- function(site) {
   return(site)
 }
 
-#' Get Main GENIE clinical patient and sample files using release version name
+#' Get Main GENIE clinical file using release version name
 #'
 #' @param release Release version name for a GENIE consortium release
 #'                
-#' @return A named list of Main GENIE clinical patient and sample file Synapse IDs.
-get_main_genie_clinical_ids <- function(release){
+#' @return A named list of Main GENIE clinical file Synapse ID.
+get_main_genie_clinical_id <- function(release){
   query <- glue("SELECT id FROM syn17019650 WHERE name = '{release}'")
   release_folder_id <- as.character(unlist(as.data.frame(synTableQuery(query, includeRowIdAndRowVersion = F))))
   release_files <- as.list(synGetChildren(release_folder_id, includeTypes = list("link")))
-  main_clinical <- list()
   for (release_file in release_files){
-    if (release_file$name == "data_clinical_patient.txt"){
-      main_clinical["main_patient"] = release_file$id
-    }
-    if (release_file$name == "data_clinical_sample.txt"){
-      main_clinical["main_sample"] = release_file$id
+    if (release_file$name == "data_clinical.txt"){
+      return(release_file$id)
     }
   }
-   return(main_clinical)
 }
 
 #' Create data matrix with all necessary information to determine 
 #' eligibility for BPC cohort case selection. 
 #' 
-#' @param patient Data from the data_clinical_patient.txt file from a GENIE
-#'                consortium release
-#' @param sample Data from the data_clinical_sample.txt file from a GENIE
+#' @param synid_clinical Data from the data_clinical.txt file from a GENIE
 #'                consortium release
 #' @return Matrix of data elements for all samples in the consortium data files.
 #' @example 
-#'   get_eligibility_data(patient, sample)
-get_eligibility_data <- function(synid_table_patient, synid_table_sample, site) {
+#'   get_eligibility_data(synid_clinical, site)
+get_eligibility_data <- function(synid_clinical, site) {
   
   # read table data
-  patient_data <- read.csv(synGet(synid_table_patient, followLink = TRUE)$path, sep = "\t", header = TRUE, skip=4) %>% 
-    select("PATIENT_ID", "CENTER", "YEAR_DEATH", "INT_CONTACT")
-  
-  sample_data <- read.csv(synGet(synid_table_sample, followLink = TRUE)$path, sep = "\t", header = TRUE, skip=4) %>% 
-    select("PATIENT_ID", "SAMPLE_ID", "ONCOTREE_CODE", "SEQ_DATE", "SEQ_YEAR", "AGE_AT_SEQ_REPORT")
+  clinical_data <- read.csv(synGet(synid_clinical, followLink = TRUE)$path, sep = "\t", header = TRUE) 
   
   sites <- get_site_list(site)
   
   # merge and filter
-  data <- patient_data %>% 
-    inner_join(sample_data, by = "PATIENT_ID") %>%  
+  clinical_data <- clinical_data %>% 
     filter(is.element(CENTER, sites)) %>%
     select(PATIENT_ID, 
            SAMPLE_ID, 
@@ -213,7 +201,7 @@ get_eligibility_data <- function(synid_table_patient, synid_table_sample, site) 
            YEAR_DEATH,
            INT_CONTACT)
   
-  return(data)
+  return(clinical_data)
 }
 
 #' Create a matrix of both data and flags for exclusion criteria for all
@@ -350,11 +338,10 @@ if (debug) {
   print(glue("{now(timeOnly = T)}: querying data to determine eligibility..."))
 }
 
-# get main_patient and main_sample
-main_clinical <- get_main_genie_clinical_ids(release = release)
+# get main genie clinical file synapse id
+main_clinical <- get_main_genie_clinical_id(release = release)
   
-eligibility_data <- get_eligibility_data(synid_table_patient = main_clinical$main_patient, 
-                                         synid_table_sample = main_clinical$main_sample, 
+eligibility_data <- get_eligibility_data(synid_clinical =main_clinical, 
                                          site = site)
 
 if (debug) {
