@@ -9,7 +9,6 @@
 library(optparse)
 library(yaml)
 library(glue)
-library(synapserutils)
 source("shared_fxns.R")
 
 # read in all global parameters
