@@ -34,7 +34,7 @@ option_list <- list(
   make_option(c("-s", "--site"), type = "character",
               help="BPC site. i.e. DFCI, MSK, UHN, VICC, and etc."),
   make_option(c("-r", "--release"), type = "character",
-              help="Main GENIE clinical file release version name, e.g. 17.2-consortium."),
+              help="Main GENIE clinical file release version name, e.g. 17.2-consortium.")
 )
 opt <- parse_args(OptionParser(option_list=option_list))
 
@@ -124,15 +124,13 @@ get_main_genie_clinical_ids <- function(release){
   return(main_clinical)
 }
 main_clinical <- get_main_genie_clinical_ids(release = release)
-main_patient <- main_clinical['main_patient']
-main_sample <- main_clinical['main_sample']
 
 # sample clinical data
-clinical_sample <- read.delim(synGet(main_sample, downloadFile = TRUE, followLink = TRUE)$path, skip = 4, header = TRUE)
+clinical_sample <- read.delim(synGet(main_clinical$main_sample, downloadFile = TRUE, followLink = TRUE)$path, skip = 4, header = TRUE)
 clinical_sample <- sqldf(paste("SELECT * FROM clinical_sample where SAMPLE_ID in (",temp,")",sep = ""))
 
 # patient clinical data
-clinical_patient <- read.delim(synGet(main_patient, downloadFile = TRUE, followLink = TRUE)$path, skip = 4, header = TRUE)
+clinical_patient <- read.delim(synGet(main_clinical$main_patient, downloadFile = TRUE, followLink = TRUE)$path, skip = 4, header = TRUE)
 
 # combined clinical data
 sql <- "select * from clinical_sample left join clinical_patient on clinical_sample.PATIENT_ID = clinical_patient.PATIENT_ID"
@@ -243,7 +241,7 @@ print("output and upload")
 write.csv(patient_output,file = output_file_name,quote = TRUE,row.names = FALSE,na = "")
 act <- Activity(name = 'export main GENIE data', 
                 description='Export selected BPC patient data from main GENIE clinical files',
-                used = c(main_sample, main_patient, in_file),
+                used = c(main_clinical$main_sample, main_clinical$main_patient, in_file),
                 executed = 'https://github.com/Sage-Bionetworks/genie-bpc-pipeline/tree/develop/scripts/case_selection/export_bpc_selected_cases.R')
 syn_file <- File(output_file_name, 
                  parent=out_folder,

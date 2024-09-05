@@ -25,7 +25,7 @@ option_list <- list(
   make_option(c("-s", "--site"), type = "character",
               help="BPC site"),
   make_option(c("-r", "--release"), type = "character",
-              help="Main GENIE clinical file release version name, e.g. 17.2-consortium."),
+              help="Main GENIE clinical file release version name, e.g. 17.2-consortium.")
 )
 opt <- parse_args(OptionParser(option_list=option_list))
 waitifnot(!is.null(opt$phase) && !is.null(opt$cohort) && !is.null(opt$site),
@@ -352,11 +352,9 @@ if (debug) {
 
 # get main_patient and main_sample
 main_clinical <- get_main_genie_clinical_ids(release = release)
-main_patient <- main_clinical['main_patient']
-main_sample <- main_clinical['main_sample']
   
-eligibility_data <- get_eligibility_data(synid_table_patient = main_patient, 
-                                         synid_table_sample = main_sample, 
+eligibility_data <- get_eligibility_data(synid_table_patient = main_clinical$main_patient, 
+                                         synid_table_sample = main_clinical$main_sample, 
                                          site = site)
 
 if (debug) {

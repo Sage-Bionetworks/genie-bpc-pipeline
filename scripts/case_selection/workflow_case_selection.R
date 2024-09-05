@@ -102,11 +102,9 @@ get_main_genie_clinical_ids <- function(release){
 
 # get main genie clinical file ids
 main_clinical <- get_main_genie_clinical_ids(release = release)
-main_patient <- main_clinical['main_patient']
-main_sample <- main_clinical['main_sample']
 
 # provancne used
-prov_used_selection <- c(main_patient, main_sample, config$synapse$bpc_patient$id)
+prov_used_selection <- c(main_clinical$main_patient, main_clinical$main_sample, config$synapse$bpc_patient$id)
 prov_used_add <- c(prov_used_selection, config$synapse$bpc_sample$id)
 prov_used_report <- ""
 

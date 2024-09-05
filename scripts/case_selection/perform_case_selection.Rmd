@@ -120,8 +120,8 @@ Eligible samples are defined with following criteria:
 
 ```{r eligibility}
 main_clinical <- get_main_genie_clinical_ids(release)
-main_patient <- main_clinical["main_patient"]
-n_main_genie <- read.csv(synGet(main_patient, followLink = TRUE)$path, sep = "\t", header = TRUE, skip=4) %>% filter(CENTER == site) %>%  nrow()
+
+n_main_genie <- read.csv(synGet(main_clinical$main_patient, followLink = TRUE)$path, sep = "\t", header = TRUE, skip=4) %>% filter(CENTER == site) %>%  nrow()
 
 print(glue("Total number of main GENIE cases for site: {n_main_genie}"))
 print(glue("Total number of BPC eligible cases: {nrow(case_selection)}"))
