@@ -124,9 +124,6 @@ main_clinical <- get_main_genie_clinical_id(release = release)
 clinical <- read.delim(synGet(main_clinical, downloadFile = TRUE, followLink = TRUE)$path, header = TRUE)
 clinical <- sqldf(paste("SELECT * FROM clinical where SAMPLE_ID in (",temp,")",sep = ""))
 
-# combined clinical data
-clinical <- sqldf(sql)
-
 # change the columns to lower case
 colnames(clinical) <- tolower(colnames(clinical))
 print("get all samples for selected patients")
