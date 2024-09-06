@@ -10,7 +10,7 @@ params.center = "DFCI"
 params.production = false
 params.bpc_input = "syn53294194"
 params.bpc_output = "syn62147862"
-params.release = ""
+params.release = "17.2-consortium"
 export_phase = "phase " + params.phase
 
 // import modules
