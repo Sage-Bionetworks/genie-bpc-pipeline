@@ -236,3 +236,23 @@ extract_sample_ids <- function(sample_ids_list) {
   all_sample_ids <- unique(all_sample_ids)
   return(all_sample_ids)
 }
+
+#' Get Main GENIE clinical file using release version name
+#'
+#' @param release Release version name for a GENIE consortium release
+#'                
+#' @return A named list of Main GENIE clinical file Synapse ID.
+get_main_genie_clinical_id <- function(release){
+  query <- glue("SELECT id FROM syn17019650 WHERE name = '{release}'")
+  release_folder_id <- as.character(unlist(as.data.frame(synTableQuery(query, includeRowIdAndRowVersion = F))))
+  if (length(release_folder_id) == 0) {
+  stop(glue("The release version is invalid."))
+}
+  release_files <- as.list(synGetChildren(release_folder_id, includeTypes = list("link")))
+  for (release_file in release_files){
+    if (release_file$name == "data_clinical.txt"){
+      return(release_file$id)
+    }
+  }
+  return(NULL)
+}

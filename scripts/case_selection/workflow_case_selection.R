@@ -22,6 +22,8 @@ option_list <- list(
               help="BPC cohort"),
   make_option(c("-s", "--site"), type = "character",
               help="BPC site"),
+  make_option(c("-r", "--release"), type = "character",
+              help="Main GENIE clinical file release version name, e.g. 17.2-consortium."),
   make_option(c("--production"), action="store_true", default = FALSE,
               help="Save output to production folder")
 )
@@ -33,6 +35,7 @@ if (is.null(opt$phase) || is.null(opt$cohort) || is.null(opt$site)) {
 phase <- opt$phase
 cohort <- opt$cohort
 site <- opt$site
+release <- opt$release
 is_production <- opt$production
 
 # check user input -----------------
@@ -76,8 +79,11 @@ prov_exec_selection <- "https://github.com/Sage-Bionetworks/genie-bpc-pipeline/t
 prov_exec_add <- prov_exec_selection
 prov_exec_report <- "https://github.com/Sage-Bionetworks/genie-bpc-pipeline/tree/develop/scripts/case_selection/perform_case_selection.Rmd"
 
+# get main genie clinical file ids
+main_clinical <- get_main_genie_clinical_id(release = release)
+
 # provancne used
-prov_used_selection <- c(config$synapse$main_patient$id, config$synapse$main_sample$id, config$synapse$bpc_patient$id)
+prov_used_selection <- c(main_clinical, config$synapse$bpc_patient$id)
 prov_used_add <- c(prov_used_selection, config$synapse$bpc_sample$id)
 prov_used_report <- ""
 
@@ -115,7 +121,7 @@ save_to_synapse <- function(path,
 # case selection ----------------------------
 
 # construct eligibility matrices + case lists
-exit_status <- system(glue("Rscript perform_case_selection.R -p {phase} -c {cohort} -s {site}"))
+exit_status <- system(glue("Rscript perform_case_selection.R -p {phase} -c {cohort} -s {site} -r {release}"))
 
 # Check if the command failed
 if (exit_status != 0) {
@@ -126,7 +132,7 @@ if (!flag_additional) {
   # render eligibility report
   rmarkdown::render("perform_case_selection.Rmd", 
                     output_file = file_report,
-                    params = list(phase = phase, cohort = cohort, site = site))
+                    params = list(phase = phase, cohort = cohort, site = site, release = release))
 }
 
 # load to synapse --------------------

@@ -32,7 +32,9 @@ option_list <- list(
               type = "character",
               help="BPC cohort. i.e. NSCLC, CRC, BrCa, and etc."),
   make_option(c("-s", "--site"), type = "character",
-              help="BPC site. i.e. DFCI, MSK, UHN, VICC, and etc.")
+              help="BPC site. i.e. DFCI, MSK, UHN, VICC, and etc."),
+  make_option(c("-r", "--release"), type = "character",
+              help="Main GENIE clinical file release version name, e.g. 17.2-consortium.")
 )
 opt <- parse_args(OptionParser(option_list=option_list))
 
@@ -45,6 +47,7 @@ out_folder <- opt$output
 phase <- opt$phase
 cohort <- opt$cohort
 site <- opt$site
+release <- opt$release
 
 # check user input -----------------
 
@@ -77,10 +80,6 @@ if (!is.element(site, site_option)) {
 # setup ----------------------------
 print("get clinical data")
 # clinical data
-# This is hardcoded 17.2-consortium release
-clinical_sample_id <- "syn62173557"
-clinical_patient_id <- "syn62173556"
-
 # mapping tables
 sex_mapping <- synTableQuery("SELECT * FROM syn7434222")$asDataFrame()
 race_mapping <- synTableQuery("SELECT * FROM syn7434236")$asDataFrame()
@@ -104,16 +103,11 @@ temp <- toString(selected_samples)
 temp <- sapply(strsplit(temp, '[, ]+'), function(x) toString(shQuote(x)))
 
 # download clinical data
-# sample clinical data
-clinical_sample <- read.delim(synGet(clinical_sample_id, downloadFile = TRUE, followLink = TRUE)$path, skip = 4, header = TRUE)
-clinical_sample <- sqldf(paste("SELECT * FROM clinical_sample where SAMPLE_ID in (",temp,")",sep = ""))
+main_clinical <- get_main_genie_clinical_id(release = release)
 
-# patient clinical data
-clinical_patient <- read.delim(synGet(clinical_patient_id, downloadFile = TRUE, followLink = TRUE)$path, skip = 4, header = TRUE)
-
-# combined clinical data
-sql <- "select * from clinical_sample left join clinical_patient on clinical_sample.PATIENT_ID = clinical_patient.PATIENT_ID"
-clinical <- sqldf(sql)
+# load and subset clinical data
+clinical <- read.delim(synGet(main_clinical, downloadFile = TRUE, followLink = TRUE)$path, header = TRUE)
+clinical <- sqldf(paste("SELECT * FROM clinical where SAMPLE_ID in (",temp,")",sep = ""))
 
 # change the columns to lower case
 colnames(clinical) <- tolower(colnames(clinical))
@@ -219,8 +213,8 @@ print("output and upload")
 # output and upload ----------------------------
 write.csv(patient_output,file = output_file_name,quote = TRUE,row.names = FALSE,na = "")
 act <- Activity(name = 'export main GENIE data', 
-                description='Export selected BPC patient data from main GENIE database',
-                used = c(clinical_sample_id, clinical_patient_id, in_file),
+                description='Export selected BPC patient data from main GENIE clinical files',
+                used = c(main_clinical, in_file),
                 executed = 'https://github.com/Sage-Bionetworks/genie-bpc-pipeline/tree/develop/scripts/case_selection/export_bpc_selected_cases.R')
 syn_file <- File(output_file_name, 
                  parent=out_folder,

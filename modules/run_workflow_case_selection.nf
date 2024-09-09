@@ -10,6 +10,7 @@ process run_workflow_case_selection {
     val phase
     val cohort
     val center
+    val release
     val production
 
     output:
@@ -22,13 +23,13 @@ process run_workflow_case_selection {
     if (production) {
         """
         cd /usr/local/src/myscripts/
-        Rscript workflow_case_selection.R --phase $phase --cohort $cohort --site $center -u
+        Rscript workflow_case_selection.R --phase $phase --cohort $cohort --site $center --release $release --production
         """
     }
     else {
         """
         cd /usr/local/src/myscripts/
-        Rscript workflow_case_selection.R -p $phase -c $cohort -s $center
+        Rscript workflow_case_selection.R -p $phase -c $cohort -s $center --release $release
         """
     }
 }

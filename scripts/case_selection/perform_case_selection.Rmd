@@ -7,6 +7,7 @@ params:
   phase: x
   cohort: x
   site: x
+  release: x
 ---
 
 ```{r setup, include=FALSE}
@@ -19,6 +20,7 @@ library(dplyr)
 library(RColorBrewer)
 library(RCurl)
 library(jsonlite)
+source("shared_fxns.R")
 
 # rmarkdown knit setup
 knitr::opts_chunk$set(echo = F)
@@ -30,6 +32,7 @@ config <- read_yaml("config.yaml")
 phase <- as.character(params$phase)
 cohort <- params$cohort
 site <- params$site
+release <- params$release
 
 # file names
 file_matrix <- tolower(glue("{cohort}_{site}_phase{phase}_eligibility_matrix.csv"))
@@ -61,6 +64,7 @@ traverse <- function(root, oncotree) {
   
   return(c(root, desc))
 }
+
 ```
 
 ```{r read, include = F}
@@ -78,6 +82,8 @@ case_selection <- read.csv(file_selection)
 
 **Site**: `r site`
 
+**Main GENIE Release**: `r release`
+
 # Eligibility
 
 Eligible samples are defined with following criteria:
@@ -94,9 +100,9 @@ Eligible samples are defined with following criteria:
 5. Patient or sample was not previously excluded for quality control or other reasons.
 
 ```{r eligibility}
+main_clinical <- get_main_genie_clinical_id(release)
 
-query <- glue("SELECT COUNT(*) FROM {config$synapse$main_patient$id} WHERE CENTER = '{site}'")
-n_main_genie <- as.integer(as.data.frame(synTableQuery(query, includeRowIdAndRowVersion = T)))
+n_main_genie <- read.csv(synGet(main_clinical, followLink = TRUE)$path, sep = "\t", header = TRUE) %>% filter(CENTER == site) %>%  nrow()
 
 print(glue("Total number of main GENIE cases for site: {n_main_genie}"))
 print(glue("Total number of BPC eligible cases: {nrow(case_selection)}"))

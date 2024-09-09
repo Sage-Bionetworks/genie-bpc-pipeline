@@ -54,16 +54,19 @@ Options:
 	-s SITE, --site=SITE
 		BPC site
 
-	-u, --save_synapse
-		Save output to Synapse
-
+	-r RELEASE, --release=RELEASE
+		Main GENIE clinical file release version name, e.g. 17.2-consortium
+		
+	--production
+	  Save output to production folder
+		
 	-h, --help
 		Show this help message and exit
 ```
 
 Example run: 
 ```
-Rscript workflow_case_selection.R  -p 1 -c NSCLC -s DFCI -u
+Rscript workflow_case_selection.R  -p 1 -c NSCLC -s DFCI -r 17.2-consortium --production
 ```
 
 ```
@@ -98,6 +101,9 @@ Options:
 
 	-s SITE, --site=SITE
 		BPC site. i.e. DFCI, MSK, UHN, VICC, and etc.
+		
+	-r RELEASE, --release=RELEASE
+		Main GENIE clinical file release version name, e.g. 17.2-consortium
 
 	-h, --help
 		Show this help message and exit

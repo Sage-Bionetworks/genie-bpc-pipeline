@@ -12,6 +12,7 @@ process run_export_bpc_selected_cases {
     val phase
     val cohort
     val center
+    val release
 
     output:
     stdout
@@ -19,6 +20,6 @@ process run_export_bpc_selected_cases {
     script:
     """
     cd /usr/local/src/myscripts/
-    Rscript export_bpc_selected_cases.R -i $bpc_input -o $output_synid --phase "$phase" --cohort $cohort --site $center
+    Rscript export_bpc_selected_cases.R -i $bpc_input -o $output_synid --phase "$phase" --cohort $cohort --site $center --release $release
     """
 }
