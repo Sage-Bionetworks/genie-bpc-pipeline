@@ -103,21 +103,6 @@ temp <- toString(selected_samples)
 temp <- sapply(strsplit(temp, '[, ]+'), function(x) toString(shQuote(x)))
 
 # download clinical data
-#' Get Main GENIE clinical file using release version name
-#'
-#' @param release Release version name for a GENIE consortium release
-#'                
-#' @return A named list of Main GENIE clinical file Synapse ID.
-get_main_genie_clinical_id <- function(release){
-  query <- glue("SELECT id FROM syn17019650 WHERE name = '{release}'")
-  release_folder_id <- as.character(unlist(as.data.frame(synTableQuery(query, includeRowIdAndRowVersion = F))))
-  release_files <- as.list(synGetChildren(release_folder_id, includeTypes = list("link")))
-  for (release_file in release_files){
-    if (release_file$name == "data_clinical.txt"){
-      return(release_file$id)
-    }
-  }
-}
 main_clinical <- get_main_genie_clinical_id(release = release)
 
 # load and subset clinical data

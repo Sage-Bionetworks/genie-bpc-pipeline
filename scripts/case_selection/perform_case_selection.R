@@ -158,22 +158,6 @@ get_site_list <- function(site) {
   return(site)
 }
 
-#' Get Main GENIE clinical file using release version name
-#'
-#' @param release Release version name for a GENIE consortium release
-#'                
-#' @return A named list of Main GENIE clinical file Synapse ID.
-get_main_genie_clinical_id <- function(release){
-  query <- glue("SELECT id FROM syn17019650 WHERE name = '{release}'")
-  release_folder_id <- as.character(unlist(as.data.frame(synTableQuery(query, includeRowIdAndRowVersion = F))))
-  release_files <- as.list(synGetChildren(release_folder_id, includeTypes = list("link")))
-  for (release_file in release_files){
-    if (release_file$name == "data_clinical.txt"){
-      return(release_file$id)
-    }
-  }
-}
-
 #' Create data matrix with all necessary information to determine 
 #' eligibility for BPC cohort case selection. 
 #' 
