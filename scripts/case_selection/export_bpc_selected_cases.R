@@ -42,12 +42,12 @@ if (is.null(opt$input) || is.null(opt$phase) || is.null(opt$cohort) || is.null(o
   stop("Usage: Rscript export_bpc_selected_cases.R -h")
 }
 
-in_file <- 'syn62828306'
-out_folder <- 'syn62828556'
-phase <- 'phase 1'
-cohort <- 'NSCLC'
-site <- 'DFCI'
-release <- '17.2-consortium'
+in_file <- opt$input
+out_folder <- opt$output
+phase <- opt$phase
+cohort <- opt$cohort
+site <- opt$site
+release <- opt$release
 
 # check user input -----------------
 
