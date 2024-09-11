@@ -84,7 +84,7 @@ print("get clinical data")
 sex_mapping <- synTableQuery("SELECT * FROM syn7434222")$asDataFrame()
 race_mapping <- synTableQuery("SELECT * FROM syn7434236")$asDataFrame()
 ethnicity_mapping <- synTableQuery("SELECT * FROM syn7434242")$asDataFrame()
-sample_type_mapping <- synTableQuery("SELECT * FROM syn7434273")$asDataFrame()
+#sample_type_mapping <- synTableQuery("SELECT * FROM syn7434273")$asDataFrame()
 
 # output setup
 phase_no_space <- sub(" ","_",sub(" ","",phase))
@@ -165,7 +165,6 @@ sample_info_list <- lapply(samples_per_patient,function(x){
     temp_df$cpt_genie_sample_id = x[i]
     temp_df$cpt_oncotree_code = clinical$oncotree_code[clinical$sample_id == x[i]]
     temp_df$cpt_sample_type = clinical$sample_type_detailed[clinical$sample_id == x[i]]
-    temp_df$cpt_sample_type = sample_type_mapping$CODE[match(temp_df$cpt_sample_type, sample_type_mapping$DESCRIPTION)]
     temp_df$cpt_seq_assay_id = clinical$seq_assay_id[clinical$sample_id == x[i]]
     temp_df$cpt_seq_date = clinical$seq_year[clinical$sample_id == x[i]]
     temp_df$age_at_seq_report = clinical$age_at_seq_report_days[clinical$sample_id == x[i]]
