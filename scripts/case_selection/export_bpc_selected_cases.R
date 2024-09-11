@@ -144,11 +144,11 @@ print("recode")
 # recode
 # cannotReleaseHIPAA = NA
 patient_output$birth_year[which(patient_output$birth_year == "cannotReleaseHIPAA")] <- NA
-# -1 Not collected = 9 Unknown
+# -1 Not collected = 9 Unknown whether Spanish or not
 patient_output$naaccr_ethnicity_code[which(patient_output$naaccr_ethnicity_code == -1)] <- 9
-# -1 Not collected = 99 Unknown
+# -1 Not collected = 99 Unknown by patient
 patient_output$naaccr_race_code_primary[which(patient_output$naaccr_race_code_primary == -1)] <- 99
-# -1 Not collected = 88 according to NAACCR
+# -1 Not collected = 88 No further race documented according to NAACCR
 patient_output$naaccr_race_code_secondary[which(patient_output$naaccr_race_code_secondary == -1)] <- 88
 patient_output$naaccr_race_code_tertiary[which(patient_output$naaccr_race_code_tertiary == -1)] <- 88
 
