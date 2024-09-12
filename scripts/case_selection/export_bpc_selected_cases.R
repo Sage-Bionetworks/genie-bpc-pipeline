@@ -42,12 +42,12 @@ if (is.null(opt$input) || is.null(opt$phase) || is.null(opt$cohort) || is.null(o
   stop("Usage: Rscript export_bpc_selected_cases.R -h")
 }
 
-in_file <- opt$input
-out_folder <- opt$output
-phase <- opt$phase
-cohort <- opt$cohort
-site <- opt$site
-release <- opt$release
+in_file <- 'syn62828306'
+out_folder <- 'syn62828556'
+phase <- 'phase 1'
+cohort <- 'NSCLC'
+site <- 'DFCI'
+release <- '17.2-consortium'
 
 # check user input -----------------
 
@@ -120,26 +120,35 @@ existing_patients = selected_cases[selected_cases %in% clinical$patient_id]
 samples_per_patient <- clinical$sample_id[clinical$patient_id %in% selected_cases]
 
 print("map data for each instrument")
-# mapping data for each instrument
-# instrument - patient_characteristics
-patient_output <- data.frame("record_id" = existing_patients)
-patient_output$redcap_repeat_instrument <- rep("")
-patient_output$redcap_repeat_instance <- rep("")
+#'  mapping data for instrument - patient_characteristics
+#' 
+#' @param clinical A data frame of released clinical data for selected cases
+#' @param existing_patients A data frame of available patient after case selection
+#' @return A data frame with mapped code
+remap_patient_characteristics <- function(clinical, existing_patients, ethnicity_mapping, race_mapping, sex_mapping){
+  
+  patient_df <- data.frame("record_id" = existing_patients)
+  patient_df$redcap_repeat_instrument <- rep("")
+  patient_df$redcap_repeat_instance <- rep("")
+  
+  patient_df$genie_patient_id <- patient_df$record_id
+  patient_df$birth_year <- clinical$birth_year[match(patient_df$genie_patient_id, clinical$patient_id)]
+  patient_df$naaccr_ethnicity_code <- clinical$ethnicity_detailed[match(patient_df$genie_patient_id, clinical$patient_id)]
+  patient_df$naaccr_race_code_primary <- clinical$primary_race_detailed[match(patient_df$genie_patient_id, clinical$patient_id)]
+  patient_df$naaccr_race_code_secondary <- clinical$secondary_race_detailed[match(patient_df$genie_patient_id, clinical$patient_id)]
+  patient_df$naaccr_race_code_tertiary <- clinical$tertiary_race_detailed[match(patient_df$genie_patient_id, clinical$patient_id)]
+  patient_df$naaccr_sex_code <- clinical$sex_detailed[match(patient_df$genie_patient_id, clinical$patient_id)]
+  
+  # mapping to code
+  patient_df$naaccr_ethnicity_code <- ethnicity_mapping$CODE[match(patient_df$naaccr_ethnicity_code, ethnicity_mapping$DESCRIPTION)]
+  patient_df$naaccr_race_code_primary <- race_mapping$CODE[match(patient_df$naaccr_race_code_primary, race_mapping$DESCRIPTION)]
+  patient_df$naaccr_race_code_secondary <- race_mapping$CODE[match(patient_df$naaccr_race_code_secondary, race_mapping$DESCRIPTION)]
+  patient_df$naaccr_race_code_tertiary <- race_mapping$CODE[match(patient_df$naaccr_race_code_tertiary, race_mapping$DESCRIPTION)]
+  patient_df$naaccr_sex_code <- sex_mapping$CODE[match(patient_df$naaccr_sex_code,sex_mapping$DESCRIPTION)]
+}
 
-patient_output$genie_patient_id <- patient_output$record_id
-patient_output$birth_year <- clinical$birth_year[match(patient_output$genie_patient_id, clinical$patient_id)]
-patient_output$naaccr_ethnicity_code <- clinical$ethnicity_detailed[match(patient_output$genie_patient_id, clinical$patient_id)]
-patient_output$naaccr_race_code_primary <- clinical$primary_race_detailed[match(patient_output$genie_patient_id, clinical$patient_id)]
-patient_output$naaccr_race_code_secondary <- clinical$secondary_race_detailed[match(patient_output$genie_patient_id, clinical$patient_id)]
-patient_output$naaccr_race_code_tertiary <- clinical$tertiary_race_detailed[match(patient_output$genie_patient_id, clinical$patient_id)]
-patient_output$naaccr_sex_code <- clinical$sex_detailed[match(patient_output$genie_patient_id, clinical$patient_id)]
+patient_output <- remap_patient_characteristics(clinical, existing_patients, ethnicity_mapping, race_mapping, sex_mapping)
 
-# mapping to code
-patient_output$naaccr_ethnicity_code <- ethnicity_mapping$CODE[match(patient_output$naaccr_ethnicity_code, ethnicity_mapping$DESCRIPTION)]
-patient_output$naaccr_race_code_primary <- race_mapping$CODE[match(patient_output$naaccr_race_code_primary, race_mapping$DESCRIPTION)]
-patient_output$naaccr_race_code_secondary <- race_mapping$CODE[match(patient_output$naaccr_race_code_secondary, race_mapping$DESCRIPTION)]
-patient_output$naaccr_race_code_tertiary <- race_mapping$CODE[match(patient_output$naaccr_race_code_tertiary, race_mapping$DESCRIPTION)]
-patient_output$naaccr_sex_code <- sex_mapping$CODE[match(patient_output$naaccr_sex_code,sex_mapping$DESCRIPTION)]
 print("recode")
 # recode
 # cannotReleaseHIPAA = NA
