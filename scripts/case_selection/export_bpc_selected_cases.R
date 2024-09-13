@@ -122,6 +122,11 @@ samples_per_patient <- clinical$sample_id[clinical$patient_id %in% selected_case
 print("map data for each instrument")
 # instrument - patient_characteristics
 patient_output <- remap_patient_characteristics(clinical, existing_patients, ethnicity_mapping, race_mapping, sex_mapping)
+# check missing values
+# get naaccr code columns
+naaccr_col <- grep("naaccr", colnames(patient_output), value = TRUE)
+# error out if NAs or empty strings are detected in naaccr code columns
+check_for_missing_values(patient_output, naaccr_col)
 
 print("recode")
 # recode

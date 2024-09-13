@@ -261,6 +261,9 @@ get_main_genie_clinical_id <- function(release){
 #' 
 #' @param clinical A data frame of released clinical data for selected cases
 #' @param existing_patients A data frame of available patient after case selection
+#' @param ethnicity_mapping The NAACCR_ETHNICITY_MAPPING data frame
+#' @param race_mapping The NAACCR_RACE_MAPPING data frame
+#' @param sex_mapping The NAACCR_SEX_MAPPING data frame
 #' @return A data frame with mapped code
 remap_patient_characteristics <- function(clinical, existing_patients, ethnicity_mapping, race_mapping, sex_mapping){
   
@@ -284,4 +287,21 @@ remap_patient_characteristics <- function(clinical, existing_patients, ethnicity
   patient_df$naaccr_sex_code <- sex_mapping$CODE[match(patient_df$naaccr_sex_code,sex_mapping$DESCRIPTION)]
 
   return(patient_df)
+}
+
+#' Check for missing values
+#'
+#' @param data The data frame to check against
+#' @param columns The target columns
+check_for_missing_values <- function(data, columns) {
+  # Check for NA values or empty strings
+  missingness_col <- c()
+  for (col in columns) {
+    if (any(is.na(data[[col]]) | data[[col]] == "" )){
+      missingness_col <- c(col, missingness_col)
+    }
+  }
+  if (length(missingness_col) > 0) {
+    warning(paste0("Warning: Missing or empty values found in column(s): ", paste(missingness_col,collapse=", ")))
+    }
 }

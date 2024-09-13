@@ -103,3 +103,38 @@ test_that("remap_patient_characteristics works as expected", {
   # Test if the output is as expected
   expect_equal(result, expected_output)
 })
+
+test_that("check_for_missing_values - no missing or empty values in the data", {
+  data <- data.frame(
+    col1 = c(1, 2, 3),
+    col2 = c("a", "b", "c")
+  )
+  expect_warning(check_for_missing_values(data, c("col1", "col2")), NA)
+})
+
+test_that("check_for_missing_values - NAs are detected", {
+  data <- data.frame(
+    col1 = c(1, NA, 3),
+    col2 = c("a", "b", "c")
+  )
+  expect_warning(check_for_missing_values(data, c("col1", "col2")), 
+              "Warning: Missing or empty values found in column\\(s\\): col1")
+})
+
+test_that("check_for_missing_values - empty string values are detected", {
+  data <- data.frame(
+    col1 = c(1, 2, 3),
+    col2 = c("a", "", "c")
+  )
+  expect_warning(check_for_missing_values(data, c("col1", "col2")), 
+               "Warning: Missing or empty values found in column\\(s\\): col2")
+})
+
+test_that("check_for_missing_values - multiple missing and empty values are detected", {
+  data <- data.frame(
+    col1 = c(1, NA, 3),
+    col2 = c("a", "", "c")
+  )
+  expect_warning(check_for_missing_values(data, c("col1", "col2")), 
+               "Warning: Missing or empty values found in column\\(s\\): col2, col1")
+})
