@@ -120,33 +120,7 @@ existing_patients = selected_cases[selected_cases %in% clinical$patient_id]
 samples_per_patient <- clinical$sample_id[clinical$patient_id %in% selected_cases]
 
 print("map data for each instrument")
-#'  mapping data for instrument - patient_characteristics
-#' 
-#' @param clinical A data frame of released clinical data for selected cases
-#' @param existing_patients A data frame of available patient after case selection
-#' @return A data frame with mapped code
-remap_patient_characteristics <- function(clinical, existing_patients, ethnicity_mapping, race_mapping, sex_mapping){
-  
-  patient_df <- data.frame("record_id" = existing_patients)
-  patient_df$redcap_repeat_instrument <- rep("")
-  patient_df$redcap_repeat_instance <- rep("")
-  
-  patient_df$genie_patient_id <- patient_df$record_id
-  patient_df$birth_year <- clinical$birth_year[match(patient_df$genie_patient_id, clinical$patient_id)]
-  patient_df$naaccr_ethnicity_code <- clinical$ethnicity_detailed[match(patient_df$genie_patient_id, clinical$patient_id)]
-  patient_df$naaccr_race_code_primary <- clinical$primary_race_detailed[match(patient_df$genie_patient_id, clinical$patient_id)]
-  patient_df$naaccr_race_code_secondary <- clinical$secondary_race_detailed[match(patient_df$genie_patient_id, clinical$patient_id)]
-  patient_df$naaccr_race_code_tertiary <- clinical$tertiary_race_detailed[match(patient_df$genie_patient_id, clinical$patient_id)]
-  patient_df$naaccr_sex_code <- clinical$sex_detailed[match(patient_df$genie_patient_id, clinical$patient_id)]
-  
-  # mapping to code
-  patient_df$naaccr_ethnicity_code <- ethnicity_mapping$CODE[match(patient_df$naaccr_ethnicity_code, ethnicity_mapping$DESCRIPTION)]
-  patient_df$naaccr_race_code_primary <- race_mapping$CODE[match(patient_df$naaccr_race_code_primary, race_mapping$DESCRIPTION)]
-  patient_df$naaccr_race_code_secondary <- race_mapping$CODE[match(patient_df$naaccr_race_code_secondary, race_mapping$DESCRIPTION)]
-  patient_df$naaccr_race_code_tertiary <- race_mapping$CODE[match(patient_df$naaccr_race_code_tertiary, race_mapping$DESCRIPTION)]
-  patient_df$naaccr_sex_code <- sex_mapping$CODE[match(patient_df$naaccr_sex_code,sex_mapping$DESCRIPTION)]
-}
-
+# instrument - patient_characteristics
 patient_output <- remap_patient_characteristics(clinical, existing_patients, ethnicity_mapping, race_mapping, sex_mapping)
 
 print("recode")
