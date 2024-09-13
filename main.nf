@@ -76,6 +76,7 @@ include { run_quac_table_report } from './modules/run_quac_table_report'
 include { run_quac_comparison_report } from './modules/run_quac_comparison_report'
 include { create_masking_report } from './modules/create_masking_report'
 include { update_case_count_table } from './modules/update_case_count_table'
+include { run_clinical_release } from './modules/run_clinical_release'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -83,7 +84,7 @@ include { update_case_count_table } from './modules/update_case_count_table'
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-workflow {
+workflow BPC_PIPELINE {
    ch_cohort = Channel.value(params.cohort)
    ch_comment = Channel.value(params.comment)
 
@@ -104,3 +105,7 @@ workflow {
     THE END
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
+
+workflow CLINICAL_RELEASE {
+    run_clinical_release('', params.cohort, params.production)
+}

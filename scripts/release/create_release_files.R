@@ -27,10 +27,6 @@ option_list <- list(
               action="store_true", 
               default = FALSE,
               help="Copy release files from staging to release folder"),
-  make_option(c("-a", "--auth"), 
-              type = "character",
-              default = NA,
-              help="Synapse personal access token or path to .synapseConfig (default: normal synapse login behavior)"),
   make_option(c("-v", "--verbose"), 
               action="store_true", 
               default = FALSE,
@@ -41,7 +37,6 @@ opt <- parse_args(OptionParser(option_list=option_list))
 selected_cohort <- opt$cohort
 staging <- opt$staging
 release <- opt$release
-auth <- opt$auth
 verbose <- opt$verbose
 
 if (verbose) {
@@ -121,68 +116,10 @@ store_file <- function(var,
   }
 }
 
-#' Extract personal access token from .synapseConfig
-#' located at a custom path. 
-#' 
-#' @param path Path to .synapseConfig
-#' @return personal acccess token
-get_auth_token <- function(path) {
-  
-  lines <- scan(path, what = "character", sep = "\t", quiet = T)
-  line <- grep(pattern = "^authtoken = ", x = lines, value = T)
-  
-  token <- strsplit(line, split = ' ')[[1]][3]
-  return(token)
-}
-
-#' Override of synapser::synLogin() function to accept 
-#' custom path to .synapseConfig file or personal authentication
-#' token.  If no arguments are supplied, performs standard synLogin().
-#' 
-#' @param auth full path to .synapseConfig file or authentication token
-#' @param silent verbosity control on login
-#' @return TRUE for successful login; F otherwise
-synLogin <- function(auth = NA, silent = T) {
-  
-  secret <- Sys.getenv("SCHEDULED_JOB_SECRETS")
-  if (secret != "") {
-    # Synapse token stored as secret in json string
-    syn = synapser::synLogin(silent = T, authToken = fromJSON(secret)$SYNAPSE_AUTH_TOKEN)
-  } else if (auth == "~/.synapseConfig" || is.na(auth)) {
-    # default Synapse behavior
-    syn <- synapser::synLogin(silent = silent)
-  } else {
-    
-    # in case pat passed directly
-    token <- auth
-    
-    # extract token from custom path to .synapseConfig
-    if (grepl(x = auth, pattern = "\\.synapseConfig$")) {
-      token = get_auth_token(auth)
-      
-      if (is.na(token)) {
-        return(F)
-      }
-    }
-    
-    # login with token
-    syn <- tryCatch({
-      synapser::synLogin(authToken = token, silent = silent)
-    }, error = function(cond) {
-      return(F)
-    })
-  }
-  
-  # NULL returned indicates successful login
-  if (is.null(syn)) {
-    return(T)
-  }
-  return(F)
-}
 
 # synapse login ---------------
 
-status <- synLogin(auth = auth)
+synLogin()
 
 # read --------------------
 
