@@ -52,3 +52,54 @@ test_that("get_main_genie_clinical_id returns NULL when data_clinical.txt does n
   result <- get_main_genie_clinical_id(release)
   expect_null(result)
 })
+
+test_that("remap_patient_characteristics works as expected", {
+  
+  # Mock input data
+  clinical <- data.frame(
+    patient_id = c(1, 2, 3),
+    birth_year = c(1980, 1990, 2000),
+    ethnicity_detailed = c("Hispanic", "Non-Hispanic", "Hispanic"),
+    primary_race_detailed = c("White", "Black", "Asian"),
+    secondary_race_detailed = c("Unknown", "White", "Black"),
+    tertiary_race_detailed = c("Asian", "Unknown", "White"),
+    sex_detailed = c("Male", "Female", "Male")
+  )
+  
+  existing_patients <-  c(1, 2, 3)
+  
+  ethnicity_mapping <- data.frame(
+    DESCRIPTION = c("Hispanic", "Non-Hispanic"),
+    CODE = c("1", "2")
+  )
+  
+  race_mapping <- data.frame(
+    DESCRIPTION = c("White", "Black", "Asian", "Unknown"),
+    CODE = c("1", "2", "3", "99")
+  )
+  
+  sex_mapping <- data.frame(
+    DESCRIPTION = c("Male", "Female"),
+    CODE = c("M", "F")
+  )
+  
+  # Expected output
+  expected_output <- data.frame(
+    record_id = c(1, 2, 3),
+    redcap_repeat_instrument = c("", "", ""),
+    redcap_repeat_instance = c("", "", ""),
+    genie_patient_id = c(1, 2, 3),
+    birth_year = c(1980, 1990, 2000),
+    naaccr_ethnicity_code = c("1", "2", "1"),
+    naaccr_race_code_primary = c("1", "2", "3"),
+    naaccr_race_code_secondary = c("99", "1", "2"),
+    naaccr_race_code_tertiary = c("3", "99", "1"),
+    naaccr_sex_code = c("M", "F", "M")
+  )
+  
+  # Run the function
+  result <- remap_patient_characteristics(clinical, existing_patients, ethnicity_mapping, race_mapping, sex_mapping)
+  
+  # Test if the output is as expected
+  expect_equal(result, expected_output)
+})
