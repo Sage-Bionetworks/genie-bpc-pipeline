@@ -104,51 +104,38 @@ test_that("remap_patient_characteristics works as expected", {
   expect_equal(result, expected_output)
 })
 
-test_that("check_for_missing_values - no missing or empty values in centers other than CHOP, PROV, JHU", {
-  data <- data.frame(
-    col1 = c(1, 2, 3, NA),
-    col2 = c("a", "b", "c", ""),
-    genie_patient_id = c('a', 'b', 'c', 'CHOP123')
-  )
-  expect_warning(check_for_missing_values(data, c("col1", "col2")), NA)
-
-})
-
-test_that("check_for_missing_values - NAs are detected in centers other than CHOP, PROV, JHU", {
-  data <- data.frame(
-    col1 = c(1, NA, 3),
-    col2 = c("a", "b", "c"),
-    genie_patient_id = c('CHOP123', 'b', 'PROV234')
-  )
-  expect_warning(check_for_missing_values(data, c("col1", "col2")), 
-              "Warning: Missing or empty values found in column\\(s\\): col1")
-})
-
-test_that("check_for_missing_values - empty string values are detected in centers other than CHOP, PROV, JHU", {
+test_that("check_for_missing_values - no missing or empty values", {
   data <- data.frame(
     col1 = c(1, 2, 3),
-    col2 = c("a", "", "c"),
-    genie_patient_id = c('CHOP123', 'b', 'PROV234')
+    col2 = c("a", "b", "c"),
+    genie_patient_id = c("a", "b", "CHOP123"),
+    naaccr_race_code_tertiary = c("a", "b", "c"),
+    naaccr_race_code_secondary = c("a", "b", "c")
   )
-  expect_warning(check_for_missing_values(data, c("col1", "col2")), 
-               "Warning: Missing or empty values found in column\\(s\\): col2")
+  expect_no_warning(check_for_missing_values(data, c("col1", "col2", "naaccr_race_code_tertiary", "naaccr_race_code_secondary")))
+
 })
 
-test_that("check_for_missing_values - multiple missing and empty values are detected in centers other than CHOP, PROV, JHU", {
+test_that("check_for_missing_values - missingness values are detected in NAACCR code columns in centers other than CHOP, PROV, JHU", {
+  data <- data.frame(
+    col1 = c(1, NA, ""),
+    col2 = c("a", "b", "c"),
+    genie_patient_id = c("CHOP123", "b", "PROV234"),
+    naaccr_race_code_tertiary = c("a", "", "c"),
+    naaccr_race_code_secondary = c("a", "b", "c")
+  )
+  expect_warning(check_for_missing_values(data, c("col1", "col2", "naaccr_race_code_tertiary", "naaccr_race_code_secondary")), 
+              "Warning: Missing or empty values found in column\\(s\\): naaccr_race_code_tertiary, col1")
+})
+
+test_that("check_for_missing_values - missingness values are detected in NAACCR code columns in CHOP, PROV, JHU centers", {
   data <- data.frame(
     col1 = c(1, NA, ""),
     col2 = c("a", "", "c"),
-    genie_patient_id = c('CHOP123', 'b', 'PROV234')
+    genie_patient_id = c("CHOP123", "b", "PROV234"),
+    naaccr_race_code_tertiary = c("", "b", "c"),
+    naaccr_race_code_secondary = c("a", "b", NA)
   )
-  expect_warning(check_for_missing_values(data, c("col1", "col2")), 
+  expect_warning(check_for_missing_values(data, c("col1", "col2", "naaccr_race_code_tertiary", "naaccr_race_code_secondary")), 
                "Warning: Missing or empty values found in column\\(s\\): col2, col1")
-})
-
-test_that("check_for_missing_values - multiple missing and empty values are detected in CHOP, PROV, JHU centers", {
-  data <- data.frame(
-    col1 = c(1, NA, 2),
-    col2 = c("a", "", "c"),
-    genie_patient_id = c('a', 'CHOP123', 'PROV234')
-  )
-  expect_warning(check_for_missing_values(data, c("col1", "col2")), NA)
 })

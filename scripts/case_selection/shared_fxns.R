@@ -294,15 +294,19 @@ remap_patient_characteristics <- function(clinical, existing_patients, ethnicity
 #' @param data The data frame to check against
 #' @param columns The target columns
 check_for_missing_values <- function(data, columns) {
-  # filter out CHOP, PROV, JHU centers with known NAs
-  data <- data[!grepl("CHOP|PROV|JHU", data$genie_patient_id), ]
   # Check for NA values or empty strings
   missingness_col <- c()
   for (col in columns) {
-    if (any(is.na(data[[col]]) | data[[col]] == "" )){
+    if (col %in% c("naaccr_race_code_tertiary", "naaccr_race_code_secondary")) {
+      # filter out CHOP, PROV, JHU centers with known NAs in NAACCR code columns
+      relevant_rows <- data[!grepl("CHOP|PROV|JHU", data$genie_patient_id), ]
+    } else{
+      relevant_rows <- data
+    }
+    if (any(is.na(relevant_rows[[col]]) | relevant_rows[[col]] == "" )){
       missingness_col <- c(col, missingness_col)
     }
-  }
+    }
   if (length(missingness_col) > 0) {
     warning(paste0("Warning: Missing or empty values found in column(s): ", paste(missingness_col,collapse=", ")))
     }
