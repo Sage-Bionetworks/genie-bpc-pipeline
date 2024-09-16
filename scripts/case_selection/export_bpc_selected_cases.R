@@ -84,7 +84,7 @@ print("get clinical data")
 sex_mapping <- synTableQuery("SELECT * FROM syn7434222")$asDataFrame()
 race_mapping <- synTableQuery("SELECT * FROM syn7434236")$asDataFrame()
 ethnicity_mapping <- synTableQuery("SELECT * FROM syn7434242")$asDataFrame()
-# sample_type_mapping <- synTableQuery("SELECT * FROM syn7434273")$asDataFrame()
+#sample_type_mapping <- synTableQuery("SELECT * FROM syn7434273")$asDataFrame()
 
 # output setup
 phase_no_space <- sub(" ","_",sub(" ","",phase))
@@ -120,35 +120,23 @@ existing_patients = selected_cases[selected_cases %in% clinical$patient_id]
 samples_per_patient <- clinical$sample_id[clinical$patient_id %in% selected_cases]
 
 print("map data for each instrument")
-# mapping data for each instrument
 # instrument - patient_characteristics
-patient_output <- data.frame("record_id" = existing_patients)
-patient_output$redcap_repeat_instrument <- rep("")
-patient_output$redcap_repeat_instance <- rep("")
+patient_output <- remap_patient_characteristics(clinical, existing_patients, ethnicity_mapping, race_mapping, sex_mapping)
+# check missing values
+# get naaccr code columns
+naaccr_col <- grep("naaccr", colnames(patient_output), value = TRUE)
+# error out if NAs or empty strings are detected in naaccr code columns
+check_for_missing_values(patient_output, naaccr_col)
 
-patient_output$genie_patient_id <- patient_output$record_id
-patient_output$birth_year <- clinical$birth_year[match(patient_output$genie_patient_id, clinical$patient_id)]
-patient_output$naaccr_ethnicity_code <- clinical$ethnicity[match(patient_output$genie_patient_id, clinical$patient_id)]
-patient_output$naaccr_race_code_primary <- clinical$primary_race[match(patient_output$genie_patient_id, clinical$patient_id)]
-patient_output$naaccr_race_code_secondary <- clinical$secondary_race[match(patient_output$genie_patient_id, clinical$patient_id)]
-patient_output$naaccr_race_code_tertiary <- clinical$tertiary_race[match(patient_output$genie_patient_id, clinical$patient_id)]
-patient_output$naaccr_sex_code <- clinical$sex[match(patient_output$genie_patient_id, clinical$patient_id)]
-
-# mapping to code
-patient_output$naaccr_ethnicity_code <- ethnicity_mapping$CODE[match(patient_output$naaccr_ethnicity_code, ethnicity_mapping$CBIO_LABEL)]
-patient_output$naaccr_race_code_primary <- race_mapping$CODE[match(patient_output$naaccr_race_code_primary, race_mapping$CBIO_LABEL)]
-patient_output$naaccr_race_code_secondary <- race_mapping$CODE[match(patient_output$naaccr_race_code_secondary, race_mapping$CBIO_LABEL)]
-patient_output$naaccr_race_code_tertiary <- race_mapping$CODE[match(patient_output$naaccr_race_code_tertiary, race_mapping$CBIO_LABEL)]
-patient_output$naaccr_sex_code <- sex_mapping$CODE[match(patient_output$naaccr_sex_code,sex_mapping$CBIO_LABEL)]
 print("recode")
 # recode
 # cannotReleaseHIPAA = NA
 patient_output$birth_year[which(patient_output$birth_year == "cannotReleaseHIPAA")] <- NA
-# -1 Not collected = 9 Unknown
+# -1 Not collected = 9 Unknown whether Spanish or not
 patient_output$naaccr_ethnicity_code[which(patient_output$naaccr_ethnicity_code == -1)] <- 9
-# -1 Not collected = 99 Unknown
+# -1 Not collected = 99 Unknown by patient
 patient_output$naaccr_race_code_primary[which(patient_output$naaccr_race_code_primary == -1)] <- 99
-# -1 Not collected = 88 according to NAACCR
+# -1 Not collected = 88 No further race documented according to NAACCR
 patient_output$naaccr_race_code_secondary[which(patient_output$naaccr_race_code_secondary == -1)] <- 88
 patient_output$naaccr_race_code_tertiary[which(patient_output$naaccr_race_code_tertiary == -1)] <- 88
 

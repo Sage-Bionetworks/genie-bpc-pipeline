@@ -256,3 +256,58 @@ get_main_genie_clinical_id <- function(release){
   }
   return(NULL)
 }
+
+#'  Mapping data for patient_characteristics
+#' 
+#' @param clinical A data frame of released clinical data for selected cases
+#' @param existing_patients A data frame of available patient after case selection
+#' @param ethnicity_mapping The NAACCR_ETHNICITY_MAPPING data frame
+#' @param race_mapping The NAACCR_RACE_MAPPING data frame
+#' @param sex_mapping The NAACCR_SEX_MAPPING data frame
+#' @return A data frame with mapped code
+remap_patient_characteristics <- function(clinical, existing_patients, ethnicity_mapping, race_mapping, sex_mapping){
+  
+  patient_df <- data.frame("record_id" = existing_patients)
+  patient_df$redcap_repeat_instrument <- rep("")
+  patient_df$redcap_repeat_instance <- rep("")
+  
+  patient_df$genie_patient_id <- patient_df$record_id
+  patient_df$birth_year <- clinical$birth_year[match(patient_df$genie_patient_id, clinical$patient_id)]
+  patient_df$naaccr_ethnicity_code <- clinical$ethnicity_detailed[match(patient_df$genie_patient_id, clinical$patient_id)]
+  patient_df$naaccr_race_code_primary <- clinical$primary_race_detailed[match(patient_df$genie_patient_id, clinical$patient_id)]
+  patient_df$naaccr_race_code_secondary <- clinical$secondary_race_detailed[match(patient_df$genie_patient_id, clinical$patient_id)]
+  patient_df$naaccr_race_code_tertiary <- clinical$tertiary_race_detailed[match(patient_df$genie_patient_id, clinical$patient_id)]
+  patient_df$naaccr_sex_code <- clinical$sex_detailed[match(patient_df$genie_patient_id, clinical$patient_id)]
+  
+  # mapping to code
+  patient_df$naaccr_ethnicity_code <- ethnicity_mapping$CODE[match(patient_df$naaccr_ethnicity_code, ethnicity_mapping$DESCRIPTION)]
+  patient_df$naaccr_race_code_primary <- race_mapping$CODE[match(patient_df$naaccr_race_code_primary, race_mapping$DESCRIPTION)]
+  patient_df$naaccr_race_code_secondary <- race_mapping$CODE[match(patient_df$naaccr_race_code_secondary, race_mapping$DESCRIPTION)]
+  patient_df$naaccr_race_code_tertiary <- race_mapping$CODE[match(patient_df$naaccr_race_code_tertiary, race_mapping$DESCRIPTION)]
+  patient_df$naaccr_sex_code <- sex_mapping$CODE[match(patient_df$naaccr_sex_code,sex_mapping$DESCRIPTION)]
+
+  return(patient_df)
+}
+
+#' Check for missing values in naaccr columns
+#'
+#' @param data The data frame to check against
+#' @param columns The target columns
+check_for_missing_values <- function(data, columns) {
+  # Check for NA values or empty strings
+  missingness_col <- c()
+  for (col in columns) {
+    if (col %in% c("naaccr_race_code_tertiary", "naaccr_race_code_secondary")) {
+      # filter out CHOP, PROV, JHU centers with known NAs in NAACCR code columns
+      relevant_rows <- data[!grepl("CHOP|PROV|JHU", data$genie_patient_id), ]
+    } else{
+      relevant_rows <- data
+    }
+    if (any(is.na(relevant_rows[[col]]) | relevant_rows[[col]] == "" )){
+      missingness_col <- c(col, missingness_col)
+    }
+    }
+  if (length(missingness_col) > 0) {
+    warning(paste0("Warning: Missing or empty values found in column(s): ", paste(missingness_col,collapse=", ")))
+    }
+}
