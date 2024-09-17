@@ -44,6 +44,14 @@ Example cleaned output:
 image_casite6,prissmm_imaging,,dropdown,"Where is the cancer located? Cancer Site 6", ...
 """
 def clean_multiline_content(file_content):
+    """
+    Function to clean up the multiline content while preserving specific rows
+    Example multiline input:
+    image_casite6,prissmm_imaging,,dropdown,"Where is the cancer located?
+    Cancer Site 6", ...
+    Example cleaned output:
+    image_casite6,prissmm_imaging,,dropdown,"Where is the cancer located? Cancer Site 6", ...
+    """
     cleaned_lines = []
     temp_line = ''
     inside_quotes = False
