@@ -512,20 +512,20 @@ phase:
         name: MELANOMA
         site: 
           DFCI:
-            production: 300
-            adjusted: 300
+            production: 362
+            adjusted: 362
             irr: 0
           MSK:
-            production: 500
-            adjusted: 500
+            production: 561
+            adjusted: 561
             irr: 0
           PROV:
             production: 103
             adjusted: 103
             irr: 0
           UCSF:
-            production: 103
-            adjusted: 103
+            production: 45
+            adjusted: 45
             irr: 0
           UHN:
             production: 40
@@ -541,13 +541,13 @@ phase:
           #VHIO:
           #  production: 0
           #  adjusted: 0
-          WAKE:
-            production: 29
-            adjusted: 29
-            irr: 0
+          #WAKE:
+          #  production: 0
+          #  adjusted: 0
+          #  irr: 0
         date: 
           seq_min: Oct-2017
-          seq_max: Oct-2022
+          seq_max: Apr-2022
         oncotree:
           root: MEL
           allowed_codes: 
