@@ -3,7 +3,7 @@ import sys
 
 import pandas
 import synapseclient
-from synapseclient import Schema, Column, Table
+from synapseclient import Schema, Table, as_table_columns
 
 def _is_float(val):
     """Check if the value is float
@@ -135,3 +135,100 @@ def revert_table_version(syn, table_id):
     table_query = syn.tableQuery("SELECT * from %s" % table_id)
     syn.delete(table_query.asRowSet())
     syn.store(Table(table_schema, temp_data))
+
+
+def store_cohort_data(syn, table_type, data, schema, cohort, dry_run, production, config):
+    """Truncate and save record for a cohort
+
+    Args:
+        syn (synapseclient.Synapse): Synapse client connection
+        table_type (string): Table type, primary or irr
+        data (pandas.DataFrame): The data to be stored
+        schema (Schema): The table schema of the table in the production project
+        cohort (string): Cohort name
+        dry_run (bool): The dry run flag. If True, perform a dry run.
+        production (bool): If True, save the output to the production environment.
+        config (dict): config read in    
+    """
+    table_query = syn.tableQuery(f"SELECT * FROM {schema.id} where cohort = '{cohort}'")
+
+    if table_type == "irr":
+        # check for exsiting id to update for new data only
+        existing_records = list(set(table_query.asDataFrame()["record_id"]))
+        data = data[~data["record_id"].isin(existing_records)]
+    if not dry_run:
+        # save to synapse
+        if table_type == "primary":
+            # wipe out cohort data
+            syn.delete(table_query)
+        if production:
+            # save to production project
+            syn.store(Table(schema, data))
+        else:
+            # save to staging project
+            table_schema = Schema(name=schema.name, columns=as_table_columns(data), primary_key= schema.primary_key, data_type= schema.data_type, table_type = schema.table_type, form = schema.form, form_label = schema.form_label, parent=config['staging_project'])
+            syn.store(Table(table_schema, data))
+    else:
+        # save to local
+        data.to_csv(schema.id + "_temp.csv")
+
+
+def store_cohort_redacted_data(syn, data, schema, cohort, dry_run, production, config):
+    """Store redacted tables for a cohort
+
+    Args:
+        syn (synapseclient.Synapse): Synapse client connection
+        data (pandas.DataFrame): The data to be stored
+        schema (Schema): The table schema of the table in the production project
+        cohort (string): Cohort name
+        dry_run (bool): The dry run flag. If True, perform a dry run.
+        production (bool): If True, save the output to the production environment.
+        config (dict): config read in  
+    """
+    table_query = syn.tableQuery(f"SELECT * FROM {schema.id} where cohort = '{cohort}'")
+
+    if not dry_run:
+        # save to synapse
+        # wipe out cohort data
+        syn.delete(table_query)
+        if production:
+            # save to production project
+            syn.store(Table(schema, data))
+        else:
+            # save to staging project
+            table_schema = Schema(name=schema.name, columns=as_table_columns(data), primary_key= schema.primary_key, data_type= schema.data_type, table_type = schema.table_type, form = schema.form, form_label = schema.form_label, parent=config['staging_project'])
+            syn.store(Table(table_schema, data))
+    else:
+        # save to local
+        data.to_csv(schema.id + "_temp.csv")
+
+
+def update_redacted_column(syn, schema, data, redacted_column, table_query, dry_run, production, config):
+    """Update redacted column in a table
+
+    Args:
+        syn (synapseclient.Synapse): Synapse client connection
+        schema (Schema): The table schema of the table in the production project
+        data (pandas.DataFrame): The data to be stored
+        redacted_column (pandas.Series): The redacted column
+        table_query (synapseclient.table.CsvFileTable): The synapseclient.table.CsvFileTable object
+        dry_run (bool): The dry run flag. If True, perform a dry run.
+        production (bool): If True, save the output to the production environment.
+        config (dict): config read in  
+    """
+    if not dry_run:
+        # save to synapse
+        if production:
+            # save to production project
+            syn.store(Table(schema, redacted_column, etag = table_query.etag))
+        else:
+            # save to staging project
+            # get the table id
+            table_id = syn.findEntityId(schema.name, parent=config['staging_project'])
+            schema = syn.get(table_id)
+            table_query = syn.tableQuery(f"SELECT cohort, record_id FROM {table_id}")
+            syn.store(Table(schema, redacted_column, etag= table_query.etag))
+    else:
+        # save to local
+        data["redacted"] = redacted_column
+        data.to_csv(schema.id + "_temp.csv")

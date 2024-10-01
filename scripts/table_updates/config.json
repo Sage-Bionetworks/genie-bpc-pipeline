@@ -21,5 +21,6 @@
     },
     "main_genie_release_version": "16.6-consortium",
     "main_genie_data_release_files": "syn16804261",
-    "main_genie_sample_mapping_table": "syn7434273"
+    "main_genie_sample_mapping_table": "syn7434273",
+    "staging_project": "syn63600793"
 }

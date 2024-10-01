@@ -28,7 +28,11 @@ TABLE_INFO = {
     "primary": ("syn23285911", "table_type='data'"),
     "irr": ("syn21446696", "table_type='data' and double_curated is true"),
 }
-
+    # This contains external tables with redacted
+    TABLE_INFO["redacted"] = (
+        "syn21446696",
+        "table_type='data' and double_curated is false",
+    )
 
 def get_main_genie_clinical_sample_file(
     syn: synapseclient.Synapse,
@@ -70,9 +74,23 @@ def get_main_genie_clinical_sample_file(
     return clinical_df[["SAMPLE_ID", "SEQ_YEAR"]]
 
 
-def _store_data(syn, table_id, label_data, table_type, logger, dry_run):
+def _store_data(syn, table_id, label_data, table_type, cohort, logger, dry_run, production, config):
+    """Helper function to store data to each table in the master table.
+
+    Args:
+        syn (synapseclient.Synapse): Synapse client connection
+        master_table (pandas.DataFrame): Table of all of the primary or irr BPC tables
+        label_data (pandas.DataFrame): The uploaded data
+        table_type (string): Table type, primary or irr
+        cohort (string): Cohort name
+        logger (logging.Logger): The custom logger. Optional.
+        dry_run (bool): The dry run flag. If True, perform a dry run.
+        production (bool): If True, save the output to the production environment.
+        config (dict): config read in
+    """
     table_schema = syn.get(table_id)
     logger.info(f"Updating table: {table_schema.name} {table_id}")
+    # subset columns for the uploaded data
     form_label = table_schema.form_label[0]
     table_columns = syn.getColumns(table_schema.columnIds)
     table_columns = [col["name"] for col in list(table_columns)]
@@ -81,6 +99,7 @@ def _store_data(syn, table_id, label_data, table_type, logger, dry_run):
     )  # variable in dd but not in data
     table_columns.append("redcap_repeat_instrument")
     temp_data = label_data[table_columns]
+    # subset the uploaded data based on form_label
     if form_label == "non-repeating":
         temp_data = temp_data[temp_data.redcap_repeat_instrument.isnull()]
     else:
@@ -104,23 +123,26 @@ def _store_data(syn, table_id, label_data, table_type, logger, dry_run):
     # remove .0 from all columns
     temp_data = temp_data.applymap(lambda x: float_to_int(x))
     # update table
-    table_query = syn.tableQuery("SELECT * from %s" % table_id)
-    if table_type == "irr":
-        # check for exsiting id to update for new data only
-        existing_records = list(set(table_query.asDataFrame()["record_id"]))
-        temp_data = temp_data[~temp_data["record_id"].isin(existing_records)]
-    if not dry_run:
-        if table_type == "primary":
-            table = syn.delete(table_query.asRowSet())  # wipe the table
-        table = syn.store(Table(table_schema, temp_data))
-    else:
-        temp_data.to_csv(table_id + "_temp.csv")
+    store_cohort_data(syn, table_type, temp_data, table_schema, cohort, dry_run, production, config)
 
 
-def store_data(syn, master_table, label_data, table_type, logger, dry_run):
+def store_data(syn, master_table, label_data, table_type, cohort, logger, dry_run, production, config):
+    """Store data to each table in the master table.
+
+    Args:
+        syn (synapseclient.Synapse): Synapse client connection
+        master_table (pandas.DataFrame): Table of all of the primary or irr BPC tables
+        label_data (pandas.DataFrame): The uploaded data
+        table_type (string): Table type, primary or irr
+        cohort (string): Cohort name
+        logger (logging.Logger): The custom logger. Optional.
+        dry_run (bool): The dry run flag. If True, perform a dry run.
+        production (bool): If True, save the output to the production environment.
+        config (dict): config read in
+    """
     logger.info("Updating data for %s tables..." % table_type)
     for table_id in master_table["id"]:
-        _store_data(syn, table_id, label_data, table_type, logger, dry_run)
+        _store_data(syn, table_id, label_data, table_type, cohort, logger, dry_run, production, config)
 
 
 def get_phi_cutoff(unit):
@@ -218,7 +240,19 @@ def _redact_table(df, interval_cols_info):
     return df, record_to_redact
 
 
-def update_redact_table(syn, redacted_table_info, full_data_table_info, logger):
+def update_redact_table(syn, redacted_table_info, full_data_table_info, cohort, logger, dry_run, production, config):
+    """Update redacted table
+
+    Args:
+        syn (synapseclient.Synapse): Synapse client connection
+        redacted_table_info (pandas.DataFrame): Table of all of the redacted tables
+        full_data_table_info (pandas.DataFrame): Table of all of the primary or irr BPC tables
+        cohort (string): Cohort name
+        logger (logging.Logger): The custom logger. Optional.
+        dry_run (bool): The dry run flag. If True, perform a dry run.
+        production (bool): If True, save the output to the production environment.
+        config (dict): config read in
+    """
     interval_cols_info = download_synapse_table(syn, "syn23281483", "")
     # Create new master table
     master_table = redacted_table_info.merge(
@@ -235,14 +269,13 @@ def update_redact_table(syn, redacted_table_info, full_data_table_info, logger):
         master_table["name"] == "Cancer Panel Test", "id_full"
     ].values[0]
     curation_info = syn.tableQuery(
-        "SELECT record_id, curation_dt FROM %s" % curation_table_id
+        f"SELECT record_id, curation_dt FROM {curation_table_id} where cohort = '{cohort}'"
     ).asDataFrame()
     patient_info = syn.tableQuery(
-        "SELECT record_id, birth_year, hybrid_death_ind FROM %s" % patient_table_id
+        f"SELECT record_id, birth_year, hybrid_death_ind FROM {patient_table_id} where cohort = '{cohort}'"
     ).asDataFrame()
     sample_info = syn.tableQuery(
-        "SELECT record_id, cpt_genie_sample_id, age_at_seq_report FROM %s"
-        % sample_table_id
+        f"SELECT record_id, cpt_genie_sample_id, age_at_seq_report FROM {sample_table_id} where cohort = '{cohort}'"
     ).asDataFrame()
     patient_curation_info = patient_info.merge(
         curation_info, how="left", on="record_id"
@@ -268,17 +301,16 @@ def update_redact_table(syn, redacted_table_info, full_data_table_info, logger):
     for _, row in master_table.iterrows():
         if row["name"] != "Patient Characteristics":
             table_id = row["id_full"]
-            df = syn.tableQuery("SELECT * FROM %s" % table_id).asDataFrame()
+            df = syn.tableQuery(f"SELECT * FROM {table_id} where cohort = '{cohort}'").asDataFrame()
             new_df, new_record_to_redact = _redact_table(df, interval_cols_info)
             new_df.reset_index(drop=True, inplace=True)
             record_to_redact = record_to_redact + new_record_to_redact
             table_schema = syn.get(row["id_redacted"])
             logger.info("Updating table: %s" % table_schema.name)
-            table_query = syn.tableQuery("SELECT * from %s" % row["id_redacted"])
-            table = syn.delete(table_query.asRowSet())  # wipe the table
-            table = syn.store(Table(table_schema, new_df))
-    # Modify patient table
-    df = syn.tableQuery("SELECT * FROM %s" % patient_table_id).asDataFrame()
+            store_cohort_redacted_data(syn, new_df, table_schema, cohort, dry_run, production, config)
+
+    # Modify patient table separately 
+    df = syn.tableQuery(f"SELECT * FROM {patient_table_id} where cohort = '{cohort}'").asDataFrame()
     new_df, new_record_to_redact = _redact_table(df, interval_cols_info)
     new_df.reset_index(drop=True, inplace=True)
     record_to_redact = record_to_redact + new_record_to_redact
@@ -293,16 +325,18 @@ def update_redact_table(syn, redacted_table_info, full_data_table_info, logger):
         master_table["name"] == "Patient Characteristics", "id_redacted"
     ].values[0]
     table_schema = syn.get(redacted_patient_id)
-    table_query = syn.tableQuery("SELECT * from %s" % redacted_patient_id)
-    table = syn.delete(table_query.asRowSet())  # wipe the table
-    table = syn.store(Table(table_schema, new_df))
+    # rename the table to distiguish it from full data patient table in Staging project
+    if not production:
+        table_schema["name"] = "Patient Characteristics Redacted"
+    store_cohort_redacted_data(syn, new_df, table_schema, cohort, dry_run, production, config)
+
     # Update redacted column in full data patient table
-    logger.info("Updating redacted column in the internal table...")
+    logger.info("Updating redacted column in the Sage internal table...")
     full_pt_id = master_table.loc[
         master_table["name"] == "Patient Characteristics", "id_full"
     ].values[0]
     full_pt_schema = syn.get(full_pt_id)
-    pt_dat_query = syn.tableQuery("SELECT cohort, record_id FROM %s" % full_pt_id)
+    pt_dat_query = syn.tableQuery(f"SELECT cohort, record_id FROM {full_pt_id} where cohort = '{cohort}'")
     pt_dat = pt_dat_query.asDataFrame()
     pt_dat.index = pt_dat.index.map(str)
     pt_dat["index"] = pt_dat.index
@@ -310,8 +344,7 @@ def update_redact_table(syn, redacted_table_info, full_data_table_info, logger):
     result = pandas.merge(pt_dat, info_to_update, on=["cohort", "record_id"])
     result.index = result["index"]
     result = result[["redacted"]]
-    syn.store(Table(full_pt_schema, result, etag=pt_dat_query.etag))
-
+    update_redacted_column(syn, full_pt_schema, pt_dat, result, pt_dat_query, dry_run, production, config)
 
 def custom_fix_for_cancer_panel_test_table(
     syn: synapseclient.Synapse,
@@ -399,6 +432,8 @@ def main():
     parser.add_argument(
         "-p", "--project_config", default="config.json", help="Project config file"
     )
+    parser.add_argument("-c", "--cohort", default="", help="Cohort name for which the tables should be updated")
+    parser.add_argument("-pd", "--production", action="store_true", help="Save output to production folder")
     parser.add_argument("-m", "--message", default="", help="Version comment")
     parser.add_argument("-d", "--dry_run", action="store_true", help="dry run flag")
 
@@ -406,6 +441,8 @@ def main():
     table_type = args.table
     synapse_config = args.synapse_config
     project_config = args.project_config
+    cohort = args.cohort
+    production = args.production
     comment = args.message
     dry_run = args.dry_run
 
@@ -426,26 +463,17 @@ def main():
     # This is the internal tables with non redacted
     table_id, condition = list(TABLE_INFO[table_type])
     master_table = download_synapse_table(syn, table_id, condition)
-    # This contains external tables with redacted
-    TABLE_INFO["redacted"] = (
-        "syn21446696",
-        "table_type='data' and double_curated is false",
-    )
 
     # download data files
     # TODO: find the cohort that has new data
     # This is a mapping to all the intake data. e.g: ProstateBPCIntake_data
     # found here: https://www.synapse.org/Synapse:syn23286928
     cohort_info_selected = config[table_type]
-    cohort_data_list = []
-    for cohort in cohort_info_selected:
-        df = get_data(syn, cohort_info_selected[cohort], cohort)
-        cohort_data_list.append(df)
-    label_data = pandas.concat(cohort_data_list, axis=0, ignore_index=True)
+    label_data = get_data(syn, cohort_info_selected[cohort], cohort)
     label_data["redacted"] = numpy.nan
 
     # update data tables
-    store_data(syn, master_table, label_data, table_type, logger, dry_run)
+    store_data(syn, master_table, label_data, table_type, cohort, logger, dry_run, production, config)
     if not dry_run:
         custom_fix_for_cancer_panel_test_table(syn, master_table, logger, config)
         if table_type == "primary":
