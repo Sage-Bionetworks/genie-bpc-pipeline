@@ -19,20 +19,20 @@ import datetime
 import json
 import math
 
-import pandas
 import numpy
-
+import pandas
 from utilities import *
 
 TABLE_INFO = {
+    "production" : {
     "primary": ("syn23285911", "table_type='data'"),
     "irr": ("syn21446696", "table_type='data' and double_curated is true"),
+    "redacted" : ("syn21446696", "table_type='data' and double_curated is false")
+}, "staging" : {
+    "primary": ("syn63616766", "table_type='data'"),
+    "redacted" : ("syn63617582", "table_type='data' and double_curated is false")
 }
-    # This contains external tables with redacted
-    TABLE_INFO["redacted"] = (
-        "syn21446696",
-        "table_type='data' and double_curated is false",
-    )
+}
 
 def get_main_genie_clinical_sample_file(
     syn: synapseclient.Synapse,
@@ -74,7 +74,7 @@ def get_main_genie_clinical_sample_file(
     return clinical_df[["SAMPLE_ID", "SEQ_YEAR"]]
 
 
-def _store_data(syn, table_id, label_data, table_type, cohort, logger, dry_run, production, config):
+def _store_data(syn, table_id, label_data, table_type, cohort, logger, dry_run):
     """Helper function to store data to each table in the master table.
 
     Args:
@@ -123,10 +123,19 @@ def _store_data(syn, table_id, label_data, table_type, cohort, logger, dry_run, 
     # remove .0 from all columns
     temp_data = temp_data.applymap(lambda x: float_to_int(x))
     # update table
-    store_cohort_data(syn, table_type, temp_data, table_schema, cohort, dry_run, production, config)
+    table_query = syn.tableQuery(f"SELECT * FROM {table_schema.id} where cohort = '{cohort}'")
+    if table_type == "irr":
+        # check for exsiting id to update for new data only
+        existing_records = list(set(table_query.asDataFrame()["record_id"]))
+        temp_data = temp_data[~temp_data["record_id"].isin(existing_records)]
+    if not dry_run:
+        if table_type == "primary":
+            table = syn.delete(table_query)  # wipe the cohort data
+        table = syn.store(Table(table_schema, temp_data))
+    else:
+        temp_data.to_csv(table_id + "_temp.csv")
 
-
-def store_data(syn, master_table, label_data, table_type, cohort, logger, dry_run, production, config):
+def store_data(syn, master_table, label_data, table_type, cohort, logger, dry_run):
     """Store data to each table in the master table.
 
     Args:
@@ -142,8 +151,7 @@ def store_data(syn, master_table, label_data, table_type, cohort, logger, dry_ru
     """
     logger.info("Updating data for %s tables..." % table_type)
     for table_id in master_table["id"]:
-        _store_data(syn, table_id, label_data, table_type, cohort, logger, dry_run, production, config)
-
+        _store_data(syn, table_id, label_data, table_type, cohort, logger, dry_run)
 
 def get_phi_cutoff(unit):
     switcher = {"day": math.floor(89 * 365), "month": math.floor(89 * 12), "year": 89}
@@ -240,7 +248,7 @@ def _redact_table(df, interval_cols_info):
     return df, record_to_redact
 
 
-def update_redact_table(syn, redacted_table_info, full_data_table_info, cohort, logger, dry_run, production, config):
+def update_redact_table(syn, redacted_table_info, full_data_table_info, cohort, logger, dry_run):
     """Update redacted table
 
     Args:
@@ -307,9 +315,11 @@ def update_redact_table(syn, redacted_table_info, full_data_table_info, cohort, 
             record_to_redact = record_to_redact + new_record_to_redact
             table_schema = syn.get(row["id_redacted"])
             logger.info("Updating table: %s" % table_schema.name)
-            store_cohort_redacted_data(syn, new_df, table_schema, cohort, dry_run, production, config)
+            table_query = syn.tableQuery(f"SELECT * from {table_schema.id} where cohort = '{cohort}'")
+            table = syn.delete(table_query)  # wipe the table
+            table = syn.store(Table(table_schema, new_df))
 
-    # Modify patient table separately 
+    # Modify patient table
     df = syn.tableQuery(f"SELECT * FROM {patient_table_id} where cohort = '{cohort}'").asDataFrame()
     new_df, new_record_to_redact = _redact_table(df, interval_cols_info)
     new_df.reset_index(drop=True, inplace=True)
@@ -325,11 +335,9 @@ def update_redact_table(syn, redacted_table_info, full_data_table_info, cohort, 
         master_table["name"] == "Patient Characteristics", "id_redacted"
     ].values[0]
     table_schema = syn.get(redacted_patient_id)
-    # rename the table to distiguish it from full data patient table in Staging project
-    if not production:
-        table_schema["name"] = "Patient Characteristics Redacted"
-    store_cohort_redacted_data(syn, new_df, table_schema, cohort, dry_run, production, config)
-
+    table_query = syn.tableQuery(f"SELECT * from {redacted_patient_id} where cohort = '{cohort}'")
+    table = syn.delete(table_query) # wipe the table
+    table = syn.store(Table(table_schema, new_df))
     # Update redacted column in full data patient table
     logger.info("Updating redacted column in the Sage internal table...")
     full_pt_id = master_table.loc[
@@ -344,7 +352,8 @@ def update_redact_table(syn, redacted_table_info, full_data_table_info, cohort, 
     result = pandas.merge(pt_dat, info_to_update, on=["cohort", "record_id"])
     result.index = result["index"]
     result = result[["redacted"]]
-    update_redacted_column(syn, full_pt_schema, pt_dat, result, pt_dat_query, dry_run, production, config)
+    syn.store(Table(full_pt_schema, result, etag=pt_dat_query.etag))
+
 
 def custom_fix_for_cancer_panel_test_table(
     syn: synapseclient.Synapse,
@@ -461,9 +470,12 @@ def main():
 
     # get master table
     # This is the internal tables with non redacted
+    if production: 
+        TABLE_INFO = TABLE_INFO["production"]
+    else:
+        TABLE_INFO = TABLE_INFO["staging"]
     table_id, condition = list(TABLE_INFO[table_type])
     master_table = download_synapse_table(syn, table_id, condition)
-
     # download data files
     # TODO: find the cohort that has new data
     # This is a mapping to all the intake data. e.g: ProstateBPCIntake_data
@@ -473,7 +485,7 @@ def main():
     label_data["redacted"] = numpy.nan
 
     # update data tables
-    store_data(syn, master_table, label_data, table_type, cohort, logger, dry_run, production, config)
+    store_data(syn, master_table, label_data, table_type, cohort, logger, dry_run)
     if not dry_run:
         custom_fix_for_cancer_panel_test_table(syn, master_table, logger, config)
         if table_type == "primary":
