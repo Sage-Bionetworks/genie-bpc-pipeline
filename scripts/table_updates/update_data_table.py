@@ -24,15 +24,17 @@ import pandas
 from utilities import *
 
 TABLE_INFO = {
-    "production" : {
-    "primary": ("syn23285911", "table_type='data'"),
-    "irr": ("syn21446696", "table_type='data' and double_curated is true"),
-    "redacted" : ("syn21446696", "table_type='data' and double_curated is false")
-}, "staging" : {
-    "primary": ("syn63616766", "table_type='data'"),
-    "redacted" : ("syn63617582", "table_type='data' and double_curated is false")
+    "production": {
+        "primary": ("syn23285911", "table_type='data'"),
+        "irr": ("syn21446696", "table_type='data' and double_curated is true"),
+        "redacted": ("syn21446696", "table_type='data' and double_curated is false"),
+    },
+    "staging": {
+        "primary": ("syn63616766", "table_type='data'"),
+        "redacted": ("syn63617582", "table_type='data' and double_curated is false"),
+    },
 }
-}
+
 
 def get_main_genie_clinical_sample_file(
     syn: synapseclient.Synapse,
@@ -121,7 +123,9 @@ def _store_data(syn, table_id, label_data, table_type, cohort, logger, dry_run):
     # remove .0 from all columns
     temp_data = temp_data.applymap(lambda x: float_to_int(x))
     # update table
-    table_query = syn.tableQuery(f"SELECT * FROM {table_schema.id} where cohort = '{cohort}'")
+    table_query = syn.tableQuery(
+        f"SELECT * FROM {table_schema.id} where cohort = '{cohort}'"
+    )
     if table_type == "irr":
         # check for exsiting id to update for new data only
         existing_records = list(set(table_query.asDataFrame()["record_id"]))
@@ -132,6 +136,7 @@ def _store_data(syn, table_id, label_data, table_type, cohort, logger, dry_run):
         table = syn.store(Table(table_schema, temp_data))
     else:
         temp_data.to_csv(table_id + "_temp.csv")
+
 
 def store_data(syn, master_table, label_data, table_type, cohort, logger, dry_run):
     """Store data to each table in the master table.
@@ -148,6 +153,7 @@ def store_data(syn, master_table, label_data, table_type, cohort, logger, dry_ru
     logger.info("Updating data for %s tables..." % table_type)
     for table_id in master_table["id"]:
         _store_data(syn, table_id, label_data, table_type, cohort, logger, dry_run)
+
 
 def get_phi_cutoff(unit):
     switcher = {"day": math.floor(89 * 365), "month": math.floor(89 * 12), "year": 89}
@@ -302,18 +308,24 @@ def update_redact_table(syn, redacted_table_info, full_data_table_info, cohort, 
     for _, row in master_table.iterrows():
         if row["name"] != "Patient Characteristics":
             table_id = row["id_full"]
-            df = syn.tableQuery(f"SELECT * FROM {table_id} where cohort = '{cohort}'").asDataFrame()
+            df = syn.tableQuery(
+                f"SELECT * FROM {table_id} where cohort = '{cohort}'"
+            ).asDataFrame()
             new_df, new_record_to_redact = _redact_table(df, interval_cols_info)
             new_df.reset_index(drop=True, inplace=True)
             record_to_redact = record_to_redact + new_record_to_redact
             table_schema = syn.get(row["id_redacted"])
             logger.info("Updating table: %s" % table_schema.name)
-            table_query = syn.tableQuery(f"SELECT * from {table_schema.id} where cohort = '{cohort}'")
+            table_query = syn.tableQuery(
+                f"SELECT * from {table_schema.id} where cohort = '{cohort}'"
+            )
             table = syn.delete(table_query)  # wipe the table
             table = syn.store(Table(table_schema, new_df))
 
     # Modify patient table
-    df = syn.tableQuery(f"SELECT * FROM {patient_table_id} where cohort = '{cohort}'").asDataFrame()
+    df = syn.tableQuery(
+        f"SELECT * FROM {patient_table_id} where cohort = '{cohort}'"
+    ).asDataFrame()
     new_df, new_record_to_redact = _redact_table(df, interval_cols_info)
     new_df.reset_index(drop=True, inplace=True)
     record_to_redact = record_to_redact + new_record_to_redact
@@ -328,8 +340,10 @@ def update_redact_table(syn, redacted_table_info, full_data_table_info, cohort, 
         master_table["name"] == "Patient Characteristics", "id_redacted"
     ].values[0]
     table_schema = syn.get(redacted_patient_id)
-    table_query = syn.tableQuery(f"SELECT * from {redacted_patient_id} where cohort = '{cohort}'")
-    table = syn.delete(table_query) # wipe the table
+    table_query = syn.tableQuery(
+        f"SELECT * from {redacted_patient_id} where cohort = '{cohort}'"
+    )
+    table = syn.delete(table_query)  # wipe the table
     table = syn.store(Table(table_schema, new_df))
     # Update redacted column in full data patient table
     logger.info("Updating redacted column in the Sage internal table...")
@@ -337,7 +351,9 @@ def update_redact_table(syn, redacted_table_info, full_data_table_info, cohort, 
         master_table["name"] == "Patient Characteristics", "id_full"
     ].values[0]
     full_pt_schema = syn.get(full_pt_id)
-    pt_dat_query = syn.tableQuery(f"SELECT cohort, record_id FROM {full_pt_id} where cohort = '{cohort}'")
+    pt_dat_query = syn.tableQuery(
+        f"SELECT cohort, record_id FROM {full_pt_id} where cohort = '{cohort}'"
+    )
     pt_dat = pt_dat_query.asDataFrame()
     pt_dat.index = pt_dat.index.map(str)
     pt_dat["index"] = pt_dat.index
@@ -434,8 +450,18 @@ def main():
     parser.add_argument(
         "-p", "--project_config", default="config.json", help="Project config file"
     )
-    parser.add_argument("-c", "--cohort", default="", help="Cohort name for which the tables should be updated")
-    parser.add_argument("-pd", "--production", action="store_true", help="Save output to production folder")
+    parser.add_argument(
+        "-c",
+        "--cohort",
+        default="",
+        help="Cohort name for which the tables should be updated",
+    )
+    parser.add_argument(
+        "-pd",
+        "--production",
+        action="store_true",
+        help="Save output to production folder",
+    )
     parser.add_argument("-m", "--message", default="", help="Version comment")
     parser.add_argument("-d", "--dry_run", action="store_true", help="dry run flag")
 
@@ -463,7 +489,7 @@ def main():
 
     # get master table
     # This is the internal tables with non redacted
-    if production: 
+    if production:
         TABLE_INFO = TABLE_INFO["production"]
     else:
         TABLE_INFO = TABLE_INFO["staging"]
