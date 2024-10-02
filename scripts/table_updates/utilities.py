@@ -3,7 +3,7 @@ import sys
 
 import pandas
 import synapseclient
-from synapseclient import Schema, Table, as_table_columns
+from synapseclient import Schema, Table
 
 
 def _is_float(val):
