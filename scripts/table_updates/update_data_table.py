@@ -85,8 +85,6 @@ def _store_data(syn, table_id, label_data, table_type, cohort, logger, dry_run):
         cohort (string): Cohort name
         logger (logging.Logger): The custom logger. Optional.
         dry_run (bool): The dry run flag. If True, perform a dry run.
-        production (bool): If True, save the output to the production environment.
-        config (dict): config read in
     """
     table_schema = syn.get(table_id)
     logger.info(f"Updating table: {table_schema.name} {table_id}")
@@ -146,8 +144,6 @@ def store_data(syn, master_table, label_data, table_type, cohort, logger, dry_ru
         cohort (string): Cohort name
         logger (logging.Logger): The custom logger. Optional.
         dry_run (bool): The dry run flag. If True, perform a dry run.
-        production (bool): If True, save the output to the production environment.
-        config (dict): config read in
     """
     logger.info("Updating data for %s tables..." % table_type)
     for table_id in master_table["id"]:
@@ -248,7 +244,7 @@ def _redact_table(df, interval_cols_info):
     return df, record_to_redact
 
 
-def update_redact_table(syn, redacted_table_info, full_data_table_info, cohort, logger, dry_run):
+def update_redact_table(syn, redacted_table_info, full_data_table_info, cohort, logger):
     """Update redacted table
 
     Args:
@@ -257,9 +253,6 @@ def update_redact_table(syn, redacted_table_info, full_data_table_info, cohort, 
         full_data_table_info (pandas.DataFrame): Table of all of the primary or irr BPC tables
         cohort (string): Cohort name
         logger (logging.Logger): The custom logger. Optional.
-        dry_run (bool): The dry run flag. If True, perform a dry run.
-        production (bool): If True, save the output to the production environment.
-        config (dict): config read in
     """
     interval_cols_info = download_synapse_table(syn, "syn23281483", "")
     # Create new master table
