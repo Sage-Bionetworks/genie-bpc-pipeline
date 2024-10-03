@@ -23,7 +23,7 @@ import numpy
 import pandas
 from utilities import *
 
-TABLE_INFO = {
+TABLES = {
     "production": {
         "primary": ("syn23285911", "table_type='data'"),
         "irr": ("syn21446696", "table_type='data' and double_curated is true"),
@@ -439,7 +439,7 @@ def main():
         description="Update data tables on Synapse for BPC databases"
     )
     parser.add_argument(
-        "table", type=str, help="Specify table type to run", choices=TABLE_INFO.keys()
+        "table", type=str, help="Specify table type to run", choices=TABLES["production"].keys()
     )
     parser.add_argument(
         "-s",
@@ -490,9 +490,9 @@ def main():
     # get master table
     # This is the internal tables with non redacted
     if production:
-        TABLE_INFO = TABLE_INFO["production"]
+        TABLE_INFO = TABLES["production"]
     else:
-        TABLE_INFO = TABLE_INFO["staging"]
+        TABLE_INFO = TABLES["staging"]
     table_id, condition = list(TABLE_INFO[table_type])
     master_table = download_synapse_table(syn, table_id, condition)
     # download data files
@@ -511,7 +511,7 @@ def main():
             table_id, condition = list(TABLE_INFO["redacted"])
             redacted_table_info = download_synapse_table(syn, table_id, condition)
             logger.info("Updating redacted tables...")
-            update_redact_table(syn, redacted_table_info, master_table, logger)
+            update_redact_table(syn, redacted_table_info, master_table, cohort, logger)
             logger.info("Updating version for redacted tables")
             for table_id in redacted_table_info["id"]:
                 update_version(syn, table_id, comment)
