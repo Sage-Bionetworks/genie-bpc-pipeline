@@ -76,12 +76,12 @@ def get_main_genie_clinical_sample_file(
     return clinical_df[["SAMPLE_ID", "SEQ_YEAR"]]
 
 
-def _store_data(syn, table_id, label_data, table_type, cohort, logger, dry_run):
+def _store_data(syn: synapseclient.Synapse, table_id: str, label_data: pandas.DataFrame, table_type: str, cohort: str, logger: logging.Logger, dry_run: bool):
     """Helper function to store data to each table in the master table.
 
     Args:
         syn (synapseclient.Synapse): Synapse client connection
-        master_table (pandas.DataFrame): Table of all of the primary or irr BPC tables
+        table_id (string): The table id
         label_data (pandas.DataFrame): The uploaded data
         table_type (string): Table type, primary or irr
         cohort (string): Cohort name
@@ -138,7 +138,7 @@ def _store_data(syn, table_id, label_data, table_type, cohort, logger, dry_run):
         temp_data.to_csv(table_id + "_temp.csv")
 
 
-def store_data(syn, master_table, label_data, table_type, cohort, logger, dry_run):
+def store_data(syn: synapseclient.Synapse, master_table: pandas.DataFrame, label_data: pandas.DataFrame, table_type: str, cohort: str, logger: logging.Logger, dry_run: bool):
     """Store data to each table in the master table.
 
     Args:
@@ -153,7 +153,6 @@ def store_data(syn, master_table, label_data, table_type, cohort, logger, dry_ru
     logger.info("Updating data for %s tables..." % table_type)
     for table_id in master_table["id"]:
         _store_data(syn, table_id, label_data, table_type, cohort, logger, dry_run)
-
 
 def get_phi_cutoff(unit):
     switcher = {"day": math.floor(89 * 365), "month": math.floor(89 * 12), "year": 89}
@@ -250,7 +249,7 @@ def _redact_table(df, interval_cols_info):
     return df, record_to_redact
 
 
-def update_redact_table(syn, redacted_table_info, full_data_table_info, cohort, logger):
+def update_redact_table(syn: synapseclient.Synapse, redacted_table_info: pandas.DataFrame, full_data_table_info: pandas.DataFrame, cohort: str, logger: logging.Logger):
     """Update redacted table
 
     Args:
