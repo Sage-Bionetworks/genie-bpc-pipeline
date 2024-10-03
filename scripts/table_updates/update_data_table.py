@@ -79,6 +79,16 @@ def get_main_genie_clinical_sample_file(
 def _store_data(syn: synapseclient.Synapse, table_id: str, label_data: pandas.DataFrame, table_type: str, cohort: str, logger: logging.Logger, dry_run: bool):
     """Helper function to store data to each table in the master table.
 
+    Before uploading data to the Synapse table, the provided label data is filtered 
+    based on matching columns between the label data and the table schema, as well 
+    as the form_label. Data cleansing, including the removal of rows with no data 
+    and the conversion of numeric values to integers, is applied to the label data.
+
+    When table_type is set to 'primary', existing data for the cohort is wiped, and 
+    new data is inserted. When table_type is set to 'irr', only records that do not 
+    already exist in the table are added. The dry_run flag can be used to toggle 
+    between uploading the table to Synapse or saving it locally.
+
     Args:
         syn (synapseclient.Synapse): Synapse client connection
         table_id (string): The table id
@@ -252,6 +262,14 @@ def _redact_table(df, interval_cols_info):
 def update_redact_table(syn: synapseclient.Synapse, redacted_table_info: pandas.DataFrame, full_data_table_info: pandas.DataFrame, cohort: str, logger: logging.Logger):
     """Update redacted table
 
+    Before uploading data to the Synapse table, records are identified for redaction 
+    based on criteria such as birth year, sequencing age, vital status, and interval 
+    fields. The redacted data is then stored in the BPC internal tables.
+    
+    A special case applies to the Patient Characteristics table: flagged records are 
+    updated, with the birth_year field cleared. Additionally, the "redacted" column 
+    in this table is updated within the Sage Internal project.
+    
     Args:
         syn (synapseclient.Synapse): Synapse client connection
         redacted_table_info (pandas.DataFrame): Table of all of the redacted tables
