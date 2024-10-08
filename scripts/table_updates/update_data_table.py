@@ -54,9 +54,7 @@ def get_main_genie_clinical_sample_file(
     Returns:
         pandas.DataFrame: the read in clinical file as dataframe
     """
-    release_files = syn.tableQuery(
-        f"SELECT * FROM {release_files_table_synid}"
-    ).asDataFrame()
+    release_files = download_synapse_table(syn, release_files_table_synid)
     clinical_link_synid = release_files[
         (release_files["release"] == release)
         & (release_files["name"] == "data_clinical_sample.txt")
@@ -277,7 +275,7 @@ def update_redact_table(syn: synapseclient.Synapse, redacted_table_info: pandas.
         cohort (string): Cohort name
         logger (logging.Logger): The custom logger. Optional.
     """
-    interval_cols_info = download_synapse_table(syn, "syn23281483", "")
+    interval_cols_info = download_synapse_table(syn, "syn23281483")
     # Create new master table
     master_table = redacted_table_info.merge(
         full_data_table_info, on="name", suffixes=("_redacted", "_full")
@@ -292,15 +290,11 @@ def update_redact_table(syn: synapseclient.Synapse, redacted_table_info: pandas.
     sample_table_id = master_table.loc[
         master_table["name"] == "Cancer Panel Test", "id_full"
     ].values[0]
-    curation_info = syn.tableQuery(
-        f"SELECT record_id, curation_dt FROM {curation_table_id} where cohort = '{cohort}'"
-    ).asDataFrame()
-    patient_info = syn.tableQuery(
-        f"SELECT record_id, birth_year, hybrid_death_ind FROM {patient_table_id} where cohort = '{cohort}'"
-    ).asDataFrame()
-    sample_info = syn.tableQuery(
-        f"SELECT record_id, cpt_genie_sample_id, age_at_seq_report FROM {sample_table_id} where cohort = '{cohort}'"
-    ).asDataFrame()
+    # download tables
+    condition = f"cohort = '{cohort}'"
+    curation_info = download_synapse_table(syn, curation_table_id, "record_id, curation_dt", condition)
+    patient_info = download_synapse_table(syn, patient_table_id, "record_id, birth_year, hybrid_death_ind", condition)
+    sample_info = download_synapse_table(syn, sample_table_id, "record_id, cpt_genie_sample_id, age_at_seq_report", condition)
     patient_curation_info = patient_info.merge(
         curation_info, how="left", on="record_id"
     )
@@ -325,9 +319,7 @@ def update_redact_table(syn: synapseclient.Synapse, redacted_table_info: pandas.
     for _, row in master_table.iterrows():
         if row["name"] != "Patient Characteristics":
             table_id = row["id_full"]
-            df = syn.tableQuery(
-                f"SELECT * FROM {table_id} where cohort = '{cohort}'"
-            ).asDataFrame()
+            df = download_synapse_table(syn, table_id, condition = condition)
             new_df, new_record_to_redact = _redact_table(df, interval_cols_info)
             new_df.reset_index(drop=True, inplace=True)
             record_to_redact = record_to_redact + new_record_to_redact
@@ -340,9 +332,7 @@ def update_redact_table(syn: synapseclient.Synapse, redacted_table_info: pandas.
             table = syn.store(Table(table_schema, new_df))
 
     # Modify patient table
-    df = syn.tableQuery(
-        f"SELECT * FROM {patient_table_id} where cohort = '{cohort}'"
-    ).asDataFrame()
+    df = download_synapse_table(syn, patient_table_id, condition = condition)
     new_df, new_record_to_redact = _redact_table(df, interval_cols_info)
     new_df.reset_index(drop=True, inplace=True)
     record_to_redact = record_to_redact + new_record_to_redact
@@ -371,7 +361,7 @@ def update_redact_table(syn: synapseclient.Synapse, redacted_table_info: pandas.
     pt_dat_query = syn.tableQuery(
         f"SELECT cohort, record_id FROM {full_pt_id} where cohort = '{cohort}'"
     )
-    pt_dat = pt_dat_query.asDataFrame()
+    pt_dat = download_synapse_table(syn, full_pt_id, "cohort, record_id", condition = condition)
     pt_dat.index = pt_dat.index.map(str)
     pt_dat["index"] = pt_dat.index
     info_to_update = new_df[["cohort", "record_id", "redacted"]]
@@ -408,7 +398,7 @@ def custom_fix_for_cancer_panel_test_table(
     ].values[0]
     cpt_table_schema = syn.get(cpt_table_id)
     cpt_dat_query = syn.tableQuery("SELECT cpt_genie_sample_id FROM %s" % cpt_table_id)
-    cpt_dat = cpt_dat_query.asDataFrame()
+    cpt_dat = download_synapse_table(syn, cpt_table_id, select = "cpt_genie_sample_id")
     cpt_dat.index = cpt_dat.index.map(str)
     cpt_dat["index"] = cpt_dat.index
     genie_sample_dat = get_main_genie_clinical_sample_file(
@@ -434,11 +424,9 @@ def custom_fix_for_cancer_panel_test_table(
         "SELECT cpt_sample_type FROM %s WHERE cpt_sample_type in (1,2,3,4,5,6,7)"
         % cpt_table_id
     )
-    cpt_dat = cpt_dat_query.asDataFrame()
+    cpt_dat = download_synapse_table(syn, cpt_table_id, "cpt_sample_type", "cpt_sample_type in (1,2,3,4,5,6,7)")
     cpt_dat["cpt_sample_type"] = pandas.to_numeric(cpt_dat["cpt_sample_type"])
-    sample_type_mapping = syn.tableQuery(
-        f"SELECT * FROM {config['main_genie_sample_mapping_table']}"
-    ).asDataFrame()
+    sample_type_mapping = download_synapse_table(syn, config['main_genie_sample_mapping_table'])
     sample_type_mapping_dict = sample_type_mapping.set_index("CODE").to_dict()[
         "DESCRIPTION"
     ]
@@ -511,7 +499,7 @@ def main():
     else:
         TABLE_INFO = TABLES["staging"]
     table_id, condition = list(TABLE_INFO[table_type])
-    master_table = download_synapse_table(syn, table_id, condition)
+    master_table = download_synapse_table(syn, table_id, condition = condition)
     # download data files
     # TODO: find the cohort that has new data
     # This is a mapping to all the intake data. e.g: ProstateBPCIntake_data
@@ -526,7 +514,7 @@ def main():
         custom_fix_for_cancer_panel_test_table(syn, master_table, logger, config)
         if table_type == "primary":
             table_id, condition = list(TABLE_INFO["redacted"])
-            redacted_table_info = download_synapse_table(syn, table_id, condition)
+            redacted_table_info = download_synapse_table(syn, table_id, condition = condition)
             logger.info("Updating redacted tables...")
             update_redact_table(syn, redacted_table_info, master_table, cohort, logger)
             logger.info("Updating version for redacted tables")
