@@ -23,11 +23,6 @@ process update_data_table {
       cd /root/scripts/
       python update_data_table.py -p /root/scripts/config.json -c $cohort -m "$comment" primary -pd
       """
-   } else if (dry_run){
-      """
-      cd /root/scripts/
-      python update_data_table.py -p /root/scripts/config.json -c $cohort -m "$comment" primary -d
-      """
    } else {
       """
       cd /root/scripts/
