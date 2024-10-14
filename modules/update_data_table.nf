@@ -12,7 +12,6 @@ process update_data_table {
    val cohort
    val production
    val comment
-   val dry_run
 
    output:
    stdout
