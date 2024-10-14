@@ -5,15 +5,15 @@ import numpy as np
 import pandas as pd
 import pytest
 import synapseclient
-from scripts.table_updates import utilities
 from synapseclient import Schema, Table
+from table_updates import utilities
 
 
 @pytest.fixture(scope="session")
 def syn():
     return create_autospec(synapseclient.Synapse)
 
-def test_download_with_select(syn):
+def test_download_synapse_table_with_selected_columns(syn):
     select = "col1"
     df = pd.DataFrame({
         'col1': ['value1', 'value2']
@@ -30,7 +30,7 @@ def test_download_with_select(syn):
     syn.tableQuery.assert_called_once_with("SELECT col1 from syn123456")
     pd.testing.assert_frame_equal(result, df)
 
-def test_download_without_condition(syn):
+def test_download_synapse_table_without_condition(syn):
     df = pd.DataFrame({
         'col1': ['value1', 'value2'],
         'col2': [1, 2]
@@ -47,7 +47,7 @@ def test_download_without_condition(syn):
     syn.tableQuery.assert_called_once_with("SELECT * from syn123456")
     pd.testing.assert_frame_equal(result, df)
 
-def test_download_with_condition(syn):
+def test_download_synapse_table_with_condition(syn):
     condition = "col1 = 'value1'"
     df = pd.DataFrame({
         'col1': ['value1'],
@@ -65,7 +65,7 @@ def test_download_with_condition(syn):
     syn.tableQuery.assert_called_once_with("SELECT * from syn123456 WHERE col1 = 'value1'")
     pd.testing.assert_frame_equal(result, df)
 
-def test_download_with_na_values(syn):
+def test_download_synapse_table_with_na_values(syn):
     df = pd.DataFrame({
         'col1': ["NA", "value1", "None"],
         'col2': [1, 2, 3]
@@ -86,7 +86,7 @@ def test_download_with_na_values(syn):
         'col2': [1, 2, 3]
     }))
 
-def test_download_with_empty_table(syn):
+def test_download_synapse_table_with_empty_table(syn):
     df = pd.DataFrame(columns = ["col1", "col2"])
     schema = synapseclient.table.Schema(
         name="test_table",
