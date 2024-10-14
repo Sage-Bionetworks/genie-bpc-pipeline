@@ -45,7 +45,7 @@ def check_empty_row(row, cols_to_skip):
     return row.drop(cols_to_skip).isnull().all()
 
 
-def download_synapse_table(syn, table_id: str, select: str = "*", condition: str = ""):
+def download_synapse_table(syn, table_id: str, select: str = "*", condition: str = "") -> pandas.DataFrame:
     """Download Synapse Table with the given table ID and condition
 
     Args:
@@ -55,7 +55,7 @@ def download_synapse_table(syn, table_id: str, select: str = "*", condition: str
         condition: additional condition for querying the table
 
     Returns:
-        Dataframe: synapse table
+        A Pandas dataframe of the Synapse table
     """
     if condition:
         condition = " WHERE " + condition
