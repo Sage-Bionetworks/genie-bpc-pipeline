@@ -33,7 +33,7 @@ option_list <- list(
   make_option(c("-d", "--dry_run"), action="store_true", default = TRUE,
               help="dry run flag"),
   make_option(c("-c", "--comment"), type = "character",
-              help="Comment for new table snapshot version. This must be unique and is tied to the cohort run."),
+              help="Comment for new table snapshot version. This must be unique and is tied to the cohort run.")
 )
 
 # functions ----------------------------
