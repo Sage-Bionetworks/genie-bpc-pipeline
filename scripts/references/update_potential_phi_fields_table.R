@@ -5,32 +5,36 @@
 
 # pre-setup  ---------------------------
 
+library(dplyr)
+library(glue)
 library(optparse)
+library(synapser)
+
+# global variables -------------------------
+ENTITIES <- list(
+  production = list(
+    synid_file_sor = c("syn22294851"),
+    synid_table_red = c("syn23281483")
+  ),
+  staging = list(
+    synid_file_sor = c("syn63611274"),
+    synid_table_red = c("syn63611284")
+  )
+)
+
 
 # user input ----------------------------
 
 option_list <- list( 
-  make_option(c("-f", "--synid_file_sor"), type = "character",
-              help="Synapse ID of Scope of Release file (default: syn22294851)", default = "syn22294851"),
-  make_option(c("-t", "--synid_table_red"), type = "character",
-              help="Synapse ID of table listing variables to redact (default: syn23281483)", default = "syn23281483"),
   make_option(c("-a", "--auth"), type = "character",
               help="path to .synapseConfig or Synapse PAT (default: normal synapse login behavior)", default = NA)
+  make_option(c("-pd", "--production"), action="store_true", default = TRUE,
+              help="Run in production")       
+  make_option(c("-d", "--dry_run"), action="store_true", default = TRUE,
+              help="dry run flag")
+  make_option(c("-c", "--comment"), type = "character",
+              help="Comment for new table snapshot version. This must be unique and is tied to the cohort run."),
 )
-opt <- parse_args(OptionParser(option_list=option_list))
-
-# synapse
-synid_file_sor <- opt$synid_file_sor
-synid_table_red <- opt$synid_table_red
-auth <- opt$auth
-
-# setup ----------------------------
-
-tic = as.double(Sys.time())
-
-library(glue)
-library(dplyr)
-library(synapser)
 
 # functions ----------------------------
 
@@ -132,16 +136,17 @@ trim <- function(str) {
 #' Create a Synapse table snapshot version with comment.
 #' 
 #' @param table_id Synapse ID of a table entity
+#' @param activity Synapse activity to add for provenance
 #' @param comment Message to annotate the new table version
 #' @return snapshot version number
 #' @example 
 #' create_synapse_table_snapshot("syn12345", comment = "my new snapshot")
-snapshot_synapse_table <- function(table_id, comment) {
-  res <- synRestPOST(glue("/entity/{table_id}/table/snapshot"), 
-                     body = glue("{'snapshotComment':'{{comment}}'}", 
-                                 .open = "{{", 
-                                 .close = "}}"))
-  
+snapshot_synapse_table <- function(table_id, activity, comment) {
+  res <- synCreateSnapshotVersion(
+    table = table_id, 
+    comment = comment, 
+    activity = activity,
+  )
   return(res$snapshotVersionNumber)
 }
 
@@ -215,57 +220,90 @@ get_red_table_update <-function(var_add, inf_sor) {
   return(mat_add)
 }
 
-#' Update Synapse table and take snapshot.
+#' This function will update the synapse table, adds provenance and 
+#' creates a snapshot of the table 
+#' IF this is not a dry run 
+#' AND there are rows to update with
 #' 
 #' @param synid_table Synapse ID of table to update
+#' @param synid_file_sor Synapse ID of SOR file used in update of table
 #' @param df_update Data frame containing data with which to update the table.
 #' @param comment Comment for table snapshot
+#' @param dry_run Dry run flag
 #' @return Integer corresponding to new snapshot version or NA if table is not updated.
-update_red_table <- function(synid_table, df_update, comment) {
+update_red_table <- function(synid_table, synid_file_sor, df_update, comment, dry_run) {
   
   n_version = NA
   
-  if (nrow(df_update)) {
+  if (nrow(df_update) && !dry_run) {
     tbl <- synStore(Table(synid_table, df_update))
-    n_version <- snapshot_synapse_table(table_id = synid_table, comment = comment)
+    act <- Activity(
+      name = 'Update potential PHI fields table', 
+      description='Updates the reference table with potential PHI fields to redact',
+      used = synid_file_sor,
+      executed = 'https://github.com/Sage-Bionetworks/genie-bpc-pipeline/tree/develop/scripts/references/update_potential_phi_fields_table.R'
+    )
+    n_version <- snapshot_synapse_table(table_id = synid_table, activity = act, comment = comment)
   }
   
   return(n_version)
 }
 
-# Synpase login --------------------
 
-status <- synLogin()
+main <- function(){
+  opt <- parse_args(OptionParser(option_list=option_list))
 
-# main ----------------------------
+  # get the synapse ids
+  if(opt$production){
+    synid_file_sor <- ENTITIES[["production"]][["synid_file_sor"]]
+    synid_table_red <- ENTITIES[["production"]][["synid_table_red"]]
+  } else{
+    synid_file_sor <- ENTITIES[["staging"]][["synid_file_sor"]]
+    synid_table_red <- ENTITIES[["staging"]][["synid_table_red"]]
+  }
+  auth <- opt$auth
 
-# parameters
-comment <- glue("Update according to SOR {synid_file_sor}.{synGet(synid_file_sor, downloadFile = F)$properties$versionNumber}")
+  # setup ----------------------------
 
-# sor
-inf_sor <- get_sor_inf_to_redact(synid_file_sor)
-var_sor <- unlist(inf_sor$VARNAME)
+  tic = as.double(Sys.time())
+  # Synpase login --------------------
+  status <- synLogin()
 
-# redaction table
-var_red <- get_var_currently_redacted(synid_table_red)
+  # main ----------------------------
 
-# missing variables
-var_add <- setdiff(var_sor, var_red)
+  # sor
+  inf_sor <- get_sor_inf_to_redact(synid_file_sor)
+  var_sor <- unlist(inf_sor$VARNAME)
 
-# update table with missing variables
-tbl_update <- get_red_table_update(var_add = var_add, 
-                                   inf_sor = inf_sor)
-n_version <- update_red_table(synid_table = synid_table_red, 
-                              df_update = data.frame(tbl_update), 
-                              comment = comment)
+  # redaction table
+  var_red <- get_var_currently_redacted(synid_table_red)
 
-# close out ----------------------------
+  # missing variables
+  var_add <- setdiff(var_sor, var_red)
 
-if (is.na(n_version)) {
-  print(glue("No missing potential PHI variables detected.  Redaction table '{synGet(synid_table_red)$properties$name}' ({synid_table_red}) unchanged. "))
-} else {
-  print(glue("Detected {length(var_add)} missing potential PHI variables.  Redaction table '{synGet(synid_table_red)$properties$name}' ({synid_table_red}) updated to version {n_version}."))
+  # update table with missing variables
+  tbl_update <- get_red_table_update(var_add = var_add, 
+                                    inf_sor = inf_sor)
+  n_version <- update_red_table(synid_table = synid_table_red, 
+                                synid_file_sor = synid_file_sor,
+                                df_update = data.frame(tbl_update), 
+                                comment = comment,
+                                dry_run = dry_run)
+
+  # close out ----------------------------
+
+  if (is.na(n_version)) {
+    print(glue("No missing potential PHI variables detected.  Redaction table '{synGet(synid_table_red)$properties$name}' ({synid_table_red}) unchanged. "))
+  } else {
+    print(glue("Detected {length(var_add)} missing potential PHI variables.  Redaction table '{synGet(synid_table_red)$properties$name}' ({synid_table_red}) updated to version {n_version}."))
+  }
+
+  toc = as.double(Sys.time())
+  print(glue("Runtime: {round(toc - tic)} s"))
 }
 
-toc = as.double(Sys.time())
-print(glue("Runtime: {round(toc - tic)} s"))
+
+# only run main when not sourced
+if (sys.nframe() == 0) {
+  main()
+}
