@@ -28,8 +28,8 @@ ENTITIES <- list(
 option_list <- list( 
   make_option(c("-a", "--auth"), type = "character",
               help="path to .synapseConfig or Synapse PAT (default: normal synapse login behavior)", default = NA),
-  make_option(c("-pd", "--production"), action="store_true", default = TRUE,
-              help="Run in production"),      
+  make_option(c("-pd", "--production"), action="store_true", default = FALSE,
+              help="Run in production"),
   make_option(c("-d", "--dry_run"), action="store_true", default = TRUE,
               help="dry run flag"),
   make_option(c("-c", "--comment"), type = "character",
