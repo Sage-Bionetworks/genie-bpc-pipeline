@@ -141,11 +141,11 @@ trim <- function(str) {
 #' @example 
 #' create_synapse_table_snapshot("syn12345", comment = "my new snapshot")
 snapshot_synapse_table <- function(table_id, comment) {
-  res <- synCreateSnapshotVersion(
+  snapshotVersionNumber <- synCreateSnapshotVersion(
     table = table_id, 
-    comment = comment, 
+    comment = comment
   )
-  return(res$snapshotVersionNumber)
+  return(snapshotVersionNumber)
 }
 
 #' Gather list of variable and type corresponding to time interval suffixes in
@@ -235,13 +235,12 @@ update_red_table <- function(synid_table, synid_file_sor, df_update, comment, dr
   
   if (nrow(df_update) && !dry_run) {
     print(glue("Updating potential PHI fields table ..."))
-    tbl <- synStore(Table(synid_table, df_update, activity = Activity(
+    act <- Activity(
       name = 'Update potential PHI fields table', 
       description='Updates the reference table with potential PHI fields to redact',
       used = synid_file_sor,
       executed = 'https://github.com/Sage-Bionetworks/genie-bpc-pipeline/tree/develop/scripts/references/update_potential_phi_fields_table.R')
-      )
-    )
+    tbl <- synStore(Table(synid_table, df_update), activity = act)
     n_version <- snapshot_synapse_table(table_id = synid_table, comment = comment)
   } else {
     print(glue("No rows to update or running in dry run mode"))
