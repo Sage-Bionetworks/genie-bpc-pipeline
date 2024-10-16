@@ -133,7 +133,12 @@ trim <- function(str) {
   return(back)
 }
 
-#' Create a Synapse table snapshot version with comment.
+#' Create a Synapse table snapshot version with comment. 
+#' NOTE: There appears to be a known issue with using synCreateSnapshotVersion
+#' directly (likely being how it's accessed or called in R) resulting in the
+#' below error
+#' 
+#' ERROR: the provided R object can not be type cast into an Python object
 #' 
 #' @param table_id Synapse ID of a table entity
 #' @param comment Message to annotate the new table version
@@ -141,11 +146,11 @@ trim <- function(str) {
 #' @example 
 #' create_synapse_table_snapshot("syn12345", comment = "my new snapshot")
 snapshot_synapse_table <- function(table_id, comment) {
-  snapshotVersionNumber <- synCreateSnapshotVersion(
-    table = table_id, 
-    comment = comment
-  )
-  return(snapshotVersionNumber)
+  res <- synRestPOST(glue("/entity/{table_id}/table/snapshot"), 
+                    body = glue("{'snapshotComment':'{{comment}}'}", 
+                                .open = "{{", 
+                                .close = "}}"))
+  return(res$snapshotVersionNumber)
 }
 
 #' Gather list of variable and type corresponding to time interval suffixes in
