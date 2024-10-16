@@ -8,7 +8,6 @@ process update_potential_phi_fields {
    debug true
 
    input:
-   val previous
    val comment
    val production
 

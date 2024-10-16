@@ -44,6 +44,15 @@
                         false
                     ]
                 },
+                "step": {
+                    "type": "string",
+                    "default": "genie_bpc_pipeline",
+                    "description": "Available BPC steps",
+                    "enum": [
+                        "update_potential_phi_fields",
+                        "genie_bpc_pipeline"
+                    ]
+                },
                 "schema_ignore_params": {
                     "type": "string",
                     "description": "Put parameters to ignore for validation here separated by comma",
