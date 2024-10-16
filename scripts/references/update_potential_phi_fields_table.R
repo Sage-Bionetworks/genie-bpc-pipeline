@@ -236,6 +236,7 @@ update_red_table <- function(synid_table, synid_file_sor, df_update, comment, dr
   n_version = NA
   
   if (nrow(df_update) && !dry_run) {
+    print("Updating potential PHI fields table ...")
     tbl <- synStore(Table(synid_table, df_update))
     act <- Activity(
       name = 'Update potential PHI fields table', 
@@ -244,6 +245,8 @@ update_red_table <- function(synid_table, synid_file_sor, df_update, comment, dr
       executed = 'https://github.com/Sage-Bionetworks/genie-bpc-pipeline/tree/develop/scripts/references/update_potential_phi_fields_table.R'
     )
     n_version <- snapshot_synapse_table(table_id = synid_table, activity = act, comment = comment)
+  } else {
+    print("No rows to update or running in dry run mode")
   }
   
   return(n_version)
@@ -257,9 +260,11 @@ main <- function(){
   if(opt$production){
     synid_file_sor <- ENTITIES[["production"]][["synid_file_sor"]]
     synid_table_red <- ENTITIES[["production"]][["synid_table_red"]]
+    print("Running in production mode")
   } else{
     synid_file_sor <- ENTITIES[["staging"]][["synid_file_sor"]]
     synid_table_red <- ENTITIES[["staging"]][["synid_table_red"]]
+    print("Running in staging mode")
   }
   auth <- opt$auth
 
@@ -267,7 +272,7 @@ main <- function(){
 
   tic = as.double(Sys.time())
   # Synpase login --------------------
-  status <- synLogin()
+  status <- synLogin(auth=auth)
 
   # main ----------------------------
 
