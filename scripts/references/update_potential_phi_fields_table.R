@@ -133,24 +133,21 @@ trim <- function(str) {
   return(back)
 }
 
-#' Create a Synapse table snapshot version with comment. 
-#' NOTE: There appears to be a known issue with using synCreateSnapshotVersion
-#' directly (likely being how it's accessed or called in R) resulting in the
-#' below error
-#' 
-#' ERROR: the provided R object can not be type cast into an Python object
+#' Create a Synapse table snapshot version with comment.
 #' 
 #' @param table_id Synapse ID of a table entity
 #' @param comment Message to annotate the new table version
+#' @param activity Activity object to add to snapshot
 #' @return snapshot version number
 #' @example 
 #' create_synapse_table_snapshot("syn12345", comment = "my new snapshot")
-snapshot_synapse_table <- function(table_id, comment) {
-  res <- synRestPOST(glue("/entity/{table_id}/table/snapshot"), 
-                    body = glue("{'snapshotComment':'{{comment}}'}", 
-                                .open = "{{", 
-                                .close = "}}"))
-  return(res$snapshotVersionNumber)
+snapshot_synapse_table <- function(table_id, comment, activity) {
+  snapshotVersionNumber <- synCreateSnapshotVersion(
+    table = table_id, 
+    comment = comment,
+    activity = activity
+  )
+  return(snapshotVersionNumber)
 }
 
 #' Gather list of variable and type corresponding to time interval suffixes in
@@ -245,8 +242,8 @@ update_red_table <- function(synid_table, synid_file_sor, df_update, comment, dr
       description='Updates the reference table with potential PHI fields to redact',
       used = synid_file_sor,
       executed = 'https://github.com/Sage-Bionetworks/genie-bpc-pipeline/tree/develop/scripts/references/update_potential_phi_fields_table.R')
-    tbl <- synStore(Table(synid_table, df_update), activity = act)
-    n_version <- snapshot_synapse_table(table_id = synid_table, comment = comment)
+    tbl <- synStore(Table(synid_table, df_update))
+    n_version <- snapshot_synapse_table(table_id = synid_table, comment = comment, activity = act)
   } else {
     print(glue("No rows to update or running in dry run mode"))
   }
@@ -294,7 +291,7 @@ main <- function(){
   n_version <- update_red_table(synid_table = synid_table_red, 
                                 synid_file_sor = synid_file_sor,
                                 df_update = data.frame(tbl_update), 
-                                comment = comment,
+                                comment = opt$comment,
                                 dry_run = opt$dry_run)
 
   # close out ----------------------------
