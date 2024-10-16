@@ -30,7 +30,7 @@ option_list <- list(
               help="path to .synapseConfig or Synapse PAT (default: normal synapse login behavior)", default = NA),
   make_option(c("--production"), action="store_true", default = FALSE,
               help="Run in production"),
-  make_option(c("-d", "--dry_run"), action="store_true", default = TRUE,
+  make_option(c("-d", "--dry_run"), action="store_true", default = FALSE,
               help="dry run flag"),
   make_option(c("-c", "--comment"), type = "character",
               help="Comment for new table snapshot version. This must be unique and is tied to the cohort run.")
@@ -136,16 +136,14 @@ trim <- function(str) {
 #' Create a Synapse table snapshot version with comment.
 #' 
 #' @param table_id Synapse ID of a table entity
-#' @param activity Synapse activity to add for provenance
 #' @param comment Message to annotate the new table version
 #' @return snapshot version number
 #' @example 
 #' create_synapse_table_snapshot("syn12345", comment = "my new snapshot")
-snapshot_synapse_table <- function(table_id, activity, comment) {
+snapshot_synapse_table <- function(table_id, comment) {
   res <- synCreateSnapshotVersion(
     table = table_id, 
     comment = comment, 
-    activity = activity,
   )
   return(res$snapshotVersionNumber)
 }
@@ -236,17 +234,17 @@ update_red_table <- function(synid_table, synid_file_sor, df_update, comment, dr
   n_version = NA
   
   if (nrow(df_update) && !dry_run) {
-    print("Updating potential PHI fields table ...")
-    tbl <- synStore(Table(synid_table, df_update))
-    act <- Activity(
+    print(glue("Updating potential PHI fields table ..."))
+    tbl <- synStore(Table(synid_table, df_update, activity = Activity(
       name = 'Update potential PHI fields table', 
       description='Updates the reference table with potential PHI fields to redact',
       used = synid_file_sor,
-      executed = 'https://github.com/Sage-Bionetworks/genie-bpc-pipeline/tree/develop/scripts/references/update_potential_phi_fields_table.R'
+      executed = 'https://github.com/Sage-Bionetworks/genie-bpc-pipeline/tree/develop/scripts/references/update_potential_phi_fields_table.R')
+      )
     )
-    n_version <- snapshot_synapse_table(table_id = synid_table, activity = act, comment = comment)
+    n_version <- snapshot_synapse_table(table_id = synid_table, comment = comment)
   } else {
-    print("No rows to update or running in dry run mode")
+    print(glue("No rows to update or running in dry run mode"))
   }
   
   return(n_version)
@@ -260,11 +258,11 @@ main <- function(){
   if(opt$production){
     synid_file_sor <- ENTITIES[["production"]][["synid_file_sor"]]
     synid_table_red <- ENTITIES[["production"]][["synid_table_red"]]
-    print("Running in production mode")
+    print(glue("Running in production mode"))
   } else{
     synid_file_sor <- ENTITIES[["staging"]][["synid_file_sor"]]
     synid_table_red <- ENTITIES[["staging"]][["synid_table_red"]]
-    print("Running in staging mode")
+    print(glue("Running in staging mode"))
   }
   auth <- opt$auth
 
@@ -293,7 +291,7 @@ main <- function(){
                                 synid_file_sor = synid_file_sor,
                                 df_update = data.frame(tbl_update), 
                                 comment = comment,
-                                dry_run = dry_run)
+                                dry_run = opt$dry_run)
 
   # close out ----------------------------
 
