@@ -134,7 +134,8 @@ trim <- function(str) {
   return(back)
 }
 
-#' Create a Synapse table snapshot version with comment.
+#' Create a Synapse table snapshot version with comment and
+#' provenance
 #' 
 #' @param table_id Synapse ID of a table entity
 #' @param comment Message to annotate the new table version
