@@ -49,6 +49,7 @@ if (params.step == null) { exit 1, 'step parameter not specified!' }
 
 
 // Print parameter summary log to screen
+log.info NfcoreSchema.paramsSummaryLog(workflow, params)
 log.info "Running step: ${params.step}"
 
 // Print message for production mode vs test mode
