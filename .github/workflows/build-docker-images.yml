@@ -28,7 +28,15 @@ jobs:
     - name: Check for Changes in scripts/references
       id: check_changes
       run: |
-        if git diff origin/develop...HEAD --name-only | grep -E '^scripts/references/'; then
+        # Check for a merge base, fallback to root commit if none exists
+        if git merge-base --is-ancestor origin/develop HEAD; then
+          DIFF_BASE="origin/develop"
+        else
+          DIFF_BASE=$(git rev-list --max-parents=0 HEAD)  # Use the initial commit as fallback
+        fi
+
+        # Compare changes between DIFF_BASE and HEAD
+        if git diff --name-only $DIFF_BASE -- scripts/references | grep -q .; then
           echo "CHANGED=true" >> $GITHUB_ENV
         else
           echo "CHANGED=false" >> $GITHUB_ENV
