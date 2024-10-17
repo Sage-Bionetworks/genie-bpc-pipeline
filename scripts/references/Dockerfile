@@ -24,8 +24,11 @@ RUN R -e "remotes::install_version('synapser', version = '0.11.7', repos = c('ht
 # Set Python environment variable for R
 ENV PYTHON /usr/local/lib/R/site-library/PythonEmbedInR/bin/python3.6
 
-# Copy the local project files into the container
-COPY . .
+# Copy only renv.lock first to leverage Docker cache for dependencies
+COPY renv.lock renv.lock
 
 # Restore R environment with renv
 RUN R -e "renv::restore()"
+
+# Copy the local project files into the container
+COPY . .
