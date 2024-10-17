@@ -7,9 +7,14 @@ on:
       - 'scripts/references/**'
       - '.github/workflows/build-docker-images.yml'
 
+  workflow_dispatch:
+
 jobs:
   build_references_docker:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     env:
       REGISTRY: ghcr.io
       IMAGE_NAME: sagebionetworks/genie-bpc-pipeline-references
