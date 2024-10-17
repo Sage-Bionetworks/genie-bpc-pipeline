@@ -54,7 +54,7 @@ jobs:
       with:
         registry: ${{ env.REGISTRY }}
         username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+        password: ${{ secrets.PAT_TOKEN }}
 
     - name: Build and Push Docker Image for scripts/references
       if: env.CHANGED == 'true'
