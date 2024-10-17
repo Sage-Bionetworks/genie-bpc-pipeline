@@ -253,6 +253,7 @@ update_red_table <- function(synid_table, synid_file_sor, df_update, comment, dr
 }
 
 
+#' Main function
 main <- function(){
   opt <- parse_args(OptionParser(option_list=option_list))
 
