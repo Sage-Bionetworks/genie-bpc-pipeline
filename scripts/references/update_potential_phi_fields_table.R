@@ -1,6 +1,6 @@
 # Description: Check the Scope of Release (sor) for additional variables in need of
 #   redaction that are not in the Sage internal reference table. Updates
-#   potential PHI fields table if there are.
+#   potential PHI fields table if there are variables in need of retraction.
 # Author: Haley Hunter-Zinck
 # Date: 2022-03-24
 
