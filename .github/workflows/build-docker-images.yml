@@ -18,6 +18,12 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v3
+      with:
+        fetch-depth: 2
+
+    - name: Fetch the default branch (develop) for comparison
+      run: git fetch origin develop:refs/remotes/origin/develop --depth=1
+
 
     - name: Check for Changes in scripts/references
       id: check_changes
