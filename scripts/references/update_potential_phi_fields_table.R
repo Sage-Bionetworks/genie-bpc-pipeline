@@ -177,7 +177,7 @@ get_sor_inf_to_redact <- function(synid_file_sor) {
   return(inf_sor)
 }
 
-#' Get list of currently redacted variables from the current version of 
+#' Get list of redacted variables from the current version of 
 #' the potential PHI fields table
 #' 
 #' @param synid_table_red Synapse ID of potential PHI fields.
