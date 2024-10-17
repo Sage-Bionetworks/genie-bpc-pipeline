@@ -92,7 +92,6 @@ workflow BPC_PIPELINE {
    ch_comment = Channel.value(params.comment)
    
    if (params.step == "update_potential_phi_fields") {
-    log.info "Is this running: ${params.step}?"
     update_potential_phi_fields(ch_comment, params.production)
     // validate_data.out.view()
    } else if (params.step == "genie_bpc_pipeline"){
