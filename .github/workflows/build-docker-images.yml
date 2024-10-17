@@ -9,7 +9,6 @@ on:
 
 jobs:
   build_references_docker:
-    if: ${{ contains(github.event.commits.*.modified || github.event.commits.*.added || github.event.commits.*.removed, 'scripts/references/') }}
     runs-on: ubuntu-latest
     env:
       REGISTRY: ghcr.io
@@ -20,14 +19,26 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v3
 
-    - name: Log in to GHCR
-      uses: docker/login-action@v2
+    - name: Check for Changes in scripts/references
+      id: check_changes
+      run: |
+        if git diff --name-only HEAD^..HEAD | grep -E '^scripts/references/'; then
+          echo "CHANGED=true" >> $GITHUB_ENV
+        else
+          echo "CHANGED=false" >> $GITHUB_ENV
+        fi
+
+    - name: Log in to GitHub Container Registry
+      if: env.CHANGED == 'true'
+      uses: docker/login-action@v3
       with:
         registry: ${{ env.REGISTRY }}
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Build and Push Docker Image for References
-      run: |
-        docker build -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.TAG }} -f scripts/references/Dockerfile .
-        docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.TAG }}
+    - name: Build and Push Docker Image for scripts/references
+      if: env.CHANGED == 'true'
+      uses: docker/build-push-action@v5
+      with:
+        context: scripts/references
+        tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}
