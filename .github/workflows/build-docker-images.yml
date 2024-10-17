@@ -22,7 +22,7 @@ jobs:
     - name: Check for Changes in scripts/references
       id: check_changes
       run: |
-        if git diff --name-only HEAD^..HEAD | grep -E '^scripts/references/'; then
+        if git diff --name-only origin/develop..HEAD | grep -E '^scripts/references/'; then
           echo "CHANGED=true" >> $GITHUB_ENV
         else
           echo "CHANGED=false" >> $GITHUB_ENV
