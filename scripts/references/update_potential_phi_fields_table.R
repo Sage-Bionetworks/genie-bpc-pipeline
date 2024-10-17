@@ -194,7 +194,8 @@ get_var_currently_redacted <- function(synid_table_red) {
 #' fields table.
 #' 
 #' @param var_add Vector of variable names to add
-#' @param inf_sor DataFrame with two columns corresponding to the variable name and type.
+#' @param inf_sor DataFrame with two columns corresponding to the variable 
+#'  name and type.
 #' @return Matrix with table update
 get_red_table_update <-function(var_add, inf_sor) {
   
