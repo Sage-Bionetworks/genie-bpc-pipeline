@@ -24,7 +24,7 @@ params.comment = 'NSCLC public release update'
 params.production = false
 params.schema_ignore_params = ""
 params.help = false
-params.step = "update_potential_phi_fields"
+params.step = "update_potential_phi_fields_table"
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

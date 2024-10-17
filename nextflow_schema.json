@@ -46,10 +46,10 @@
                 },
                 "step": {
                     "type": "string",
-                    "default": "update_potential_phi_fields",
+                    "default": "update_potential_phi_fields_table",
                     "description": "Available BPC steps",
                     "enum": [
-                        "update_potential_phi_fields",
+                        "update_potential_phi_fields_table",
                         "genie_bpc_pipeline"
                     ]
                 },

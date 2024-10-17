@@ -1,7 +1,7 @@
 /*
 
 */
-process update_potential_phi_fields {
+process update_potential_phi_fields_table {
 
    container 'sagebionetworks/genie-bpc-pipeline-references'
    secret 'SYNAPSE_AUTH_TOKEN'
@@ -18,13 +18,13 @@ process update_potential_phi_fields {
    if (production) {
       """
       cd /usr/local/src/myscripts/
-      Rscript update_potential_phi_fields.R -c $comment --production
+      Rscript update_potential_phi_fields_table.R -c $comment --production
       """
    } 
    else {
       """
       cd /usr/local/src/myscripts/
-      Rscript update_potential_phi_fields.R -c $comment
+      Rscript update_potential_phi_fields_table.R -c $comment
       """
    } 
 }
