@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       REGISTRY: ghcr.io
-      IMAGE_NAME: sagebionetworks/genie-bpc-pipeline-references
+      IMAGE_NAME: ${{ github.repository }}
     permissions:
       contents: read
       packages: write
@@ -52,14 +52,14 @@ jobs:
       with:
         registry: ${{ env.REGISTRY }}
         username: ${{ github.actor }}
-        password: ${{ secrets.PAT_TOKEN }}
+        password: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Build and Push Docker Image for scripts/references
       uses: docker/build-push-action@v5
       with:
         context: scripts/references
         push: true
-        tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}
-        #cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}-cache
-        #cache-to: type=inline,mode=max
+        tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:references-${{ github.ref_name }}
+        cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:references-${{ github.ref_name }}-cache
+        cache-to: type=inline,mode=max
 
