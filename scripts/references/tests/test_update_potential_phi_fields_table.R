@@ -27,7 +27,7 @@ teardown({
     test_df_update_empty, 
     synid_table, 
     synid_file_sor, 
-    comment envir = .GlobalEnv
+    comment
     )
 })
 
