@@ -5,6 +5,7 @@ on:
     branches: [develop, 'GEN*', 'gen*']
     paths:
       - 'scripts/references/**'
+      - '.github/workflows/build-docker-images.yml'
 
 jobs:
   build_and_push:
@@ -28,7 +29,7 @@ jobs:
     - name: Determine Image to Build
       id: image
       run: |
-        if git diff --name-only HEAD^ HEAD | grep '^scripts/references/'; then
+        if git diff --name-only HEAD~ -- | grep -q '^scripts/references/'; then
           echo "IMAGE_NAME=${{ github.repository }}-references" >> $GITHUB_ENV
           echo "DOCKERFILE_PATH=scripts/references/Dockerfile" >> $GITHUB_ENV
         else
