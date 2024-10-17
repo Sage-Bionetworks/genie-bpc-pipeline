@@ -6,9 +6,9 @@ WORKDIR /usr/local/src/myscripts
 # Set environment variable for renv version
 ENV RENV_VERSION 0.14.0
 
-# Update apt-get and install system dependencies
+# Update apt-get and install system dependencies (only install required)
 RUN apt-get update -y && \
-    apt-get install -y --no-install-recommends \
+    apt-get install -y --no-install-recommends \ 
     dpkg-dev zlib1g-dev libssl-dev libffi-dev \
     libcurl4-openssl-dev curl procps && \
     apt-get clean && \
