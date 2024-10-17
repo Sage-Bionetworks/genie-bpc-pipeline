@@ -3,7 +3,7 @@ Updates the potential pHI fields table with any new variables to redact
 */
 process update_potential_phi_fields_table {
 
-   container 'sagebionetworks/genie-bpc-pipeline-references'
+   container "$params.references_docker"
    secret 'SYNAPSE_AUTH_TOKEN'
    debug true
 
