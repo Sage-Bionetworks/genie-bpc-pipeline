@@ -15,15 +15,16 @@ process update_potential_phi_fields {
    stdout
 
    script:
-    if (production) {
-        """
-        cd /usr/local/src/myscripts/
-        Rscript update_potential_phi_fields.R -c $comment --production
-        """
-    } else {
-        """
-        cd /usr/local/src/myscripts/
-        Rscript update_potential_phi_fields.R -c $comment
-        """
-    } 
+   if (production) {
+      """
+      cd /usr/local/src/myscripts/
+      Rscript update_potential_phi_fields.R -c $comment --production
+      """
+   } 
+   else {
+      """
+      cd /usr/local/src/myscripts/
+      Rscript update_potential_phi_fields.R -c $comment
+      """
+   } 
 }
