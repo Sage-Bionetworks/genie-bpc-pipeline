@@ -45,22 +45,26 @@ Usage: update_potential_phi_fields_table.R [options]
 
 
 Options:
-	-f SYNID_FILE_SOR, --synid_file_sor=SYNID_FILE_SOR
-		Synapse ID of Scope of Release file (default: syn22294851)
-
-	-t SYNID_TABLE_RED, --synid_table_red=SYNID_TABLE_RED
-		Synapse ID of table listing variables to redact (default: syn23281483)
-
 	-a AUTH, --auth=AUTH
 		path to .synapseConfig or Synapse PAT (default: standard login precedence)
 
+	-d , --dry_run
+		Whether to dry-run or not.
+
+	--production
+		Whether to run in production mode (uses production project) or not (runs in staging mode and uses staging project).
+
 	-h, --help
 		Show this help message and exit
+
+	-c, --comment
+		Comment for new table snapshot version. This must be unique and is tied to the cohort run.
 ```
 
-Example run: 
+Example run (runs in staging mode) with version comment 3.0.1 for
+potential PHI fields table when updated:
 ```
-Rscript update_potential_phi_fields_table.R 
+Rscript update_potential_phi_fields_table.R -c "version3.0.1"
 ```
 
 ## Usage: updating the cBioPortal mapping table 
@@ -94,7 +98,7 @@ Options:
 
 Example run: 
 ```
-Rscript update_potential_phi_fields_table.R -v
+Rscript update_cbio_mapping.R -v
 ```
 
 ## Usage: updating upload tracking table 

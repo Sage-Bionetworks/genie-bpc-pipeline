@@ -44,6 +44,19 @@
                         false
                     ]
                 },
+                "step": {
+                    "type": "string",
+                    "default": "update_potential_phi_fields_table",
+                    "description": "Available BPC steps",
+                    "enum": [
+                        "update_potential_phi_fields_table",
+                        "genie_bpc_pipeline"
+                    ]
+                },
+                "references_docker":{
+                    "type": "string",
+                    "description": "Name of docker to use in processes in scripts/references"
+                },
                 "schema_ignore_params": {
                     "type": "string",
                     "description": "Put parameters to ignore for validation here separated by comma",
