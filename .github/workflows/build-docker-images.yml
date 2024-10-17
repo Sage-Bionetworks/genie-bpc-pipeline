@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       REGISTRY: ghcr.io
-      IMAGE_NAME: ${{ github.repository }}-references
+      IMAGE_NAME: sagebionetworks/genie-bpc-pipeline-references
       TAG: ${{ github.ref_name }}
 
     steps:
