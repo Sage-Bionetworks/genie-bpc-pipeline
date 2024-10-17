@@ -1,5 +1,5 @@
 /*
-
+Updates the potential pHI fields table with any new variables to redact
 */
 process update_potential_phi_fields_table {
 
