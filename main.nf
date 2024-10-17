@@ -69,7 +69,7 @@ else {
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-include { update_potential_phi_fields } from './modules/update_potential_phi_fields'
+include { update_potential_phi_fields_table } from './modules/update_potential_phi_fields_table'
 include { run_quac_upload_report_error } from './modules/run_quac_upload_report_error'
 include { run_quac_upload_report_warning } from './modules/run_quac_upload_report_warning'
 include { merge_and_uncode_rca_uploads } from './modules/merge_and_uncode_rca_uploads'
@@ -91,12 +91,12 @@ workflow BPC_PIPELINE {
    ch_cohort = Channel.value(params.cohort)
    ch_comment = Channel.value(params.comment)
    
-   if (params.step == "update_potential_phi_fields") {
-    update_potential_phi_fields(ch_comment, params.production)
+   if (params.step == "update_potential_phi_fields_table") {
+    update_potential_phi_fields_table(ch_comment, params.production)
     // validate_data.out.view()
    } else if (params.step == "genie_bpc_pipeline"){
-    update_potential_phi_fields(ch_comment, params.production)
-    run_quac_upload_report_error(update_potential_phi_fields.out, ch_cohort)
+    update_potential_phi_fields_table(ch_comment, params.production)
+    run_quac_upload_report_error(update_potential_phi_fields_table.out, ch_cohort)
     run_quac_upload_report_warning(run_quac_upload_report_error.out, ch_cohort, params.production)
     merge_and_uncode_rca_uploads(run_quac_upload_report_warning.out, ch_cohort, params.production)
     // remove_patients_from_merged(merge_and_uncode_rca_uploads.out, ch_cohort, params.production)
