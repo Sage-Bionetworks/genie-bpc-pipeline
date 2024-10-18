@@ -1,11 +1,11 @@
-import pdb
+import logging
 from unittest.mock import MagicMock, create_autospec, patch
 
 import numpy as np
 import pandas as pd
 import pytest
 import synapseclient
-from synapseclient import Schema, Table
+from synapseclient import Schema, Table, client
 from table_updates import utilities
 
 
@@ -99,3 +99,79 @@ def test_download_synapse_table_with_empty_table(syn):
 
     syn.tableQuery.assert_called_once_with("SELECT * from syn123456")
     pd.testing.assert_frame_equal(result, df)
+
+@pytest.fixture
+def master_table():
+    return pd.DataFrame(
+        {
+            "form": ["patient_characteristics", "cancer_panel_test"],
+            "id": ["syn123", "syn456"],
+        }
+        )
+
+@pytest.fixture
+def column_mapping_table():
+    return pd.DataFrame(
+        {"genie_element": ["ETHNICITY_DETAILED", "PRIMARY_RACE_DETAILED", "SEQ_YEAR", "SAMPLE_TYPE_DETAILED"], 
+        "prissmm_element": ["naaccr_ethnicity_code", "naaccr_race_code_primary", "cpt_seq_date", "cpt_sample_type"],
+        "prissmm_form": ["patient_characteristics", "patient_characteristics", "cancer_panel_test", "cancer_panel_test"]}
+        )
+
+@pytest.mark.parametrize(
+    "form,bpc_column_list,expected_error",
+    [
+        ("patient_characteristics", ['other_col'], f"Invalid bpc_column_list. Column names should be matching ['naaccr_ethnicity_code', 'naaccr_race_code_primary']."),
+        ("cancer_panel_test", ['other_col'], f"Invalid bpc_column_list. Column names should be matching ['cpt_seq_date']."),
+    ],
+    ids=["invalid_patient_col", "invalid_sample_col"]
+)
+def test_overwrite_tier1a_invalid_bpc_column_list(syn, form, column_mapping_table, bpc_column_list, expected_error):
+    with pytest.raises(AssertionError) as excinfo:
+        mock_logger = MagicMock(spec=logging.Logger)
+        master_table = MagicMock()
+        main_genie_table = MagicMock()
+
+        utilities.overwrite_tier1a(syn, form, master_table, main_genie_table, column_mapping_table, bpc_column_list, mock_logger)
+
+        # validate
+        assert str(excinfo.value) == expected_error
+        mock_logger.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "form,cpt_table_id, main_genie_table,cpt_table_schema,cpt_dat,bpc_column_list,expected_cpt_seq_dat",
+    [
+        ("patient_characteristics", 
+         "syn123",
+         pd.DataFrame({"PATIENT_ID": ["GEN_1", "GEN_2"], "ETHNICITY_DETAILED": ["a", "b"],"PRIMARY_RACE_DETAILED": ["c", "d"], "OTHER_ID": ["test1", "test2"] }),
+         synapseclient.table.Schema(name='Patient Characteristics Table',parent="syn123456",column_names=["genie_patient_id", "naaccr_ethnicity_code", "naaccr_race_code_primary", "OTHER_ID"],column_types=["STRING", "STRING", "STRING","STRING"]),
+         pd.DataFrame({"genie_patient_id": ["GEN_1"], "naaccr_ethnicity_code": ["e"],"naaccr_race_code_primary": ["f"], "OTHER_ID": ["test3"] }, index=["indx"]),
+         ["naaccr_ethnicity_code"],
+         pd.DataFrame({"naaccr_ethnicity_code": ["a"]},index=["indx"]),
+         ),
+        ("cancer_panel_test", 
+         "syn456",
+         pd.DataFrame({"SAMPLE_ID": ["GEN_1", "GEN_2"], "SEQ_YEAR": ["1111.0", "2222.0"],"SAMPLE_TYPE_DETAILED": ["c", "d"], "OTHER_ID": ["test1", "test2"] }),
+         synapseclient.table.Schema(name='Cancer Panel Test Table',parent="syn123456",column_names=["cpt_genie_sample_id", "cpt_seq_date", "cpt_sample_type", "OTHER_ID"],column_types=["STRING", "STRING", "STRING","STRING"]),
+         pd.DataFrame({"cpt_genie_sample_id": ["GEN_1", "GEN_2"], "cpt_seq_date": ["3333","4444"],"cpt_sample_type": ["e", "f"], "OTHER_ID": ["test3"] },index=["indx1","indx2"]),
+         ["cpt_sample_type","cpt_seq_date"],
+         pd.DataFrame({"cpt_sample_type": ["c", "d"], "cpt_seq_date": ["1111", "2222"]},index=["indx1","indx2"]),
+         ),
+         
+    ],
+    ids=["overwrite_patient_tier1_partial_col", "overwrite_sample_tier1_col"]
+)
+def test_overwrite_tier1a_pass(syn, form, master_table, cpt_table_id, main_genie_table, column_mapping_table, cpt_table_schema, cpt_dat, bpc_column_list,expected_cpt_seq_dat):
+    with patch.object(utilities, "download_synapse_table", return_value = cpt_dat) as mock_download_synapse_table, patch.object(syn, "tableQuery") as patch_table_query,patch.object(syn, "store") as patch_store, patch("synapseclient.table.CsvFileTable"):
+        logger = MagicMock(spec=logging.Logger)
+        syn.get = MagicMock(return_value = cpt_table_schema)
+        patch_table_query.return_value =  MagicMock(etag = "test_etag")
+        # call the function
+        utilities.overwrite_tier1a(syn, form, master_table, main_genie_table, column_mapping_table, bpc_column_list, logger)
+
+        # validate
+        logger.info.assert_any_call(f"Overwrite {bpc_column_list} in {form}")
+        syn.get.assert_called_with(cpt_table_id)
+        syn.tableQuery.assert_called_with(f"SELECT * FROM {cpt_table_id}")
+        mock_download_synapse_table.assert_called_with(syn, cpt_table_id)
+        patch_store.assert_called_with(Table(cpt_table_schema, expected_cpt_seq_dat, etag=patch_table_query.etag))
