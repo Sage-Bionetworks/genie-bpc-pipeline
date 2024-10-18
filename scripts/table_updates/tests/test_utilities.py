@@ -162,7 +162,7 @@ def test_overwrite_tier1a_invalid_bpc_column_list(syn, form, column_mapping_tabl
     ids=["overwrite_patient_tier1_partial_col", "overwrite_sample_tier1_col"]
 )
 def test_overwrite_tier1a_pass(syn, form, master_table, cpt_table_id, main_genie_table, column_mapping_table, cpt_table_schema, cpt_dat, bpc_column_list,expected_cpt_seq_dat):
-    with patch.object(utilities, "download_synapse_table", return_value = cpt_dat) as mock_download_synapse_table, patch.object(syn, "tableQuery") as patch_table_query,patch.object(syn, "store") as patch_store, patch("synapseclient.table.CsvFileTable"):
+    with patch.object(utilities, "download_synapse_table", return_value = cpt_dat) as mock_download_synapse_table, patch.object(syn, "tableQuery") as patch_table_query,patch.object(syn, "store") as patch_store:
         logger = MagicMock(spec=logging.Logger)
         syn.get = MagicMock(return_value = cpt_table_schema)
         patch_table_query.return_value =  MagicMock(etag = "test_etag")
@@ -174,4 +174,8 @@ def test_overwrite_tier1a_pass(syn, form, master_table, cpt_table_id, main_genie
         syn.get.assert_called_with(cpt_table_id)
         syn.tableQuery.assert_called_with(f"SELECT * FROM {cpt_table_id}")
         mock_download_synapse_table.assert_called_with(syn, cpt_table_id)
-        patch_store.assert_called_with(Table(cpt_table_schema, expected_cpt_seq_dat, etag=patch_table_query.etag))
+        args, kwargs = patch_store.call_args
+        stored_table = args[0]
+        assert stored_table.schema == cpt_table_schema
+        pd.testing.assert_frame_equal(stored_table.asDataFrame(), expected_cpt_seq_dat.reset_index(drop=True))
+        assert stored_table.etag == "test_etag"
