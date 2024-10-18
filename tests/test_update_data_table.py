@@ -1,15 +1,14 @@
 import json
+import logging
 import os
-import pytest
 import re
 from unittest import mock
 
 import pandas as pd
+import pytest
 import synapseclient
-
-from scripts.table_updates import (
-    update_data_table,
-)
+from scripts.table_updates import utilities
+from scripts.table_updates.update_data_table import *
 
 
 @pytest.fixture
@@ -22,14 +21,6 @@ def mock_synapse(mock_syn):
     # returns the mocked syn and release table synid
     mock_syn = mock.MagicMock()
     release_files_table_synid = "syn12345"
-    # Mock the tableQuery result
-    mock_syn.tableQuery.return_value.asDataFrame.return_value = pd.DataFrame(
-        {
-            "release": ["v1.0", "v2.0"],
-            "fileSynId": ["syn23456", "syn34567"],
-            "name": ["data_clinical_sample.txt", "data_clinical_patient.txt"],
-        }
-    )
     # Mock the Link entity retrieval
     clinical_link_ent_mock = {
         "linksTo": {"targetId": "syn88888", "targetVersionNumber": 3}
@@ -70,95 +61,128 @@ def config():
         "main_genie_data_release_files": "syn16804261",
         "main_genie_sample_mapping_table": "syn7434273"
     }
-
-
-
-def test_get_main_genie_clinical_sample_file_success(
-    mock_synapse, mock_release_version
-):
-    mock_syn, mock_release_files_table_synid = mock_synapse
-    # Mock pandas.read_csv to return a non-empty DataFrame
-    clinical_df_mock = pd.DataFrame(
-        {"SAMPLE_ID": [1, 2, 3], "SEQ_YEAR": [2014, 2014, 2013], "OTHER_ID": [6, 7, 8]}
-    )
-    pd.read_csv = mock.MagicMock(return_value=clinical_df_mock)
-
-    # Call the function
-    update_data_table.get_main_genie_clinical_sample_file(
-        mock_syn, mock_release_version, mock_release_files_table_synid
-    )
-    mock_syn.tableQuery.assert_called_once_with(
-        f"SELECT * FROM {mock_release_files_table_synid}"
-    )
-    # Assert that syn.get was called in order
-    mock_syn.get.assert_called_with("syn23456", followLink=True)
-    pd.read_csv.assert_called_once_with(
-        "path/to/clinical_file.csv", sep="\t", skiprows=4
-    )
-
-
-def test_get_main_genie_clinical_sample_file_empty_file(
-    mock_synapse, mock_release_version
-):
-    mock_syn, mock_release_files_table_synid = mock_synapse
-
-    # Mock pandas.read_csv to return an empty DataFrame
-    pd.read_csv = mock.MagicMock(return_value=pd.DataFrame())
-
-    # Call the function and assert the assertion error is raised
-    with pytest.raises(
-        AssertionError, match="Clinical file pulled from syn23456 link is empty."
-    ):
-        update_data_table.get_main_genie_clinical_sample_file(
-            mock_syn, mock_release_version, mock_release_files_table_synid
+@pytest.fixture
+def column_mapping_table():
+    return pd.DataFrame(
+        {"genie_element": ["ETHNICITY_DETAILED", "PRIMARY_RACE_DETAILED", "SEQ_YEAR"], 
+        "prissmm_element": ["naaccr_ethnicity_code", "naaccr_race_code_primary", "cpt_seq_date"],
+        "prissmm_form": ["patient_characteristics", "patient_characteristics", "cancer_panel_test"]}
         )
 
-    mock_syn.tableQuery.assert_called_once_with(
-        f"SELECT * FROM {mock_release_files_table_synid}"
-    )
-    # Assert that syn.get was called in order
-    mock_syn.get.assert_called_with("syn23456", followLink=True)
-    pd.read_csv.assert_called_once_with(
-        "path/to/clinical_file.csv", sep="\t", skiprows=4
-    )
-
-
-def test_get_main_genie_clinical_sample_file_no_req_cols(
-    mock_synapse, mock_release_version
-):
-    mock_syn, mock_release_files_table_synid = mock_synapse
-
-    # Mock pandas.read_csv to return an empty DataFrame
-    pd.read_csv = mock.MagicMock(return_value=pd.DataFrame({"col1": [1, 2, 3]}))
-
-    # Call the function and assert the assertion error is raised
-    with pytest.raises(
-        AssertionError,
-        match=re.escape(
-            "Clinical file pulled from syn23456 link is missing an expected column. "
-            "Expected columns: ['SAMPLE_ID', 'SEQ_YEAR']"
-        ),
-    ):
-        update_data_table.get_main_genie_clinical_sample_file(
-            mock_syn, mock_release_version, mock_release_files_table_synid
+@pytest.fixture
+def release_files_df():
+    return pd.DataFrame(
+        {
+            "release": ["v1.0", "v1.0"],
+            "fileSynId": ["syn23456", "syn34567"],
+            "name": ["data_clinical_sample.txt", "data_clinical_patient.txt"],
+        }
         )
 
-    mock_syn.tableQuery.assert_called_once_with(
-        f"SELECT * FROM {mock_release_files_table_synid}"
-    )
-    # Assert that syn.get was called in order
-    mock_syn.get.assert_called_with("syn23456", followLink=True)
-    pd.read_csv.assert_called_once_with(
-        "path/to/clinical_file.csv", sep="\t", skiprows=4
-    )
+@pytest.mark.parametrize(
+    "clinical_df_mock,form,clinical_link_synid",
+    [
+        (pd.DataFrame({"PATIENT_ID": [1, 2, 3], "ETHNICITY_DETAILED": [1, 2, 3],"PRIMARY_RACE_DETAILED":[1, 2, 3] ,"OTHER_ID": [6, 7, 8]}), "patient_characteristics", "syn34567"),
+        (pd.DataFrame({"SAMPLE_ID": [1, 2, 3], "SEQ_YEAR": [2014, 2014, 2013], "OTHER_ID": [6, 7, 8]}), "cancer_panel_test", "syn23456"),
+    ],
+    ids=["get_patient_file", "get_sample_file"]
+)
+def test_get_main_genie_clinical_file_success(
+    mock_synapse, mock_release_version, release_files_df, column_mapping_table, clinical_df_mock, form, clinical_link_synid
+):
+    with mock.patch.object(utilities, "download_synapse_table", return_value = release_files_df) as mock_download_synapse_table:
 
+        mock_syn, mock_release_files_table_synid = mock_synapse
+        mock_logger = mock.MagicMock(spec=logging.Logger)
+        pd.read_csv = mock.MagicMock(return_value=clinical_df_mock)
+  
+        # Call the function
+        results = get_main_genie_clinical_file(
+               mock_syn, mock_release_version, mock_release_files_table_synid, form = form, column_mapping_table =column_mapping_table, logger = mock_logger
+            )
+        # validate
+        mock_download_synapse_table.assert_called_with(mock_syn, mock_release_files_table_synid)
+        mock_syn.get.assert_called_with(clinical_link_synid, followLink=True)
+        pd.read_csv.assert_called_once_with(
+            "path/to/clinical_file.csv", sep="\t", skiprows=4
+        )
+        pd.testing.assert_frame_equal(results, clinical_df_mock)
+        mock_logger.info.assert_any_call(f"CLINICAL_FILE_LINK:{clinical_link_synid}")
+        mock_logger.info.assert_any_call(f"RELEASE_FILES_TABLE_SYNID:{mock_release_files_table_synid}")
+
+
+@pytest.mark.parametrize(
+    "form,clinical_link_synid",
+    [
+        ("patient_characteristics", "syn34567"),
+        ("cancer_panel_test", "syn23456"),
+    ],
+    ids=["get_patient_file", "get_sample_file"]
+)
+def test_get_main_genie_clinical_file_empty_file(
+    mock_synapse, mock_release_version, release_files_df, column_mapping_table, form, clinical_link_synid
+):
+    with mock.patch.object(utilities, "download_synapse_table", return_value = release_files_df) as mock_download_synapse_table, pytest.raises(AssertionError, match=f"Clinical file pulled from {clinical_link_synid} link is empty."):
+        # Mock pandas.read_csv to return an empty DataFrame
+        mock_syn, mock_release_files_table_synid = mock_synapse
+        mock_logger = mock.MagicMock(spec=logging.Logger)
+        pd.read_csv = mock.MagicMock(return_value=pd.DataFrame())
+
+        # Call the function and assert the assertion error is raised
+        results = get_main_genie_clinical_file(
+               mock_syn, mock_release_version, mock_release_files_table_synid, form = form, column_mapping_table =column_mapping_table, logger = mock_logger
+            )
+
+        # validate
+        mock_download_synapse_table.assert_called_with(mock_syn, mock_release_files_table_synid)
+        mock_syn.get.assert_called_with(clinical_link_synid, followLink=True)
+        pd.read_csv.assert_called_once_with(
+            "path/to/clinical_file.csv", sep="\t", skiprows=4
+        )
+        pd.testing.assert_frame_equal(results, pd.DataFrame())
+        mock_logger.info.assert_any_call(f"CLINICAL_FILE_LINK:{clinical_link_synid}")
+        mock_logger.info.assert_any_call(f"RELEASE_FILES_TABLE_SYNID:{mock_release_files_table_synid}")
+
+@pytest.mark.parametrize(
+    "form,clinical_link_synid,expected_cols",
+    [
+        ("patient_characteristics", "syn34567","ETHNICITY_DETAILED,PRIMARY_RACE_DETAILED"),
+        ("cancer_panel_test", "syn23456","SEQ_YEAR"),
+    ],
+    ids=["get_patient_file", "get_sample_file"]
+)
+def test_get_main_genie_clinical_file_no_req_cols(
+    mock_synapse, mock_release_version, release_files_df, column_mapping_table, form, clinical_link_synid,expected_cols
+):
+    expected_error = (f"Clinical file pulled from {clinical_link_synid} link is missing an expected column. \\n"
+                     f"Expected columns: ['{expected_cols}']")
+    with mock.patch.object(utilities, "download_synapse_table", return_value = release_files_df) as mock_download_synapse_table, pytest.raises(AssertionError) as excinfo:
+        mock_syn, mock_release_files_table_synid = mock_synapse
+        mock_logger = mock.MagicMock(spec=logging.Logger)
+        pd.read_csv = mock.MagicMock(return_value=pd.DataFrame({"col1": [1, 2, 3]}))
+
+        # Call the function and assert the assertion error is raised
+        results = get_main_genie_clinical_file(
+               mock_syn, mock_release_version, mock_release_files_table_synid, form = form, column_mapping_table =column_mapping_table, logger = mock_logger
+            )
+        # validate
+        mock_download_synapse_table.assert_called_with(mock_syn, mock_release_files_table_synid)
+        mock_syn.get.assert_called_with(clinical_link_synid, followLink=True)
+        pd.read_csv.assert_called_once_with(
+            "path/to/clinical_file.csv", sep="\t", skiprows=4
+        )
+        pd.testing.assert_frame_equal(results, pd.DataFrame({"col1": [1, 2, 3]}))
+        assert str(excinfo.value) == expected_error
+        mock_logger.info.assert_any_call(f"CLINICAL_FILE_LINK:{clinical_link_synid}")
+        mock_logger.info.assert_any_call(f"RELEASE_FILES_TABLE_SYNID:{mock_release_files_table_synid}")
 
 @pytest.mark.skip(reason="This test is skipped because this integration test doesn't work in pytest env")
-def test_get_main_genie_clinical_sample_file_integration_test(config):
+def test_get_main_genie_clinical_sample_file_integration_test(config, column_mapping_table):
     syn = synapseclient.login()
-
-    update_data_table.get_main_genie_clinical_sample_file(
-        syn,
-        release=config["main_genie_release_version"],
-        release_files_table_synid=config["main_genie_data_release_files"],
-    )
+    get_main_genie_clinical_file(
+       syn,
+       release=config["main_genie_release_version"], 
+       release_files_table_synid=config["main_genie_data_release_files"], 
+       form = 'patient_characteristics', 
+       column_mapping_table =column_mapping_table, 
+       )
