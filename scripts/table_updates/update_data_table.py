@@ -388,19 +388,14 @@ def update_redact_table(syn: synapseclient.Synapse, redacted_table_info: pandas.
     syn.store(Table(full_pt_schema, result, etag=pt_dat_query.etag))
 
 
-def custom_fix_for_cancer_panel_test_table(
+def custom_fix_for_tier1a_variable(
     syn: synapseclient.Synapse,
     master_table: pandas.DataFrame,
     logger: logging.Logger,
     config: dict,
 ) -> None:
     """
-    This overwrites the cpt_seq_date column in the Cancer Panel Test
-    table in BPC with the SEQ_DATE column from the main genie clinical sample
-    file from a consortium release specified in the config.json
-
-    This also overwrites the cpt_sample_type column with the description
-    column from the main genie SAMPLE_TYPE_MAPPING table
+    This overwrites tier1a 
 
     Args:
         syn (synapseclient.Synapse): synapse client connection
@@ -430,9 +425,11 @@ def custom_fix_for_cancer_panel_test_table(
     # unlist form column in master table
     master_table["form"] = master_table["form"].apply(lambda x: ', '.join(x))
     # modify for patient table
-    utilities.overwrite_tier1a(syn, "patient_characteristics", master_table, genie_patient_dat, column_mapping_table, bpc_column_list = ["naaccr_ethnicity_code","naaccr_race_code_primary","naaccr_race_code_secondary","naaccr_race_code_tertiary","naaccr_sex_code"],logger=logger)
+    cpt_table_id, cpt_seq_dat = utilities.update_tier1a(syn, "patient_characteristics", master_table, genie_patient_dat, column_mapping_table, bpc_column_list = ["naaccr_ethnicity_code","naaccr_race_code_primary","naaccr_race_code_secondary","naaccr_race_code_tertiary","naaccr_sex_code"],logger=logger)
+    utilities.overwrite_tier1a(syn, "patient_characteristics", cpt_table_id, cpt_seq_dat, bpc_column_list = ["naaccr_ethnicity_code","naaccr_race_code_primary","naaccr_race_code_secondary","naaccr_race_code_tertiary","naaccr_sex_code"], logger=logger)
     # modify for sample table 
-    utilities.overwrite_tier1a(syn, "cancer_panel_test", master_table, genie_sample_dat, column_mapping_table, bpc_column_list = ["cpt_sample_type", "cpt_seq_date"], logger=logger)
+    cpt_table_id, cpt_seq_dat =  utilities.update_tier1a(syn, "cancer_panel_test", master_table, genie_sample_dat, column_mapping_table, bpc_column_list = ["cpt_sample_type", "cpt_seq_date"], logger=logger)
+    utilities.overwrite_tier1a(syn, "cancer_panel_test", cpt_table_id, cpt_seq_dat, bpc_column_list=["cpt_sample_type", "cpt_seq_date"], logger=logger)
     logger.info("Completed")
 
 
@@ -509,7 +506,7 @@ def main():
     # update data tables
     store_data(syn, master_table, label_data, table_type, cohort, logger, dry_run)
     if not dry_run:
-        custom_fix_for_cancer_panel_test_table(syn, master_table, logger, config)
+        custom_fix_for_tier1a_variable(syn, master_table, logger, config)
         if table_type == "primary":
             table_id, condition = list(TABLE_INFO["redacted"])
             redacted_table_info = utilities.download_synapse_table(syn, table_id, condition = condition)

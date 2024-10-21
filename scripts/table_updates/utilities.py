@@ -1,6 +1,7 @@
 # !/usr/bin/python
 import logging
 import sys
+from typing import List, Tuple
 
 import pandas
 import synapseclient
@@ -198,19 +199,37 @@ def revert_table_version(syn, table_id):
     syn.store(Table(table_schema, temp_data))
 
 
-def overwrite_tier1a(syn, form, master_table, main_genie_table, column_mapping_table, bpc_column_list, logger) -> None:
+def update_tier1a(syn: synapseclient.Synapse, form: str, master_table: pandas.DataFrame, main_genie_table: pandas.DataFrame, column_mapping_table: pandas.DataFrame, bpc_column_list: List[str],logger: logging.Logger = None, cohort: str = "") -> Tuple[str, pandas.DataFrame]:
+    """Replace tier1a variables in patient_characteristics or cancer_panel_test table with Main GENIE release files
+
+    Args:
+        syn (synapseclient.Synapse): The synapse client connection
+        form (str): The form name, can be either patient_characteristics or cancer_panel_test
+        master_table (pandas.DataFrame): Table of all of the primary or irr BPC tables
+        main_genie_table (pandas.DataFrame): The dataframe of Main GENIE release
+        column_mapping_table (pandas.DataFrame): The column mapping table between BPC and Main GENIE
+        bpc_column_list (List[str]): The column list to be replaced
+        logger (logging.Logger, optional): The custom logger. Optional. Defaults to None.
+        cohort (str, optional): The cohort name. Defaults to "".
+
+    Returns:
+        Tuple[str, pandas.DataFrame]: The synapse ID for BPC table to be modified and the updated table as dataframe
+    """
     # check the validity of bpc_column_list
     valid_col = column_mapping_table.loc[column_mapping_table["prissmm_form"] == form,].prissmm_element.tolist()
     assert all(item in valid_col for item in bpc_column_list), (f"Invalid bpc_column_list. Column names should be matching {valid_col}.")
 
-    logger.info(f"Overwrite {bpc_column_list} in {form}")
+    logger.info(f"Update {bpc_column_list} in {form}")
     # load bpc table
     cpt_table_id = master_table.loc[
         master_table["form"] == form, "id"
     ].values[0]
-    cpt_table_schema = syn.get(cpt_table_id)
-    cpt_dat_query = syn.tableQuery(f"SELECT * FROM {cpt_table_id}")
-    cpt_dat = download_synapse_table(syn, cpt_table_id)
+
+    if cohort:
+        condition = f"cohort = '{cohort}'"
+        cpt_dat = download_synapse_table(syn, cpt_table_id, condition = condition)
+    else:
+        cpt_dat = download_synapse_table(syn, cpt_table_id)
     cpt_dat.index = cpt_dat.index.map(str)
     cpt_dat["index"] = cpt_dat.index
     # subset main_genie_table based on bpc_column_list
@@ -233,11 +252,29 @@ def overwrite_tier1a(syn, form, master_table, main_genie_table, column_mapping_t
             right_on="SAMPLE_ID",
         )
     cpt_seq_dat.index = cpt_seq_dat["index"]
+    cpt_seq_dat.index.name =  None
     cpt_seq_dat = cpt_seq_dat[main_genie_column_list]
     cpt_seq_dat.columns = bpc_column_list
     # reformat cpt_seq_date column
     if "cpt_seq_date" in cpt_seq_dat.columns:
         cpt_seq_dat["cpt_seq_date"] = cpt_seq_dat["cpt_seq_date"].map(float_to_int)
-    syn.store(Table(cpt_table_schema, cpt_seq_dat, etag=cpt_dat_query.etag))
+    return cpt_table_id, cpt_seq_dat
 
+def overwrite_tier1a(syn: synapseclient.Synapse, form: str, cpt_table_id: str, cpt_seq_dat: pandas.DataFrame, bpc_column_list: List[str], logger: logging.Logger = None) -> None:
+    """Function to update tier1a columns with outputs from update_tier1a
+
+    Args:
+        syn (synapseclient.Synapse): The synapse client connection
+        form (str): The form name, can be either patient_characteristics or cancer_panel_test
+        cpt_table_id (str): The synapse ID for BPC table to be modified
+        cpt_seq_dat (pandas.DataFrame): The updated BPC table as dataframe
+        bpc_column_list (List[str]): The column list to be replaced
+        logger (logging.Logger, optional): The custom logger. Defaults to None.
+    """
+    # check the validity of bpc_column_list
+    logger.info(f"Overwrite {bpc_column_list} in {form}")
+    # load bpc table
+    cpt_table_schema = syn.get(cpt_table_id)
+    cpt_dat_query = syn.tableQuery(f"SELECT * FROM {cpt_table_id}")
+    syn.store(Table(cpt_table_schema, cpt_seq_dat, etag=cpt_dat_query.etag))
 
