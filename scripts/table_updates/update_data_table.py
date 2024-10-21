@@ -17,62 +17,105 @@ python update_table_update.py -m [version_message] irr
 import argparse
 import datetime
 import json
+import logging
 import math
+import sys
+from typing import List
 
-import pandas
 import numpy
+import pandas
+import synapseclient
+import utilities
+from synapseclient import Schema, Table
 
-from utilities import *
-
-TABLE_INFO = {
-    "primary": ("syn23285911", "table_type='data'"),
-    "irr": ("syn21446696", "table_type='data' and double_curated is true"),
+TABLES = {
+    "production": {
+        "primary": ("syn23285911", "table_type='data'"),
+        "irr": ("syn21446696", "table_type='data' and double_curated is true"),
+        "redacted": ("syn21446696", "table_type='data' and double_curated is false"),
+    },
+    "staging": {
+        "primary": ("syn63616766", "table_type='data'"),
+        "redacted": ("syn63617582", "table_type='data' and double_curated is false"),
+    },
 }
 
 
-def get_main_genie_clinical_sample_file(
+def get_main_genie_clinical_file(
     syn: synapseclient.Synapse,
     release: str,
     release_files_table_synid: str,
+    form: str, 
+    column_mapping_table: pandas.DataFrame,
     logger: logging.Logger = None,
 ) -> pandas.DataFrame:
-    """This retrieves the main genie clinical sample file from consortium release
+    """This retrieves the main genie clinical patient or sample file from consortium release
 
     Args:
         syn (synapseclient.Synapse): synapse client connection
         release (str): release version to pull from for main genie
         release_files_table_synid (str): synapse id of the data relese files table
         from main genie
+        form (str): form name, can be either patient_characteristics or cancer_panel_test
+        column_mapping_table (pandas.DataFrame): GENIE BPC Elements Mapping table
         logger (logging.Logger): custom logger. Optional.
 
     Returns:
         pandas.DataFrame: the read in clinical file as dataframe
     """
-    release_files = syn.tableQuery(
-        f"SELECT * FROM {release_files_table_synid}"
-    ).asDataFrame()
-    clinical_link_synid = release_files[
-        (release_files["release"] == release)
-        & (release_files["name"] == "data_clinical_sample.txt")
-    ]["fileSynId"].values[0]
+    release_files = utilities.download_synapse_table(syn, release_files_table_synid)
+    if form == "patient_characteristics": 
+        clinical_link_synid = release_files[
+            (release_files["release"] == release)
+            & (release_files["name"] == "data_clinical_patient.txt")
+            ]["fileSynId"].values[0]
+    else: 
+        clinical_link_synid = release_files[
+            (release_files["release"] == release)
+            & (release_files["name"] == "data_clinical_sample.txt") 
+            ]["fileSynId"].values[0]
     clinical_ent = syn.get(clinical_link_synid, followLink=True)
     clinical_df = pandas.read_csv(clinical_ent.path, sep="\t", skiprows=4)
+    # get column list for the form
+    column_list = column_mapping_table.loc[column_mapping_table['prissmm_form']== form, ].genie_element.to_list()
     assert (
         not clinical_df.empty
     ), f"Clinical file pulled from {clinical_link_synid} link is empty."
-    assert set(["SAMPLE_ID", "SEQ_YEAR"]) < set(clinical_df.columns), (
-        f"Clinical file pulled from {clinical_link_synid} link is missing an expected column. "
-        "Expected columns: ['SAMPLE_ID', 'SEQ_YEAR']"
+    assert set(column_list) < set(clinical_df.columns), (
+        f"Clinical file pulled from {clinical_link_synid} link is missing an expected column. \\n"
+        f"Expected columns: {column_list}"
     )
     if logger:
-        logger.info(f"CLINICAL_SAMPLE_FILE_LINK:{clinical_link_synid}")
+        logger.info(f"CLINICAL_FILE_LINK:{clinical_link_synid}")
         logger.info(f"RELEASE_FILES_TABLE_SYNID:{release_files_table_synid}")
-    return clinical_df[["SAMPLE_ID", "SEQ_YEAR"]]
+    return clinical_df
 
 
-def _store_data(syn, table_id, label_data, table_type, logger, dry_run):
+def _store_data(syn: synapseclient.Synapse, table_id: str, label_data: pandas.DataFrame, table_type: str, cohort: str, logger: logging.Logger, dry_run: bool):
+    """Helper function to store data to each table in the master table.
+
+    Before uploading data to the Synapse table, the provided label data is filtered 
+    based on matching columns between the label data and the table schema, as well 
+    as the form_label. Data cleansing, including the removal of rows with no data 
+    and the conversion of numeric values to integers, is applied to the label data.
+
+    When table_type is set to 'primary', existing data for the cohort is wiped, and 
+    new data is inserted. When table_type is set to 'irr', only records that do not 
+    already exist in the table are added. The dry_run flag can be used to toggle 
+    between uploading the table to Synapse or saving it locally.
+
+    Args:
+        syn (synapseclient.Synapse): Synapse client connection
+        table_id (string): The table id
+        label_data (pandas.DataFrame): The uploaded data
+        table_type (string): Table type, primary or irr
+        cohort (string): Cohort name
+        logger (logging.Logger): The custom logger. Optional.
+        dry_run (bool): The dry run flag. If True, perform a dry run.
+    """
     table_schema = syn.get(table_id)
     logger.info(f"Updating table: {table_schema.name} {table_id}")
+    # subset columns for the uploaded data
     form_label = table_schema.form_label[0]
     table_columns = syn.getColumns(table_schema.columnIds)
     table_columns = [col["name"] for col in list(table_columns)]
@@ -81,6 +124,7 @@ def _store_data(syn, table_id, label_data, table_type, logger, dry_run):
     )  # variable in dd but not in data
     table_columns.append("redcap_repeat_instrument")
     temp_data = label_data[table_columns]
+    # subset the uploaded data based on form_label
     if form_label == "non-repeating":
         temp_data = temp_data[temp_data.redcap_repeat_instrument.isnull()]
     else:
@@ -98,30 +142,42 @@ def _store_data(syn, table_id, label_data, table_type, logger, dry_run):
         else:
             cols_to_skip.append("redcap_repeat_instance")
     rows_to_drop = temp_data.index[
-        temp_data.apply(lambda row: check_empty_row(row, cols_to_skip), axis=1)
+        temp_data.apply(lambda row: utilities.check_empty_row(row, cols_to_skip), axis=1)
     ]
     temp_data.drop(index=rows_to_drop, inplace=True)
     # remove .0 from all columns
-    temp_data = temp_data.applymap(lambda x: float_to_int(x))
+    temp_data = temp_data.applymap(lambda x: utilities.float_to_int(x))
     # update table
-    table_query = syn.tableQuery("SELECT * from %s" % table_id)
+    table_query = syn.tableQuery(
+        f"SELECT * FROM {table_schema.id} where cohort = '{cohort}'"
+    )
     if table_type == "irr":
         # check for exsiting id to update for new data only
         existing_records = list(set(table_query.asDataFrame()["record_id"]))
         temp_data = temp_data[~temp_data["record_id"].isin(existing_records)]
     if not dry_run:
         if table_type == "primary":
-            table = syn.delete(table_query.asRowSet())  # wipe the table
+            table = syn.delete(table_query)  # wipe the cohort data
         table = syn.store(Table(table_schema, temp_data))
     else:
         temp_data.to_csv(table_id + "_temp.csv")
 
 
-def store_data(syn, master_table, label_data, table_type, logger, dry_run):
+def store_data(syn: synapseclient.Synapse, master_table: pandas.DataFrame, label_data: pandas.DataFrame, table_type: str, cohort: str, logger: logging.Logger, dry_run: bool):
+    """Store data to each table in the master table.
+
+    Args:
+        syn (synapseclient.Synapse): Synapse client connection
+        master_table (pandas.DataFrame): Table of all of the primary or irr BPC tables
+        label_data (pandas.DataFrame): The uploaded data
+        table_type (string): Table type, primary or irr
+        cohort (string): Cohort name
+        logger (logging.Logger): The custom logger. Optional.
+        dry_run (bool): The dry run flag. If True, perform a dry run.
+    """
     logger.info("Updating data for %s tables..." % table_type)
     for table_id in master_table["id"]:
-        _store_data(syn, table_id, label_data, table_type, logger, dry_run)
-
+        _store_data(syn, table_id, label_data, table_type, cohort, logger, dry_run)
 
 def get_phi_cutoff(unit):
     switcher = {"day": math.floor(89 * 365), "month": math.floor(89 * 12), "year": 89}
@@ -211,15 +267,32 @@ def _redact_table(df, interval_cols_info):
             to_redact = _to_redact_interval(df[col], unit)
             index_to_redact = to_redact.index[to_redact == True]
             df.loc[index_to_redact, col] = ""
-            df[col] = df[col].map(float_to_int)
+            df[col] = df[col].map(utilities.float_to_int)
             record_to_redact = record_to_redact + [
                 df["record_id"][x] for x in index_to_redact
             ]
     return df, record_to_redact
 
 
-def update_redact_table(syn, redacted_table_info, full_data_table_info, logger):
-    interval_cols_info = download_synapse_table(syn, "syn23281483", "")
+def update_redact_table(syn: synapseclient.Synapse, redacted_table_info: pandas.DataFrame, full_data_table_info: pandas.DataFrame, cohort: str, logger: logging.Logger):
+    """Update redacted table
+
+    Before uploading data to the Synapse table, records are identified for redaction 
+    based on criteria such as birth year, sequencing age, vital status, and interval 
+    fields. The redacted data is then stored in the BPC internal tables.
+    
+    A special case applies to the Patient Characteristics table: flagged records are 
+    updated, with the birth_year field cleared. Additionally, the "redacted" column 
+    in this table is updated within the Sage Internal project.
+    
+    Args:
+        syn (synapseclient.Synapse): Synapse client connection
+        redacted_table_info (pandas.DataFrame): Table of all of the redacted tables
+        full_data_table_info (pandas.DataFrame): Table of all of the primary or irr BPC tables
+        cohort (string): Cohort name
+        logger (logging.Logger): The custom logger. Optional.
+    """
+    interval_cols_info = utilities.download_synapse_table(syn, "syn23281483")
     # Create new master table
     master_table = redacted_table_info.merge(
         full_data_table_info, on="name", suffixes=("_redacted", "_full")
@@ -234,16 +307,11 @@ def update_redact_table(syn, redacted_table_info, full_data_table_info, logger):
     sample_table_id = master_table.loc[
         master_table["name"] == "Cancer Panel Test", "id_full"
     ].values[0]
-    curation_info = syn.tableQuery(
-        "SELECT record_id, curation_dt FROM %s" % curation_table_id
-    ).asDataFrame()
-    patient_info = syn.tableQuery(
-        "SELECT record_id, birth_year, hybrid_death_ind FROM %s" % patient_table_id
-    ).asDataFrame()
-    sample_info = syn.tableQuery(
-        "SELECT record_id, cpt_genie_sample_id, age_at_seq_report FROM %s"
-        % sample_table_id
-    ).asDataFrame()
+    # download tables
+    condition = f"cohort = '{cohort}'"
+    curation_info = utilities.download_synapse_table(syn, curation_table_id, "record_id, curation_dt", condition)
+    patient_info = utilities.download_synapse_table(syn, patient_table_id, "record_id, birth_year, hybrid_death_ind", condition)
+    sample_info = utilities.download_synapse_table(syn, sample_table_id, "record_id, cpt_genie_sample_id, age_at_seq_report", condition)
     patient_curation_info = patient_info.merge(
         curation_info, how="left", on="record_id"
     )
@@ -268,17 +336,20 @@ def update_redact_table(syn, redacted_table_info, full_data_table_info, logger):
     for _, row in master_table.iterrows():
         if row["name"] != "Patient Characteristics":
             table_id = row["id_full"]
-            df = syn.tableQuery("SELECT * FROM %s" % table_id).asDataFrame()
+            df = utilities.download_synapse_table(syn, table_id, condition = condition)
             new_df, new_record_to_redact = _redact_table(df, interval_cols_info)
             new_df.reset_index(drop=True, inplace=True)
             record_to_redact = record_to_redact + new_record_to_redact
             table_schema = syn.get(row["id_redacted"])
             logger.info("Updating table: %s" % table_schema.name)
-            table_query = syn.tableQuery("SELECT * from %s" % row["id_redacted"])
-            table = syn.delete(table_query.asRowSet())  # wipe the table
+            table_query = syn.tableQuery(
+                f"SELECT * from {table_schema.id} where cohort = '{cohort}'"
+            )
+            table = syn.delete(table_query)  # wipe the table
             table = syn.store(Table(table_schema, new_df))
+
     # Modify patient table
-    df = syn.tableQuery("SELECT * FROM %s" % patient_table_id).asDataFrame()
+    df = utilities.download_synapse_table(syn, patient_table_id, condition = condition)
     new_df, new_record_to_redact = _redact_table(df, interval_cols_info)
     new_df.reset_index(drop=True, inplace=True)
     record_to_redact = record_to_redact + new_record_to_redact
@@ -287,23 +358,27 @@ def update_redact_table(syn, redacted_table_info, full_data_table_info, logger):
     final_record = list(set(record_to_redact))
     new_df.loc[new_df["record_id"].isin(final_record), "redacted"] = "Yes"
     new_df.loc[new_df["record_id"].isin(final_record), "birth_year"] = ""
-    new_df["birth_year"] = new_df["birth_year"].map(float_to_int)
+    new_df["birth_year"] = new_df["birth_year"].map(utilities.float_to_int)
     new_df["redacted"] = new_df["redacted"].fillna(value="No")
     redacted_patient_id = master_table.loc[
         master_table["name"] == "Patient Characteristics", "id_redacted"
     ].values[0]
     table_schema = syn.get(redacted_patient_id)
-    table_query = syn.tableQuery("SELECT * from %s" % redacted_patient_id)
-    table = syn.delete(table_query.asRowSet())  # wipe the table
+    table_query = syn.tableQuery(
+        f"SELECT * from {redacted_patient_id} where cohort = '{cohort}'"
+    )
+    table = syn.delete(table_query)  # wipe the table
     table = syn.store(Table(table_schema, new_df))
     # Update redacted column in full data patient table
-    logger.info("Updating redacted column in the internal table...")
+    logger.info("Updating redacted column in the Sage internal table...")
     full_pt_id = master_table.loc[
         master_table["name"] == "Patient Characteristics", "id_full"
     ].values[0]
     full_pt_schema = syn.get(full_pt_id)
-    pt_dat_query = syn.tableQuery("SELECT cohort, record_id FROM %s" % full_pt_id)
-    pt_dat = pt_dat_query.asDataFrame()
+    pt_dat_query = syn.tableQuery(
+        f"SELECT cohort, record_id FROM {full_pt_id} where cohort = '{cohort}'"
+    )
+    pt_dat = utilities.download_synapse_table(syn, full_pt_id, "cohort, record_id", condition = condition)
     pt_dat.index = pt_dat.index.map(str)
     pt_dat["index"] = pt_dat.index
     info_to_update = new_df[["cohort", "record_id", "redacted"]]
@@ -313,19 +388,14 @@ def update_redact_table(syn, redacted_table_info, full_data_table_info, logger):
     syn.store(Table(full_pt_schema, result, etag=pt_dat_query.etag))
 
 
-def custom_fix_for_cancer_panel_test_table(
+def custom_fix_for_tier1a_variable(
     syn: synapseclient.Synapse,
     master_table: pandas.DataFrame,
     logger: logging.Logger,
     config: dict,
 ) -> None:
     """
-    This overwrites the cpt_seq_date column in the Cancer Panel Test
-    table in BPC with the SEQ_DATE column from the main genie clinical sample
-    file from a consortium release specified in the config.json
-
-    This also overwrites the cpt_sample_type column with the description
-    column from the main genie SAMPLE_TYPE_MAPPING table
+    This overwrites tier1a 
 
     Args:
         syn (synapseclient.Synapse): synapse client connection
@@ -333,52 +403,33 @@ def custom_fix_for_cancer_panel_test_table(
         logger (logging.Logger): logger object
         config (dict): config read in
     """
-    logger.info("Custom fix in progress...")
-    # Modify the cpt_seq_date table per request
-    cpt_table_id = master_table.loc[
-        master_table["form_label"] == "Cancer Panel Test", "id"
-    ].values[0]
-    cpt_table_schema = syn.get(cpt_table_id)
-    cpt_dat_query = syn.tableQuery("SELECT cpt_genie_sample_id FROM %s" % cpt_table_id)
-    cpt_dat = cpt_dat_query.asDataFrame()
-    cpt_dat.index = cpt_dat.index.map(str)
-    cpt_dat["index"] = cpt_dat.index
-    genie_sample_dat = get_main_genie_clinical_sample_file(
+    logger.info("Overwrite tier1a variables in progress...")
+    # load GENIE BPC elements mapping table
+    column_mapping_table = utilities.download_synapse_table(syn, "syn20945902")
+    genie_patient_dat = get_main_genie_clinical_file(
         syn,
         release=config["main_genie_release_version"],
         release_files_table_synid=config["main_genie_data_release_files"],
+        form = "patient_characteristics",
+        column_mapping_table=column_mapping_table,
         logger=logger,
     )
-    cpt_seq_dat = cpt_dat.merge(
-        genie_sample_dat,
-        how="left",
-        left_on="cpt_genie_sample_id",
-        right_on="SAMPLE_ID",
+    genie_sample_dat = get_main_genie_clinical_file(
+        syn,
+        release=config["main_genie_release_version"],
+        release_files_table_synid=config["main_genie_data_release_files"],
+        form = "cancer_panel_test",
+        column_mapping_table=column_mapping_table,
+        logger=logger,
     )
-    cpt_seq_dat.index = cpt_seq_dat["index"]
-    cpt_seq_dat = cpt_seq_dat[["SEQ_YEAR"]]
-    cpt_seq_dat.columns = ["cpt_seq_date"]
-    cpt_seq_dat["cpt_seq_date"] = cpt_seq_dat["cpt_seq_date"].map(float_to_int)
-    syn.store(Table(cpt_table_schema, cpt_seq_dat, etag=cpt_dat_query.etag))
-    # Modify the cpt_sample_type -> map to text value
-    cpt_table_schema = syn.get(cpt_table_id)
-    cpt_dat_query = syn.tableQuery(
-        "SELECT cpt_sample_type FROM %s WHERE cpt_sample_type in (1,2,3,4,5,6,7)"
-        % cpt_table_id
-    )
-    cpt_dat = cpt_dat_query.asDataFrame()
-    cpt_dat["cpt_sample_type"] = pandas.to_numeric(cpt_dat["cpt_sample_type"])
-    sample_type_mapping = syn.tableQuery(
-        f"SELECT * FROM {config['main_genie_sample_mapping_table']}"
-    ).asDataFrame()
-    sample_type_mapping_dict = sample_type_mapping.set_index("CODE").to_dict()[
-        "DESCRIPTION"
-    ]
-    cpt_dat["cpt_sample_type"] = cpt_dat["cpt_sample_type"].map(
-        sample_type_mapping_dict
-    )
-    syn.store(Table(cpt_table_schema, cpt_dat, etag=cpt_dat_query.etag))
-    logger.info(f"SAMPLE_MAPPING_TYPE:{config['main_genie_sample_mapping_table']}")
+    # unlist form column in master table
+    master_table["form"] = master_table["form"].apply(lambda x: ', '.join(x))
+    # modify for patient table
+    cpt_table_id, cpt_seq_dat = utilities.update_tier1a(syn, "patient_characteristics", master_table, genie_patient_dat, column_mapping_table, bpc_column_list = ["naaccr_ethnicity_code","naaccr_race_code_primary","naaccr_race_code_secondary","naaccr_race_code_tertiary","naaccr_sex_code"],logger=logger)
+    utilities.overwrite_tier1a(syn, "patient_characteristics", cpt_table_id, cpt_seq_dat, bpc_column_list = ["naaccr_ethnicity_code","naaccr_race_code_primary","naaccr_race_code_secondary","naaccr_race_code_tertiary","naaccr_sex_code"], logger=logger)
+    # modify for sample table 
+    cpt_table_id, cpt_seq_dat =  utilities.update_tier1a(syn, "cancer_panel_test", master_table, genie_sample_dat, column_mapping_table, bpc_column_list = ["cpt_sample_type", "cpt_seq_date"], logger=logger)
+    utilities.overwrite_tier1a(syn, "cancer_panel_test", cpt_table_id, cpt_seq_dat, bpc_column_list=["cpt_sample_type", "cpt_seq_date"], logger=logger)
     logger.info("Completed")
 
 
@@ -388,7 +439,7 @@ def main():
         description="Update data tables on Synapse for BPC databases"
     )
     parser.add_argument(
-        "table", type=str, help="Specify table type to run", choices=TABLE_INFO.keys()
+        "table", type=str, help="Specify table type to run", choices=TABLES["production"].keys()
     )
     parser.add_argument(
         "-s",
@@ -399,6 +450,18 @@ def main():
     parser.add_argument(
         "-p", "--project_config", default="config.json", help="Project config file"
     )
+    parser.add_argument(
+        "-c",
+        "--cohort",
+        default="",
+        help="Cohort name for which the tables should be updated",
+    )
+    parser.add_argument(
+        "-pd",
+        "--production",
+        action="store_true",
+        help="Save output to production folder",
+    )
     parser.add_argument("-m", "--message", default="", help="Version comment")
     parser.add_argument("-d", "--dry_run", action="store_true", help="dry run flag")
 
@@ -406,15 +469,17 @@ def main():
     table_type = args.table
     synapse_config = args.synapse_config
     project_config = args.project_config
+    cohort = args.cohort
+    production = args.production
     comment = args.message
     dry_run = args.dry_run
 
     # login to synapse
-    syn = synapse_login(synapse_config)
+    syn = utilities.synapse_login(synapse_config)
 
     # create logger
     logger_name = "testing" if dry_run else "production"
-    logger = setup_custom_logger(logger_name)
+    logger = utilities.setup_custom_logger(logger_name)
     logger.info("Updating data tables on Synapse!")
 
     # read the project config file
@@ -424,41 +489,35 @@ def main():
 
     # get master table
     # This is the internal tables with non redacted
+    if production:
+        TABLE_INFO = TABLES["production"]
+    else:
+        TABLE_INFO = TABLES["staging"]
     table_id, condition = list(TABLE_INFO[table_type])
-    master_table = download_synapse_table(syn, table_id, condition)
-    # This contains external tables with redacted
-    TABLE_INFO["redacted"] = (
-        "syn21446696",
-        "table_type='data' and double_curated is false",
-    )
-
+    master_table = utilities.download_synapse_table(syn, table_id, condition = condition)
     # download data files
     # TODO: find the cohort that has new data
     # This is a mapping to all the intake data. e.g: ProstateBPCIntake_data
     # found here: https://www.synapse.org/Synapse:syn23286928
     cohort_info_selected = config[table_type]
-    cohort_data_list = []
-    for cohort in cohort_info_selected:
-        df = get_data(syn, cohort_info_selected[cohort], cohort)
-        cohort_data_list.append(df)
-    label_data = pandas.concat(cohort_data_list, axis=0, ignore_index=True)
+    label_data = utilities.get_data(syn, cohort_info_selected[cohort], cohort)
     label_data["redacted"] = numpy.nan
 
     # update data tables
-    store_data(syn, master_table, label_data, table_type, logger, dry_run)
+    store_data(syn, master_table, label_data, table_type, cohort, logger, dry_run)
     if not dry_run:
-        custom_fix_for_cancer_panel_test_table(syn, master_table, logger, config)
+        custom_fix_for_tier1a_variable(syn, master_table, logger, config)
         if table_type == "primary":
             table_id, condition = list(TABLE_INFO["redacted"])
-            redacted_table_info = download_synapse_table(syn, table_id, condition)
+            redacted_table_info = utilities.download_synapse_table(syn, table_id, condition = condition)
             logger.info("Updating redacted tables...")
-            update_redact_table(syn, redacted_table_info, master_table, logger)
+            #update_redact_table(syn, redacted_table_info, master_table, cohort, logger)
             logger.info("Updating version for redacted tables")
             for table_id in redacted_table_info["id"]:
-                update_version(syn, table_id, comment)
+                utilities.update_version(syn, table_id, comment)
         logger.info("Updating version for %s tables" % table_type)
         for table_id in master_table["id"]:
-            update_version(syn, table_id, comment)
+            utilities.update_version(syn, table_id, comment)
         logger.info("Table update is completed!")
 
 
