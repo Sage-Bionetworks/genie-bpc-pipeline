@@ -3,8 +3,8 @@ name: Build and Push Docker Images
 on:
   push:
     branches: [develop, 'GEN*', 'gen*']
-    paths: # add the paths to each new module here
-      - 'scripts/references/**'
+    paths:
+      - 'scripts/**'
       - '.github/workflows/build-docker-images.yml'
   workflow_dispatch:
 

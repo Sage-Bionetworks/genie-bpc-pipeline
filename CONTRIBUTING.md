@@ -20,7 +20,6 @@ If you wish to contribute a new step, please use the following guidelines:
 
 We have automated docker builds to GHCR whenever there are changes to the scripts within a "module" as each module has its own image. Whenever a new module gets added, the github workflow `.github/workflows/build-docker-images.yml` should be updated.
 
-1. Add your module path to `paths:`
 1. Under `jobs` add your module name to `matrix:`
 1. Once you push your changes, your docker image will build and will in the form: `<registry>/<repo>:<folder_name>-<branch>` (Example: `ghcr.io/genie-bpc-pipeline:references-gen-1485-update-potential-phi`)
 
