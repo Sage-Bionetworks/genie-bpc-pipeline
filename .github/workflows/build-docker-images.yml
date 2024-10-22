@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        module: ["references"] # Define the modules you want to loop through
+        module: ["references", "table_updates"] # Define the modules you want to loop through
     env:
       REGISTRY: ghcr.io
       IMAGE_NAME: sage-bionetworks/genie-bpc-pipeline
