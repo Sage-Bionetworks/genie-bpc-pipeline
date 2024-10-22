@@ -3,7 +3,7 @@ name: Build and Push Docker Images
 on:
   push:
     branches: [develop, 'GEN*', 'gen*']
-    paths: # add the paths to each new module
+    paths: # add the paths to each new module here
       - 'scripts/references/**'
       - '.github/workflows/build-docker-images.yml'
   workflow_dispatch:
@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        module: ["references", "table_updates"] # Define the modules you want to loop through
+        module: ["references", "table_updates"] # Define the modules you want to loop through for builds
     env:
       REGISTRY: ghcr.io
       IMAGE_NAME: sage-bionetworks/genie-bpc-pipeline
