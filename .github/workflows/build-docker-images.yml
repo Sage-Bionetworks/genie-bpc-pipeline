@@ -36,11 +36,17 @@ jobs:
     - name: Check for Changes in scripts/${{ matrix.module }}
       id: check_changes
       run: |
-        # Check for a merge base, fallback to root commit if none exists
-        if git merge-base --is-ancestor origin/develop HEAD; then
-          DIFF_BASE="origin/develop"
+        # Determine the correct DIFF_BASE
+        if [ "${{ github.ref_name }}" = "gen-add-ghcr-docker-builds" ]; then
+          # On the develop branch, compare with the previous commit (HEAD^)
+          DIFF_BASE="HEAD^"
         else
-          DIFF_BASE=$(git rev-list --max-parents=0 HEAD)  # Use the initial commit as fallback
+          # On feature branches, compare with origin/develop
+          if git merge-base --is-ancestor origin/develop HEAD; then
+            DIFF_BASE="origin/develop"
+          else
+            DIFF_BASE=$(git rev-list --max-parents=0 HEAD)  # Use the initial commit as fallback
+          fi
         fi
 
         # Compare changes between DIFF_BASE and HEAD
