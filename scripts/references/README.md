@@ -2,7 +2,7 @@
 
 ## Overview
 
-These scripts pertain to updating references used in BPC data processing.   
+These scripts pertain to updating references used in BPC data processing.
 
 ## Installation
 
@@ -45,22 +45,26 @@ Usage: update_potential_phi_fields_table.R [options]
 
 
 Options:
-	-f SYNID_FILE_SOR, --synid_file_sor=SYNID_FILE_SOR
-		Synapse ID of Scope of Release file (default: syn22294851)
-
-	-t SYNID_TABLE_RED, --synid_table_red=SYNID_TABLE_RED
-		Synapse ID of table listing variables to redact (default: syn23281483)
-
 	-a AUTH, --auth=AUTH
 		path to .synapseConfig or Synapse PAT (default: standard login precedence)
 
+	-d , --dry_run
+		Whether to dry-run or not.
+
+	--production
+		Whether to run in production mode (uses production project) or not (runs in staging mode and uses staging project).
+
 	-h, --help
 		Show this help message and exit
+
+	-c, --comment
+		Comment for new table snapshot version. This must be unique and is tied to the cohort run.
 ```
 
-Example run: 
+Example run (runs in staging mode) with version comment 3.0.1 for
+potential PHI fields table when updated:
 ```
-Rscript update_potential_phi_fields_table.R 
+Rscript update_potential_phi_fields_table.R -c "version3.0.1"
 ```
 
 ## Usage: updating the cBioPortal mapping table 
@@ -94,7 +98,7 @@ Options:
 
 Example run: 
 ```
-Rscript update_potential_phi_fields_table.R -v
+Rscript update_cbio_mapping.R -v
 ```
 
 ## Usage: updating upload tracking table 
@@ -126,4 +130,39 @@ Options:
 Example run: 
 ```
 Rscript update_date_tracking_table.R -c CRC -d 2022-03-31 -s 'round x update to crc'
+```
+
+## Running tests
+There are unit tests under `scripts/references/tests`.
+
+1. Please pull and run the docker image associated with this modules from [here](https://github.com/Sage-Bionetworks/genie-bpc-pipeline/pkgs/container/genie-bpc-pipeline) into your EC2/local.
+
+```bash
+docker run -d --name <nickname_for_container> <container_name> /bin/bash -c "while true; do sleep 1; done"
+```
+
+2. Do anything you need to do to the container (e.g: copy current local changes)
+
+```bash
+docker cp ./. test_container:/usr/local/src/myscripts
+```
+
+3. Execute container into a bash session
+
+```bash
+docker exec -it <nickname_for_container> /bin/bash
+```
+
+4. Install the `mockery` and `testthat` packages:
+
+```bash
+R -e "remotes::install_cran('mockery')"
+R -e "remotes::install_cran('testthat')"
+```
+
+5. Run the following in a R session:
+
+```R
+library(testthat)
+test_dir("/usr/local/src/myscripts/tests")
 ```
