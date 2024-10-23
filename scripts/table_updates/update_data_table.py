@@ -393,6 +393,7 @@ def custom_fix_for_tier1a_variable(
     master_table: pandas.DataFrame,
     logger: logging.Logger,
     config: dict,
+    cohort: str = "",
 ) -> None:
     """
     This overwrites tier1a 
@@ -402,6 +403,7 @@ def custom_fix_for_tier1a_variable(
         master_table (pandas.DataFrame): table of all of the primary BPC tables
         logger (logging.Logger): logger object
         config (dict): config read in
+        cohort (str): cohort name
     """
     logger.info("Overwrite tier1a variables in progress...")
     # load GENIE BPC elements mapping table
@@ -425,10 +427,10 @@ def custom_fix_for_tier1a_variable(
     # unlist form column in master table
     master_table["form"] = master_table["form"].apply(lambda x: ', '.join(x))
     # modify for patient table
-    cpt_table_id, cpt_seq_dat = utilities.update_tier1a(syn, "patient_characteristics", master_table, genie_patient_dat, column_mapping_table, bpc_column_list = ["naaccr_ethnicity_code","naaccr_race_code_primary","naaccr_race_code_secondary","naaccr_race_code_tertiary","naaccr_sex_code"],logger=logger)
+    cpt_table_id, cpt_seq_dat = utilities.update_tier1a(syn, "patient_characteristics", master_table, genie_patient_dat, column_mapping_table, bpc_column_list = ["naaccr_ethnicity_code","naaccr_race_code_primary","naaccr_race_code_secondary","naaccr_race_code_tertiary","naaccr_sex_code"],logger=logger, cohort = cohort)
     utilities.overwrite_tier1a(syn, "patient_characteristics", cpt_table_id, cpt_seq_dat, bpc_column_list = ["naaccr_ethnicity_code","naaccr_race_code_primary","naaccr_race_code_secondary","naaccr_race_code_tertiary","naaccr_sex_code"], logger=logger)
     # modify for sample table 
-    cpt_table_id, cpt_seq_dat =  utilities.update_tier1a(syn, "cancer_panel_test", master_table, genie_sample_dat, column_mapping_table, bpc_column_list = ["cpt_sample_type", "cpt_seq_date"], logger=logger)
+    cpt_table_id, cpt_seq_dat =  utilities.update_tier1a(syn, "cancer_panel_test", master_table, genie_sample_dat, column_mapping_table, bpc_column_list = ["cpt_sample_type", "cpt_seq_date"], logger=logger,cohort = cohort)
     utilities.overwrite_tier1a(syn, "cancer_panel_test", cpt_table_id, cpt_seq_dat, bpc_column_list=["cpt_sample_type", "cpt_seq_date"], logger=logger)
     logger.info("Completed")
 
@@ -506,12 +508,12 @@ def main():
     # update data tables
     store_data(syn, master_table, label_data, table_type, cohort, logger, dry_run)
     if not dry_run:
-        custom_fix_for_tier1a_variable(syn, master_table, logger, config)
+        custom_fix_for_tier1a_variable(syn, master_table, logger, config, cohort)
         if table_type == "primary":
             table_id, condition = list(TABLE_INFO["redacted"])
             redacted_table_info = utilities.download_synapse_table(syn, table_id, condition = condition)
             logger.info("Updating redacted tables...")
-            #update_redact_table(syn, redacted_table_info, master_table, cohort, logger)
+            update_redact_table(syn, redacted_table_info, master_table, cohort, logger)
             logger.info("Updating version for redacted tables")
             for table_id in redacted_table_info["id"]:
                 utilities.update_version(syn, table_id, comment)
