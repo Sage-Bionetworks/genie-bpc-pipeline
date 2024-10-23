@@ -51,8 +51,8 @@ def download_synapse_table(syn, table_id: str, select: str = "*", condition: str
     Args:
         syn: Synapse credential
         table_id: Synapse ID of a table
-        select: Columns to be selected
-        condition: additional condition for querying the table
+        select: Columns to be selected. Defaults to all columns. 
+        condition: Additional condition for querying the table. Defaults to all rows. 
 
     Returns:
         A Pandas dataframe of the Synapse table
