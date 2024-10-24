@@ -45,14 +45,16 @@ def check_empty_row(row, cols_to_skip):
     return row.drop(cols_to_skip).isnull().all()
 
 
-def download_synapse_table(syn, table_id: str, select: str = "*", condition: str = "") -> pandas.DataFrame:
+def download_synapse_table(
+    syn, table_id: str, select: str = "*", condition: str = ""
+) -> pandas.DataFrame:
     """Download Synapse Table with the given table ID and condition
 
     Args:
         syn: Synapse credential
         table_id: Synapse ID of a table
-        select: Columns to be selected. Defaults to all columns. 
-        condition: Additional condition for querying the table. Defaults to all rows. 
+        select: Columns to be selected. Defaults to all columns.
+        condition: Additional condition for querying the table. Defaults to all rows.
 
     Returns:
         A Pandas dataframe of the Synapse table
@@ -78,9 +80,11 @@ def download_synapse_table(syn, table_id: str, select: str = "*", condition: str
         "-NaN",
         "nan",
         "-nan",
-        ""
+        "",
     ]
-    synapse_table = synapse_table.asDataFrame(na_values=na_values, keep_default_na=False)
+    synapse_table = synapse_table.asDataFrame(
+        na_values=na_values, keep_default_na=False
+    )
     return synapse_table
 
 
@@ -113,7 +117,7 @@ def get_data(syn, label_data_id, cohort):
         "-NaN",
         "nan",
         "-nan",
-        ""
+        "",
     ]
     label_data = pandas.read_csv(
         syn.get(label_data_id).path,
