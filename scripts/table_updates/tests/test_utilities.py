@@ -13,7 +13,7 @@ from table_updates import utilities
 def syn():
     return create_autospec(synapseclient.Synapse)
 
-def test_download_synapse_table_with_selected_columns(syn):
+def test_download_synapse_table_with_selected_single_column(syn):
     select = "col1"
     df = pd.DataFrame({
         'col1': ['value1', 'value2']

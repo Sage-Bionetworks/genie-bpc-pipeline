@@ -37,7 +37,7 @@ jobs:
       id: check_changes
       run: |
         # Determine the correct DIFF_BASE
-        if [ "${{ github.ref_name }}" == "develop" ]; then
+        if [ "${{ github.ref_name }}" = "develop" ]; then
           # On the develop branch, compare with the previous commit (HEAD^)
           DIFF_BASE="HEAD^"
         else
