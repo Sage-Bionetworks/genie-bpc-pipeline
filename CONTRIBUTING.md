@@ -13,7 +13,7 @@
     git checkout develop
     git checkout -b gen-1234-{feature-here}
     ```
-4. Once you have made your additions or changes, make sure you write tests and run the [comparison scripts](https://github.com/Sage-Bionetworks/Genie_processing/blob/create_generalized_comparison_script/utility_scripts/compare_between_two_synapse_entities.py) to ensure changes are expected.
+4. Once you have made your additions or changes, make sure you write tests and run [comparison scripts](https://github.com/Sage-Bionetworks/Genie_processing/blob/ed806d163fa4063a84920483e8ada21ea4b6cf47/README.md#comparisons-between-two-synapse-entities) to ensure changes are expected.
 5. At this point, you have only created the branch locally, you need to push this to your fork on GitHub.
 
     ```
