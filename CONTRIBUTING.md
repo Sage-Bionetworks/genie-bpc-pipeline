@@ -13,15 +13,15 @@
     git checkout develop
     git checkout -b gen-1234-{feature-here}
     ```
-4. Once you have made your additions or changes, make sure you write tests and run the [comparison scripts](https://github.com/Sage-Bionetworks/Genie_processing/blob/create_generalized_comparison_script/utility_scripts/compare_between_two_synapse_entities.py) to ensure changes are expected.
+4. Once you have made your additions or changes, make sure you write tests and run [comparison scripts](https://github.com/Sage-Bionetworks/Genie_processing/blob/ed806d163fa4063a84920483e8ada21ea4b6cf47/README.md#comparisons-between-two-synapse-entities) to ensure changes are expected.
 5. At this point, you have only created the branch locally, you need to push this to your fork on GitHub.
 
     ```
     git add your file
     git commit -m"your commit information"
-    git push --set-upstream origin SYNPY-1234-{feature-here}
+    git push --set-upstream origin gen-1234-{feature-here}
     ```
-6. Create a pull request from the feature branch to the develop branch. An Github action will be triggered to create a docker image for the branch, you can check it [here](https://github.com/Sage-Bionetworks/genie-bpc-pipeline/pkgs/container/genie-bpc-pipeline).
+6. Create a pull request from the feature branch to the develop branch. When changes are made to `script/<module_folder_name>` (only applies to scripts/references and scripts/table_updates for now), a Github action will be triggered to create a docker image for the branch, you can check it [here](https://github.com/Sage-Bionetworks/genie-bpc-pipeline/pkgs/container/genie-bpc-pipeline). 
 
 ## Nextflow Pipeline contribution
 
