@@ -53,3 +53,7 @@ Parameters should be initialized / defined with default values in the set parame
 ### Default processes resource requirements
 
 Defaults for process resource requirements (CPUs / memory / time) for a process should be defined in `nextflow.config`.
+
+### Testing
+1. To test locally,  you can’t use ghcr.io/sage-bionetworks/docker_image_name locally directly. You will need to pull the docker image to local and test with it. 
+2. To test on Sequra, go to the test_bpc_pipeline, edit the pipeline by pointing it to your feature branch then update. Doing this will allow you to select parameters from the dropdown menu directly. 
