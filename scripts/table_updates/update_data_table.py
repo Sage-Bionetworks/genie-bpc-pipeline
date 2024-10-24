@@ -54,7 +54,7 @@ def get_main_genie_clinical_sample_file(
     Returns:
         pandas.DataFrame: the read in clinical file as dataframe
     """
-    release_files = download_synapse_table(syn, release_files_table_synid)
+    release_files = download_synapse_table(syn, table_id = release_files_table_synid)
     clinical_link_synid = release_files[
         (release_files["release"] == release)
         & (release_files["name"] == "data_clinical_sample.txt")
@@ -136,7 +136,7 @@ def _store_data(syn: synapseclient.Synapse, table_id: str, label_data: pandas.Da
     )
     if table_type == "irr":
         # check for exsiting id to update for new data only
-        existing_records = list(set(table_query.asDataFrame()["record_id"]))
+        existing_records = list(set(download_synapse_table(syn, table_id = table_schema.id, condition= f"cohort = '{cohort}'")["record_id"]))
         temp_data = temp_data[~temp_data["record_id"].isin(existing_records)]
     if not dry_run:
         if table_type == "primary":
@@ -275,7 +275,7 @@ def update_redact_table(syn: synapseclient.Synapse, redacted_table_info: pandas.
         cohort (string): Cohort name
         logger (logging.Logger): The custom logger. Optional.
     """
-    interval_cols_info = download_synapse_table(syn, "syn23281483")
+    interval_cols_info = download_synapse_table(syn, table_id = "syn23281483")
     # Create new master table
     master_table = redacted_table_info.merge(
         full_data_table_info, on="name", suffixes=("_redacted", "_full")
@@ -292,9 +292,9 @@ def update_redact_table(syn: synapseclient.Synapse, redacted_table_info: pandas.
     ].values[0]
     # download tables
     condition = f"cohort = '{cohort}'"
-    curation_info = download_synapse_table(syn, curation_table_id, "record_id, curation_dt", condition)
-    patient_info = download_synapse_table(syn, patient_table_id, "record_id, birth_year, hybrid_death_ind", condition)
-    sample_info = download_synapse_table(syn, sample_table_id, "record_id, cpt_genie_sample_id, age_at_seq_report", condition)
+    curation_info = download_synapse_table(syn, table_id = curation_table_id, select = "record_id, curation_dt", condition = condition)
+    patient_info = download_synapse_table(syn, table_id = patient_table_id, select = "record_id, birth_year, hybrid_death_ind", condition = condition)
+    sample_info = download_synapse_table(syn, table_id = sample_table_id, select = "record_id, cpt_genie_sample_id, age_at_seq_report", condition = condition)
     patient_curation_info = patient_info.merge(
         curation_info, how="left", on="record_id"
     )
@@ -332,7 +332,7 @@ def update_redact_table(syn: synapseclient.Synapse, redacted_table_info: pandas.
             table = syn.store(Table(table_schema, new_df))
 
     # Modify patient table
-    df = download_synapse_table(syn, patient_table_id, condition = condition)
+    df = download_synapse_table(syn, table_id = patient_table_id, condition = condition)
     new_df, new_record_to_redact = _redact_table(df, interval_cols_info)
     new_df.reset_index(drop=True, inplace=True)
     record_to_redact = record_to_redact + new_record_to_redact
@@ -361,7 +361,7 @@ def update_redact_table(syn: synapseclient.Synapse, redacted_table_info: pandas.
     pt_dat_query = syn.tableQuery(
         f"SELECT cohort, record_id FROM {full_pt_id} where cohort = '{cohort}'"
     )
-    pt_dat = download_synapse_table(syn, full_pt_id, "cohort, record_id", condition = condition)
+    pt_dat = download_synapse_table(syn, table_id = full_pt_id, select = "cohort, record_id", condition = condition)
     pt_dat.index = pt_dat.index.map(str)
     pt_dat["index"] = pt_dat.index
     info_to_update = new_df[["cohort", "record_id", "redacted"]]
@@ -398,7 +398,7 @@ def custom_fix_for_cancer_panel_test_table(
     ].values[0]
     cpt_table_schema = syn.get(cpt_table_id)
     cpt_dat_query = syn.tableQuery("SELECT cpt_genie_sample_id FROM %s" % cpt_table_id)
-    cpt_dat = download_synapse_table(syn, cpt_table_id, select = "cpt_genie_sample_id")
+    cpt_dat = download_synapse_table(syn, table_id = cpt_table_id, select = "cpt_genie_sample_id")
     cpt_dat.index = cpt_dat.index.map(str)
     cpt_dat["index"] = cpt_dat.index
     genie_sample_dat = get_main_genie_clinical_sample_file(
@@ -424,9 +424,9 @@ def custom_fix_for_cancer_panel_test_table(
         "SELECT cpt_sample_type FROM %s WHERE cpt_sample_type in (1,2,3,4,5,6,7)"
         % cpt_table_id
     )
-    cpt_dat = download_synapse_table(syn, cpt_table_id, "cpt_sample_type", "cpt_sample_type in (1,2,3,4,5,6,7)")
+    cpt_dat = download_synapse_table(syn, table_id = cpt_table_id, select = "cpt_sample_type", condition = "cpt_sample_type in (1,2,3,4,5,6,7)")
     cpt_dat["cpt_sample_type"] = pandas.to_numeric(cpt_dat["cpt_sample_type"])
-    sample_type_mapping = download_synapse_table(syn, config['main_genie_sample_mapping_table'])
+    sample_type_mapping = download_synapse_table(syn, table_id = config['main_genie_sample_mapping_table'])
     sample_type_mapping_dict = sample_type_mapping.set_index("CODE").to_dict()[
         "DESCRIPTION"
     ]
