@@ -2,16 +2,16 @@
 Update Synapse tables with merged and uncoded data.
 */
 process update_data_table {
+   container "$params.table_updates_docker"
 
-   container 'sagebionetworks/genie-bpc-pipeline-table-updates'
    secret 'SYNAPSE_AUTH_TOKEN'
    debug true
 
    input:
    val previous
    val cohort
-   val production
    val comment
+   val production
 
    output:
    stdout
