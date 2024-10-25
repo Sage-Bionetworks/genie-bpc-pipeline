@@ -19,7 +19,7 @@ process merge_and_uncode_rca_uploads {
    if (production) {
       """
       cd /usr/local/src/myscripts/
-      Rscript merge_and_uncode_rca_uploads.R -c $cohort -u -v
+      Rscript merge_and_uncode_rca_uploads.R -c $cohort -v --production
       """
    }
    else {

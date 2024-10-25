@@ -687,7 +687,7 @@ main <- function(){
                 help="Save output to Synapse"),
     make_option(c("-a", "--synapse_auth"), type = "character", default = NA,
                 help="Path to .synapseConfig file or Synapse PAT (default: normal synapse login behavior)"),
-    make_option(c("-p", "--production"), action="store_true", default = FALSE, 
+    make_option(c("--production"), action="store_true", default = FALSE, 
                 help="Whether to run in production mode or not (staging mode)."),
     make_option(c("-v", "--verbose"), action="store_true", default = FALSE, 
                 help="Print out verbose output on script progress")

@@ -95,6 +95,9 @@ workflow BPC_PIPELINE {
    if (params.step == "update_potential_phi_fields_table") {
     update_potential_phi_fields_table(ch_comment, params.production)
     // validate_data.out.view()
+   } else if (params.step == "merge_and_uncode_rca_uploads"){
+    merge_and_uncode_rca_uploads("default", ch_cohort, params.production)
+   }
    } else if (params.step == "genie_bpc_pipeline"){
     update_potential_phi_fields_table(ch_comment, params.production)
     run_quac_upload_report_error(update_potential_phi_fields_table.out, ch_cohort)

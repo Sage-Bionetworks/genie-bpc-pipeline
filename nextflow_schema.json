@@ -57,6 +57,10 @@
                     "type": "string",
                     "description": "Name of docker to use in processes in scripts/references"
                 },
+                "uploads_docker":{
+                    "type": "string",
+                    "description": "Name of docker to use in processes in scripts/uploads"
+                },
                 "schema_ignore_params": {
                     "type": "string",
                     "description": "Put parameters to ignore for validation here separated by comma",
