@@ -1,4 +1,3 @@
-library(mockery)
 library(testthat)
 
 source(testthat::test_path("..", "merge_and_uncode_rca_uploads.R"))
