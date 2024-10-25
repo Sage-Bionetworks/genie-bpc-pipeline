@@ -5,9 +5,13 @@
 
 # pre-setup ----------------------------
 
-library(optparse)
-library(yaml)
+library(dplyr)
 library(glue)
+library(lubridate)
+library(optparse)
+library(synapser)
+library(yaml)
+
 
 waitifnot <- function(cond, msg) {
   if (!cond) {
@@ -21,7 +25,7 @@ waitifnot <- function(cond, msg) {
   }
 }
 
-# user input ----------------------------
+# globals ----------------------------
 
 workdir <- "."
 if (!file.exists("config.yaml")) {
@@ -29,47 +33,7 @@ if (!file.exists("config.yaml")) {
 }
 
 config <- read_yaml(glue("{workdir}/config.yaml"))
-cohorts <- names(config$upload)
-cohorts_str <- paste0(cohorts, collapse = ", ")
 
-option_list <- list( 
-  make_option(c("-c", "--cohort"), type = "character",
-              help=glue("BPC cohort (choices: {cohorts_str}, {config$misc$all})")),
-  make_option(c("-u", "--save_synapse"), action="store_true", default = FALSE, 
-              help="Save output to Synapse"),
-  make_option(c("-a", "--synapse_auth"), type = "character", default = NA,
-              help="Path to .synapseConfig file or Synapse PAT (default: normal synapse login behavior)"),
-  make_option(c("-v", "--verbose"), action="store_true", default = FALSE, 
-              help="Print out verbose output on script progress")
-)
-opt <- parse_args(OptionParser(option_list=option_list))
-
-cohort_input <- opt$cohort
-save_on_synapse <- opt$save_synapse
-auth <- opt$synapse_auth
-debug <- opt$verbose
-waitifnot(!is.null(opt$cohort),
-          msg = "Usage: Rscript merge_and_uncode_rca_uploads.R -h")
-
-# setup ----------------------------
-
-tic = as.double(Sys.time())
-
-library(synapser)
-library(dplyr)
-library(lubridate)
-
-# check user input --------------------
-
-waitifnot(is.element(cohort_input, c(cohorts, config$misc$all)), 
-            msg = glue("Error: cohort '{cohort_input}' invalid.  Valid values: {cohorts_str}."))
-
-waitifnot(is.element(save_on_synapse, c(T, F)), 
-          msg = glue("Error: save_on_synapse value '{args[3]}' invalid.  Valid values: TRUE or FALSE."))
-
-if (cohort_input == config$misc$all) {
-  cohort_input = cohorts
-}
 
 # functions ----------------------------
 
@@ -659,10 +623,21 @@ write_output_locally <- function(cohort, data_pri, data_irr) {
   return(files_output)
 }
 
+
+#' Gets the synapse folder id for the outputs of this step
+#' @param cohort (string) name of cohort
+#' @param environment (string) whether we are running in production env or staging env
+get_output_folder_id <- function(config, environment){
+  return(config$synapse$rca_files[[glue(environment, "_id")]])
+}
+
 #' Write to Synapse and clean up
-save_output_synapse <- function(cohort) {
+#' Remove leading and trailing whitespace from a string.
+#' @param cohort (string) name of cohort
+#' @param environment (string) whether we are running in production env or staging env
+save_output_synapse <- function(cohort, environment) {
   
-  parent_id <- config$synapse$rca_files$id
+  parent_id <- get_output_folder_id(config, environment)
   file_output_pri <- get_pri_file_name(cohort)
   file_output_irr <- get_irr_file_name(cohort)
   synid_dd <- get_bpc_synid_prissmm(synid_table_prissmm = config$synapse$prissmm$id, 
@@ -698,90 +673,143 @@ save_output_synapse <- function(cohort) {
   }
 }
 
-# synapse login -------------------
-
-status <- synLogin(auth = auth)
-
 # main ----------------------------
 
-if (debug) {
-  print(glue("{now(timeOnly = T)}: Reading global response set..."))
-}
+main <- function(){
 
-grs <- read.csv(synGet(config$synapse$grs$id)$path, 
-                sep = ",", 
-                stringsAsFactors = F,
-                check.names = F,
-                na.strings = c(""))
+  cohorts <- names(config$upload)
+  cohorts_str <- paste0(cohorts, collapse = ", ")
 
-# for each user-specified cohort
-for (cohort in cohort_input) {
-  
-  if (debug) {
-    print(glue("{now(timeOnly = T)}: Merging and uncoding data for cohort {cohort} -------------------"))
-    print(glue("{now(timeOnly = T)}: Reading data dictionary..."))
+  option_list <- list( 
+    make_option(c("-c", "--cohort"), type = "character",
+                help=glue("BPC cohort (choices: {cohorts_str}, {config$misc$all})")),
+    make_option(c("-u", "--save_synapse"), action="store_true", default = FALSE, 
+                help="Save output to Synapse"),
+    make_option(c("-a", "--synapse_auth"), type = "character", default = NA,
+                help="Path to .synapseConfig file or Synapse PAT (default: normal synapse login behavior)"),
+    make_option(c("-p", "--production"), action="store_true", default = FALSE, 
+                help="Whether to run in production mode or not (staging mode)."),
+    make_option(c("-v", "--verbose"), action="store_true", default = FALSE, 
+                help="Print out verbose output on script progress")
+  )
+  opt <- parse_args(OptionParser(option_list=option_list))
+
+  cohort_input <- opt$cohort
+  save_on_synapse <- opt$save_synapse
+  auth <- opt$synapse_auth
+  debug <- opt$verbose
+  waitifnot(!is.null(opt$cohort),
+            msg = "Usage: Rscript merge_and_uncode_rca_uploads.R -h")
+
+  if (opt$production){
+    env <- "production"
+  } else {
+    env <- "staging"
   }
-  
-  dd <- get_data_dictionary(cohort)
-  
-  if (debug) {
-    print(glue("{now(timeOnly = T)}: Reading data uploads..."))
+
+  # setup ----------------------------
+
+  tic = as.double(Sys.time())
+
+  # check user input --------------------
+
+  waitifnot(is.element(cohort_input, c(cohorts, config$misc$all)), 
+              msg = glue("Error: cohort '{cohort_input}' invalid.  Valid values: {cohorts_str}."))
+
+  waitifnot(is.element(save_on_synapse, c(T, F)), 
+            msg = glue("Error: save_on_synapse value '{args[3]}' invalid.  Valid values: TRUE or FALSE."))
+
+  if (cohort_input == config$misc$all) {
+    cohort_input = cohorts
   }
-  
-  data_upload <- get_data_uploads(cohort)
-  
+  # synapse login
+  status <- synLogin(auth = auth)
+
   if (debug) {
-    print(glue("{now(timeOnly = T)}: Merging data uploads..."))
+    print(glue("{now(timeOnly = T)}: Reading global response set..."))
   }
-  
-  # merge
-  coded <- merge_datasets(data_upload, cohort)
-  
-  if (debug) {
-    print(glue("{now(timeOnly = T)}: Uncoding data uploads..."))
-  }
-  
-  # uncode
-  uncoded <- uncode_data(df_coded = coded, 
-                         dd = dd,
-                         grs = grs)
-  
-  if (debug) {
-    print(glue("{now(timeOnly = T)}: Formatting uncoded data..."))
-  }
-  
-  # format data
-  uncoded_formatted <- format_rca(uncoded, dd = dd)
-  
-  # separate IRR from non-IRR cases
-  data_pri <- remove_irr(uncoded_formatted)
-  data_irr <- get_irr(uncoded_formatted)
-  
-  if (debug) {
-    print(glue("{now(timeOnly = T)}: Writing uncoded data to file locally..."))
-  }
-  
-  write_output_locally(cohort, data_pri, data_irr)
-  
-  if (save_on_synapse) {
+
+  grs <- read.csv(synGet(config$synapse$grs$id)$path, 
+                  sep = ",", 
+                  stringsAsFactors = F,
+                  check.names = F,
+                  na.strings = c(""))
+
+  # for each user-specified cohort
+  for (cohort in cohort_input) {
     
     if (debug) {
-      print(glue("{now(timeOnly = T)}: Saving uncoded data to Synapse..."))
+      print(glue("{now(timeOnly = T)}: Merging and uncoding data for cohort {cohort} -------------------"))
+      print(glue("{now(timeOnly = T)}: Reading data dictionary..."))
     }
     
-    save_output_synapse(cohort)
+    dd <- get_data_dictionary(cohort)
+    
+    if (debug) {
+      print(glue("{now(timeOnly = T)}: Reading data uploads..."))
+    }
+    
+    data_upload <- get_data_uploads(cohort)
+    
+    if (debug) {
+      print(glue("{now(timeOnly = T)}: Merging data uploads..."))
+    }
+    
+    # merge
+    coded <- merge_datasets(data_upload, cohort)
+    
+    if (debug) {
+      print(glue("{now(timeOnly = T)}: Uncoding data uploads..."))
+    }
+    
+    # uncode
+    uncoded <- uncode_data(df_coded = coded, 
+                          dd = dd,
+                          grs = grs)
+    
+    if (debug) {
+      print(glue("{now(timeOnly = T)}: Formatting uncoded data..."))
+    }
+    
+    # format data
+    uncoded_formatted <- format_rca(uncoded, dd = dd)
+    
+    # separate IRR from non-IRR cases
+    data_pri <- remove_irr(uncoded_formatted)
+    data_irr <- get_irr(uncoded_formatted)
+    
+    if (debug) {
+      print(glue("{now(timeOnly = T)}: Writing uncoded data to file locally..."))
+    }
+    
+    write_output_locally(cohort, data_pri, data_irr)
+    
+    if (save_on_synapse) {
+      
+      if (debug) {
+        print(glue("{now(timeOnly = T)}: Saving uncoded data to Synapse..."))
+      }
+      
+      save_output_synapse(cohort, environment = env)
+    }
+    
+    # clean up for memory
+    rm(data_pri)
+    rm(data_irr)
+    rm(uncoded_formatted)
+    rm(uncoded)
+    rm(coded)
+    rm(data_upload)
   }
-  
-  # clean up for memory
-  rm(data_pri)
-  rm(data_irr)
-  rm(uncoded_formatted)
-  rm(uncoded)
-  rm(coded)
-  rm(data_upload)
+
+  # close out ----------------------------
+
+  toc = as.double(Sys.time())
+  print(glue("Runtime: {round(toc - tic)} s"))
+
 }
 
-# close out ----------------------------
-
-toc = as.double(Sys.time())
-print(glue("Runtime: {round(toc - tic)} s"))
+# only run main when not sourced
+if (sys.nframe() == 0) {
+  main()
+}
