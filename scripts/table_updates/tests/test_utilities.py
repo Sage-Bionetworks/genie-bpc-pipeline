@@ -99,6 +99,42 @@ def test_download_synapse_table_with_condition(
     pd.testing.assert_frame_equal(result, expected_df)
 
 
+@pytest.mark.parametrize(
+    "query_return_df,select,condition,query,expected_df",
+    [
+        (
+            pd.DataFrame({"col1": ["value1"], "col2": [1]}),
+            "col1",
+            "col1 = 'value1'",
+            "SELECT col1 from syn123456 WHERE col1 = 'value1'",
+            pd.DataFrame({"col1": ["value1"], "col2": [1]}),
+        ),
+        (
+            pd.DataFrame({"col1": ["value1"], "col2": [1]}),
+            "col1,col2",
+            "col1 = 'value1'",
+            "SELECT col1,col2 from syn123456 WHERE col1 = 'value1'",
+            pd.DataFrame({"col1": ["value1"], "col2": [1]}),
+        ),
+    ],
+    ids=[
+        "selected_one_columns_with_condition",
+        "select_multiple_columns_with_condition",
+    ],
+)
+def test_download_synapse_table_with_select_and_condition(
+    syn, table_schema, query_return_df, select, condition, query, expected_df
+):
+    syn.tableQuery = MagicMock(return_value=Table(table_schema, query_return_df))
+    result = utilities.download_synapse_table(
+        syn, "syn123456", select=select, condition=condition
+    )
+
+    # validate
+    syn.tableQuery.assert_called_once_with(query)
+    pd.testing.assert_frame_equal(result, expected_df)
+
+
 def test_download_empty_synapse_table_with_condition(
     syn,
     table_schema,
