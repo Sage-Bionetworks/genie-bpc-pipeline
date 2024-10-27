@@ -6,11 +6,14 @@ BPC Table Update
 Installation and Setup
 ----------------------
 ### Python version
-Make sure you have Python 3.8 installed
+Make sure you have Python 3.8 installed.
 
 
 ### Install the required packages
-    (sudo) pip install -r requirements.txt
+
+```
+pip install -r requirements.txt
+```
 
 ### Synapse Credential
 Please make sure you have the [.synapseConfig file](https://help.synapse.org/docs/Client-Configuration.1985446156.html)
@@ -19,6 +22,15 @@ Please make sure you have the [.synapseConfig file](https://help.synapse.org/doc
 Use a t3.2xlarge ec2 instance for large memory requirement.
 
 Putting it all together.
+
+> [!NOTE]  
+> Due to this tool using an older version of the python client, until there is bandwidth to update
+> please do `rm -rf ~/.synapseCache/*` to clear the synapse cache to avoid this error
+> ```
+> if cached_time.endswith(".000Z"):
+> AttributeError: 'dict' object has no attribute 'endswith'
+> ```
+
 
 ```
 # Make sure you have anaconda installed
