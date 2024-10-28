@@ -702,8 +702,10 @@ main <- function(){
             msg = "Usage: Rscript merge_and_uncode_rca_uploads.R -h")
 
   if (opt$production){
+    print(glue("Running in production mode"))
     env <- "production"
   } else {
+    print(glue("Running in staging mode"))
     env <- "staging"
   }
 
