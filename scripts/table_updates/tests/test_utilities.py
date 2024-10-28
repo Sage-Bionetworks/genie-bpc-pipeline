@@ -153,16 +153,46 @@ def test_download_empty_synapse_table_with_condition(
     "input_df,expected_df",
     [
         (
-            pd.DataFrame({"col1": ["\\abc", "def"], "col2": ["abc", "def\\"]}),
-            pd.DataFrame({"col1": ["abc", "def"], "col2": ["abc", "def"]}),
+            pd.DataFrame(
+                {
+                    "col1": ["\\abc", "def"], 
+                    "col2": ["abc", "def\\"]
+                }
+            ),
+            pd.DataFrame(
+                {
+                    "col1": ["abc", "def"], 
+                    "col2": ["abc", "def"]
+                }
+            ),
         ),
         (
-            pd.DataFrame({"col1": ["abc", "def"], "col2": ["abc", "def\\"]}),
-            pd.DataFrame({"col1": ["abc", "def"], "col2": ["abc", "def"]}),
+            pd.DataFrame(
+                {
+                    "col1": ["abc", "def"], 
+                    "col2": ["abc", "def\\"]
+                }
+            ),
+            pd.DataFrame(
+                {
+                    "col1": ["abc", "def"], 
+                    "col2": ["abc", "def"]
+                }
+            ),
         ),
         (
-            pd.DataFrame({"col1": ["abc", "def"], "col2": ["abc", "def"]}),
-            pd.DataFrame({"col1": ["abc", "def"], "col2": ["abc", "def"]}),
+            pd.DataFrame(
+                {
+                    "col1": ["abc", "def"], 
+                    "col2": ["abc", "def"]
+                }
+            ),
+            pd.DataFrame(
+                {
+                    "col1": ["abc", "def"], 
+                    "col2": ["abc", "def"]
+                }
+            ),
         ),
         (
             pd.DataFrame(
