@@ -138,6 +138,9 @@ def _store_data(
     temp_data.drop(index=rows_to_drop, inplace=True)
     # remove .0 from all columns
     temp_data = temp_data.applymap(lambda x: float_to_int(x))
+    # remove backslash from drugs_drug cols in ca_directed_drugs
+    if table_schema.name == "Ca Directed Drugs":
+        temp_data = remove_backslash(temp_data)
     # update table
     table_query = syn.tableQuery(
         f"SELECT * FROM {table_schema.id} where cohort = '{cohort}'"

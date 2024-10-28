@@ -199,3 +199,25 @@ def revert_table_version(syn, table_id):
     table_query = syn.tableQuery("SELECT * from %s" % table_id)
     syn.delete(table_query.asRowSet())
     syn.store(Table(table_schema, temp_data))
+
+
+def remove_backslash(df: pandas.DataFrame) -> pandas.DataFrame:
+    """Function to detect and remove unwanted backslashes in columns from a dataframe
+
+    Args:
+        df (pandas.DataFrame): A dataframe to check against
+
+    Returns:
+        pandas.DataFrame: A dataframe with unwanted backslashes removed
+    """
+    # Check columns with backslashes
+    columns_with_backslash = [
+        col for col in df.columns if df[col].astype(str).str.contains(r"\\").any()
+    ]
+
+    if columns_with_backslash:
+        df[columns_with_backslash] = df[columns_with_backslash].replace(
+            r"\\", "", regex=True
+        )
+
+    return df

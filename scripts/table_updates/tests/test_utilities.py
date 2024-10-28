@@ -147,3 +147,45 @@ def test_download_empty_synapse_table_with_condition(
     # validate
     syn.tableQuery.assert_called_once_with("SELECT * from syn123456 WHERE col2 = 1")
     pd.testing.assert_frame_equal(result, pd.DataFrame(columns=["col1", "col2"]))
+
+
+@pytest.mark.parametrize(
+    "input_df,expected_df",
+    [
+        (
+            pd.DataFrame({"col1": ["\\abc", "def"], "col2": ["abc", "def\\"]}),
+            pd.DataFrame({"col1": ["abc", "def"], "col2": ["abc", "def"]}),
+        ),
+        (
+            pd.DataFrame({"col1": ["abc", "def"], "col2": ["abc", "def\\"]}),
+            pd.DataFrame({"col1": ["abc", "def"], "col2": ["abc", "def"]}),
+        ),
+        (
+            pd.DataFrame({"col1": ["abc", "def"], "col2": ["abc", "def"]}),
+            pd.DataFrame({"col1": ["abc", "def"], "col2": ["abc", "def"]}),
+        ),
+        (
+            pd.DataFrame(
+                {
+                    "col1": ["\\abc", "de\\f", "ghi\\"],
+                    "col2": ["abc(\\hh)", "def,\\,hh", "ghi, ,\\hh"],
+                }
+            ),
+            pd.DataFrame(
+                {
+                    "col1": ["abc", "def", "ghi"],
+                    "col2": ["abc(hh)", "def,,hh", "ghi, ,hh"],
+                }
+            ),
+        ),
+    ],
+    ids=[
+        "multiple_columns_with_backslash",
+        "one_column_with_backslash",
+        "none_column_with_backslash",
+        "backslashes_in_multiple_places",
+    ],
+)
+def test_remove_backslash(input_df, expected_df):
+    results = utilities.remove_backslash(input_df)
+    pd.testing.assert_frame_equal(results, expected_df)
