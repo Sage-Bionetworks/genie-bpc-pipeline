@@ -20,13 +20,13 @@ process merge_and_uncode_rca_uploads {
    if (production) {
       """
       cd /usr/local/src/myscripts/
-      Rscript merge_and_uncode_rca_uploads.R -c $cohort -v --production --save_synapse
+      Rscript merge_and_uncode_rca_uploads.R -c $cohort -v --production --save_synapse -c $comment
       """
    }
    else {
       """
       cd /usr/local/src/myscripts/
-      Rscript merge_and_uncode_rca_uploads.R -c $cohort -v --save_synapse
+      Rscript merge_and_uncode_rca_uploads.R -c $cohort -v --save_synapse -c $comment
       """
    }
 }
