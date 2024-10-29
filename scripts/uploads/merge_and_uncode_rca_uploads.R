@@ -705,7 +705,7 @@ main <- function(){
                 help="Whether to run in production mode or not (staging mode)."),
     make_option(c("-v", "--verbose"), action="store_true", default = FALSE, 
                 help="Print out verbose output on script progress"),
-    make_option(c("-c", "--comment"), type = "character",
+    make_option(c("-cmt", "--comment"), type = "character",
               help="Comment for new table snapshot version. This must be unique and is tied to the cohort run.")
   )
   opt <- parse_args(OptionParser(option_list=option_list))
