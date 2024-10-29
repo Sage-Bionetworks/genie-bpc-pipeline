@@ -502,18 +502,19 @@ save_to_synapse <- function(path, parent_id, comment, file_name = NA, prov_name 
     file_name = path
   } 
   file <- File(path = path, parentId = parent_id, name = file_name)
-  file$properties$versionComment <- comment
   
   if (!is.na(prov_name) || !is.na(prov_desc) || !is.na(prov_used) || !is.na(prov_exec)) {
     act <- Activity(name = prov_name,
                     description = prov_desc,
                     used = prov_used,
                     executed = prov_exec)
-    file <- synStore(file, activity = act)
+    file_id <- synStore(file, activity = act)$properties$id
   } else {
-    file <- synStore(file)
+    file_id <- synStore(file)$properties$id
   }
-  
+  file_no_comment <- synGet(file_id, downloadFile=FALSE)
+  file_no_comment$versionComment <- comment
+  synStore(file_no_comment)
   
   return(T)
 }
