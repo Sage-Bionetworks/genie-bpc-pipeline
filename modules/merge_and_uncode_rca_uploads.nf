@@ -10,6 +10,7 @@ process merge_and_uncode_rca_uploads {
    input:
    val previous
    val cohort
+   val comment
    val production
 
    output:

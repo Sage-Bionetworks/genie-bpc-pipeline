@@ -96,12 +96,12 @@ workflow BPC_PIPELINE {
     update_potential_phi_fields_table(ch_comment, params.production)
     // validate_data.out.view()
    } else if (params.step == "merge_and_uncode_rca_uploads"){
-    merge_and_uncode_rca_uploads("default", ch_cohort, params.production)
+    merge_and_uncode_rca_uploads("default", ch_cohort, ch_comment, params.production)
    } else if (params.step == "genie_bpc_pipeline"){
     update_potential_phi_fields_table(ch_comment, params.production)
     run_quac_upload_report_error(update_potential_phi_fields_table.out, ch_cohort)
     run_quac_upload_report_warning(run_quac_upload_report_error.out, ch_cohort, params.production)
-    merge_and_uncode_rca_uploads(run_quac_upload_report_warning.out, ch_cohort, params.production)
+    merge_and_uncode_rca_uploads(run_quac_upload_report_warning.out, ch_cohort, ch_comment, params.production)
     // remove_patients_from_merged(merge_and_uncode_rca_uploads.out, ch_cohort, params.production)
     update_data_table(merge_and_uncode_rca_uploads.out, ch_comment, params.production)
     update_date_tracking_table(update_data_table.out, ch_cohort, ch_comment, params.production)

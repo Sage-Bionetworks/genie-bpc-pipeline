@@ -487,12 +487,22 @@ get_irr <- function(data) {
   return(irr)
 }
 
-save_to_synapse <- function(path, parent_id, file_name = NA, prov_name = NA, prov_desc = NA, prov_used = NA, prov_exec = NA) {
+#' Stores the file, version comment and provenance to Synapse
+#' @param path (string) name of cohort
+#' @param parent_id (string) whether we are running in production env or staging env
+#' @param comment (string) some sort of comment about the new version of the file 
+#' @param file_name (string) file name
+#' @param prov_name (string) name of provenance
+#' @param prov_desc (string) provenance description
+#' @param prov_used (string) url/link to provenance used
+#' @param prov_exec (string) url/link to what was used to execute provenance
+save_to_synapse <- function(path, parent_id, comment, file_name = NA, prov_name = NA, prov_desc = NA, prov_used = NA, prov_exec = NA) {
   
   if (is.na(file_name)) {
     file_name = path
   } 
   file <- File(path = path, parentId = parent_id, name = file_name)
+  file$properties$versionComment <- comment
   
   if (!is.na(prov_name) || !is.na(prov_desc) || !is.na(prov_used) || !is.na(prov_exec)) {
     act <- Activity(name = prov_name,
@@ -635,7 +645,9 @@ get_output_folder_id <- function(config, environment){
 #' Remove leading and trailing whitespace from a string.
 #' @param cohort (string) name of cohort
 #' @param environment (string) whether we are running in production env or staging env
-save_output_synapse <- function(cohort, environment) {
+#' @param comment (string) some sort of comment about the new version of the file 
+#'  related to cohort run
+save_output_synapse <- function(cohort, environment, comment) {
   
   parent_id <- get_output_folder_id(config, environment)
   file_output_pri <- get_pri_file_name(cohort)
@@ -647,6 +659,7 @@ save_output_synapse <- function(cohort, environment) {
   save_to_synapse(path = file_output_pri,
                   file_name = gsub(pattern = ".csv|.tsv", replacement = "", x = file_output_pri),
                   parent_id = parent_id,
+                  comment = comment,
                   prov_name = "BPC non-IRR upload data",
                   prov_desc = "Merged and uncoded BPC upload data from sites academic REDCap instances with IRR cases removed",
                   prov_used = c(as.character(unlist(config$upload[[cohort]])), 
@@ -658,6 +671,7 @@ save_output_synapse <- function(cohort, environment) {
     save_to_synapse(path = file_output_irr,
                     file_name = gsub(pattern = ".csv|.tsv", replacement = "", x = file_output_irr),
                     parent_id = parent_id,
+                    comment = comment,
                     prov_name = "BPC IRR upload data",
                     prov_desc = "Merged and uncoded BPC upload IRR case data from sites academic REDCap instances",
                     prov_used = c(as.character(unlist(config$upload[[cohort]])), 
@@ -690,7 +704,9 @@ main <- function(){
     make_option(c("--production"), action="store_true", default = FALSE, 
                 help="Whether to run in production mode or not (staging mode)."),
     make_option(c("-v", "--verbose"), action="store_true", default = FALSE, 
-                help="Print out verbose output on script progress")
+                help="Print out verbose output on script progress"),
+    make_option(c("-c", "--comment"), type = "character",
+              help="Comment for new table snapshot version. This must be unique and is tied to the cohort run.")
   )
   opt <- parse_args(OptionParser(option_list=option_list))
 
@@ -792,7 +808,7 @@ main <- function(){
         print(glue("{now(timeOnly = T)}: Saving uncoded data to Synapse..."))
       }
       
-      save_output_synapse(cohort, environment = env)
+      save_output_synapse(cohort, environment = env, comment = opt$comment)
     }
     
     # clean up for memory
