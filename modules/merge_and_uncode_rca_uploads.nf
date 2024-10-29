@@ -3,7 +3,7 @@ Merge and uncode REDcap export data files.
 */
 process merge_and_uncode_rca_uploads {
 
-   container 'sagebionetworks/genie-bpc-pipeline-uploads'
+   container "$params.uploads_docker"
    secret 'SYNAPSE_AUTH_TOKEN'
    debug true
 
