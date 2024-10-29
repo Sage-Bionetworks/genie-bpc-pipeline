@@ -22,9 +22,6 @@ Please make sure you have the [.synapseConfig file](https://help.synapse.org/doc
 Make sure you have Python 3.8 and conda installed.
 
 ### Install the required packages
-```
-pip install 'synapseclient[pandas] == 2.7.2'
-```
 
 > [!NOTE]  
 > Due to this tool using an older version of the python client, until there is bandwidth to update
@@ -62,10 +59,6 @@ The `update_data_table.py` script is used to update the BPC internal tables.
 Make sure you have Python 3.9+ and conda installed.
 
 ### Install the required packages
-
-```
-pip install -r requirements.txt
-```
 
 ```
 conda create -n genie-table-update python=3.10
