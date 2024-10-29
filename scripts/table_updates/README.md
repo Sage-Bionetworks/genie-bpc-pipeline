@@ -44,10 +44,16 @@ Prepare the Synapse tables to be updated
 > **_NOTE:_** ONLY need to be executed when there is a new version of PRISSMM data dictionary
 
 ##### Step 1. Update the Data Catalog
-    python update_data_element_catalog.py -v [prissmm_version_number]
-##### Step 2. Update the table schema
-    python update_table_schema.py
 
+```
+python update_data_element_catalog.py -v [prissmm_version_number]
+```
+
+##### Step 2. Update the table schema
+
+```
+python update_table_schema.py
+```
 
 # Update Data Table
 
