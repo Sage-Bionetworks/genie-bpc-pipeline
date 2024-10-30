@@ -18,6 +18,7 @@ import argparse
 import datetime
 import json
 import math
+import re
 
 import numpy
 import pandas
@@ -140,7 +141,9 @@ def _store_data(
     temp_data = temp_data.applymap(lambda x: float_to_int(x))
     # remove backslash from drugs_drug cols in ca_directed_drugs
     if table_schema.name == "Ca Directed Drugs":
-        temp_data = remove_backslash(temp_data)
+        # extract drugs_drug_* columns
+        cols = [col for col in temp_data.columns if re.search("drugs_drug_\d$", col)]
+        temp_data = remove_backslash(temp_data, cols)
     # update table
     table_query = syn.tableQuery(
         f"SELECT * FROM {table_schema.id} where cohort = '{cohort}'"

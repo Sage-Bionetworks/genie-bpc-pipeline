@@ -150,49 +150,27 @@ def test_download_empty_synapse_table_with_condition(
 
 
 @pytest.mark.parametrize(
-    "input_df,expected_df",
+    "input_df,cols,expected_df",
     [
         (
-            pd.DataFrame(
-                {
-                    "col1": ["\\abc", "def"], 
-                    "col2": ["abc", "def\\"]
-                }
-            ),
-            pd.DataFrame(
-                {
-                    "col1": ["abc", "def"], 
-                    "col2": ["abc", "def"]
-                }
-            ),
+            pd.DataFrame({"col1": ["\\abc", "def"], "col2": ["abc", "def\\"]}),
+            ["col1", "col2"],
+            pd.DataFrame({"col1": ["abc", "def"], "col2": ["abc", "def"]}),
         ),
         (
-            pd.DataFrame(
-                {
-                    "col1": ["abc", "def"], 
-                    "col2": ["abc", "def\\"]
-                }
-            ),
-            pd.DataFrame(
-                {
-                    "col1": ["abc", "def"], 
-                    "col2": ["abc", "def"]
-                }
-            ),
+            pd.DataFrame({"col1": ["abc", "def"], "col2": ["abc", "def\\"]}),
+            ["col2"],
+            pd.DataFrame({"col1": ["abc", "def"], "col2": ["abc", "def"]}),
         ),
         (
-            pd.DataFrame(
-                {
-                    "col1": ["abc", "def"], 
-                    "col2": ["abc", "def"]
-                }
-            ),
-            pd.DataFrame(
-                {
-                    "col1": ["abc", "def"], 
-                    "col2": ["abc", "def"]
-                }
-            ),
+            pd.DataFrame({"col1": ["abc", "def"], "col2": ["abc", "def\\"]}),
+            ["col1"],
+            pd.DataFrame({"col1": ["abc", "def"], "col2": ["abc", "def\\"]}),
+        ),
+        (
+            pd.DataFrame({"col1": ["abc", "def"], "col2": ["abc", "def"]}),
+            ["col1", "col2"],
+            pd.DataFrame({"col1": ["abc", "def"], "col2": ["abc", "def"]}),
         ),
         (
             pd.DataFrame(
@@ -201,6 +179,7 @@ def test_download_empty_synapse_table_with_condition(
                     "col2": ["abc(\\hh)", "def,\\,hh", "ghi, ,\\hh"],
                 }
             ),
+            ["col1", "col2"],
             pd.DataFrame(
                 {
                     "col1": ["abc", "def", "ghi"],
@@ -208,14 +187,44 @@ def test_download_empty_synapse_table_with_condition(
                 }
             ),
         ),
+        (
+            pd.DataFrame(
+                {
+                    "col1": [1, "de\\f", "ghi\\", np.nan],
+                    "col2": ["abc(\\hh)", "def,\\,hh", "ghi, ,\\hh", 2],
+                }
+            ),
+            ["col1", "col2"],
+            pd.DataFrame(
+                {
+                    "col1": [1, "def", "ghi", np.nan],
+                    "col2": ["abc(hh)", "def,,hh", "ghi, ,hh", 2],
+                }
+            ),
+        ),
     ],
     ids=[
         "multiple_columns_with_backslash",
         "one_column_with_backslash",
+        "one_column_with_backslash_but_not_selected",
         "none_column_with_backslash",
         "backslashes_in_multiple_places",
+        "various_column_types",
     ],
 )
-def test_remove_backslash(input_df, expected_df):
-    results = utilities.remove_backslash(input_df)
+def test_remove_backslash(input_df, cols, expected_df):
+    results = utilities.remove_backslash(input_df, cols)
     pd.testing.assert_frame_equal(results, expected_df)
+
+
+@pytest.mark.parametrize(
+    "input_df,cols",
+    [
+        (pd.DataFrame({"col1": ["\\abc", "def"], "col2": ["abc", "def\\"]}), ["col3"]),
+    ],
+)
+def test_remove_backslsh_fail(input_df, cols):
+    with pytest.raises(
+        ValueError, match="Invalid column list. Not all columns are in the dataframe."
+    ):
+        utilities.remove_backslash(input_df, cols)

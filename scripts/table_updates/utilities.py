@@ -1,5 +1,6 @@
 import logging
 import sys
+from typing import List
 
 import pandas
 import synapseclient
@@ -201,23 +202,19 @@ def revert_table_version(syn, table_id):
     syn.store(Table(table_schema, temp_data))
 
 
-def remove_backslash(df: pandas.DataFrame) -> pandas.DataFrame:
+def remove_backslash(df: pandas.DataFrame, cols: List[str]) -> pandas.DataFrame:
     """Function to detect and remove unwanted backslashes in columns from a dataframe
 
     Args:
         df (pandas.DataFrame): A dataframe to check against
+        cols (List[str]): The list of columns to be updated
 
     Returns:
         pandas.DataFrame: A dataframe with unwanted backslashes removed
     """
-    # Check columns with backslashes
-    columns_with_backslash = [
-        col for col in df.columns if df[col].astype(str).str.contains(r"\\").any()
-    ]
-
-    if columns_with_backslash:
-        df[columns_with_backslash] = df[columns_with_backslash].replace(
-            r"\\", "", regex=True
-        )
-
-    return df
+    # check if the given columns are in the dataframe
+    if all(col in df.columns for col in cols):
+        df[cols] = df[cols].replace(r"\\", "", regex=True)
+        return df
+    else:
+        raise ValueError("Invalid column list. Not all columns are in the dataframe.")
