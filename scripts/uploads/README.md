@@ -45,7 +45,7 @@ Usage: merge_and_uncode_rca_uploads.R [options]
 Options:
         -c COHORT, --cohort=COHORT
                 BPC cohort
-
+        
         -u, --save_synapse
                 Save output to Synapse
 
@@ -54,11 +54,19 @@ Options:
 
         -h, --help
                 Show this help message and exit
+
+        --production
+                Whether to run in production mode or not (staging mode).
 ```
 
-Example run: 
+Example run (staging run):
 ```
 Rscript merge_and_uncode_rca_uploads.R -c NSCLC -u -a $SYNAPSE_AUTH_TOKEN
+```
+
+Example run (production run):
+```
+Rscript merge_and_uncode_rca_uploads.R -c NSCLC -u -a $SYNAPSE_AUTH_TOKEN --production
 ```
 
 ## Usage: remove patient IDs from a REDCap formatted file
@@ -99,4 +107,44 @@ Options:
 Example run: 
 ```
 Rscript remove_patients_from_merged.R -i syn23285494 -c NSCLC -r syn29266682 -v
+```
+
+## Running tests
+There are unit tests under `scripts/uploads/tests`.
+
+1. Please pull and run the docker image associated with this module from [here](https://github.com/Sage-Bionetworks/genie-bpc-pipeline/pkgs/container/genie-bpc-pipeline) into your EC2/local.
+
+You can also pull the production docker:
+
+```bash
+git pull sagebionetworks/genie-bpc-pipeline-uploads
+```
+
+```bash
+docker run -d --name <nickname_for_container> <container_name> /bin/bash -c "while true; do sleep 1; done"
+```
+
+2. Do anything you need to do to the container (e.g: copy current local changes)
+
+```bash
+docker cp ./. test_container:/usr/local/src/myscripts
+```
+
+3. Execute container into a bash session
+
+```bash
+docker exec -it <nickname_for_container> /bin/bash
+```
+
+4. Install the `mockery` and `testthat` packages:
+
+```bash
+R -e "remotes::install_cran('testthat')"
+```
+
+5. Run the following in a R session:
+
+```R
+library(testthat)
+test_dir("/usr/local/src/myscripts/tests")
 ```
