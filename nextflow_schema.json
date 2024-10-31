@@ -50,12 +50,17 @@
                     "description": "Available BPC steps",
                     "enum": [
                         "update_potential_phi_fields_table",
-                        "genie_bpc_pipeline"
+                        "genie_bpc_pipeline",
+                        "update_data_table"
                     ]
                 },
                 "references_docker":{
                     "type": "string",
                     "description": "Name of docker to use in processes in scripts/references"
+                },
+                "table_updates_docker":{
+                    "type": "string",
+                    "description": "Name of docker to use in processes in scripts/table_updates" 
                 },
                 "schema_ignore_params": {
                     "type": "string",
