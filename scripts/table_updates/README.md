@@ -39,6 +39,14 @@ Usage
 
 ### Update the Synapse Tables with data
 #### Primary Case Tables
-    python update_data_table.py -m [version_comment] primary
-#### IRR Case Tables
+##### 1. dry-run (Save output to local)
+    python update_data_table.py -c [cohort_name] -m [version_comment] primary -d
+
+##### 2. production (Save output to production projects)
+    python update_data_table.py -c [cohort_name] -m [version_comment] primary -pd
+
+##### 3. staging (Save output to staging projects)
+    python update_data_table.py -c [cohort_name] -m [version_comment] primary
+    
+#### IRR Case Tables (Deprecated)
     python update_data_table.py -m [version_comment] irr
