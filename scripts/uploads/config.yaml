@@ -10,7 +10,8 @@ synapse:
     type: table
     description: PRISSMM formatted data dictionaries for REDCap
   rca_files: 
-    id: syn23286928
+    production_id: syn23286928
+    staging_id: syn63887337
     name: curated
     type: folder
     description: REDCap academic formatted files of merged BPC data ready for import to Synapse tables
