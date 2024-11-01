@@ -488,8 +488,8 @@ get_irr <- function(data) {
 }
 
 #' Stores the file, version comment and provenance to Synapse
-#' @param path (string) name of cohort
-#' @param parent_id (string) whether we are running in production env or staging env
+#' @param path (string) local filepath of the output
+#' @param parent_id (string) synapse id of the output folder to save to
 #' @param comment (string) some sort of comment about the new version of the file 
 #' @param file_name (string) file name
 #' @param prov_name (string) name of provenance
@@ -502,20 +502,17 @@ save_to_synapse <- function(path, parent_id, comment, file_name = NA, prov_name 
     file_name = path
   } 
   file <- File(path = path, parentId = parent_id, name = file_name)
+  file$versionComment <- comment
   
   if (!is.na(prov_name) || !is.na(prov_desc) || !is.na(prov_used) || !is.na(prov_exec)) {
     act <- Activity(name = prov_name,
                     description = prov_desc,
                     used = prov_used,
                     executed = prov_exec)
-    file_id <- synStore(file, activity = act)$properties$id
+    synStore(file, activity = act)
   } else {
-    file_id <- synStore(file)$properties$id
+    synStore(file)
   }
-  file_no_comment <- synGet(file_id, downloadFile=FALSE)
-  file_no_comment$versionComment <- comment
-  synStore(file_no_comment)
-  
   return(T)
 }
 
