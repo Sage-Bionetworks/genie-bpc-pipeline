@@ -12,6 +12,7 @@ process merge_and_uncode_rca_uploads {
    val cohort
    val comment
    val production
+   val use_grs
 
    output:
    stdout
@@ -20,13 +21,24 @@ process merge_and_uncode_rca_uploads {
    if (production) {
       """
       cd /usr/local/src/myscripts/
-      Rscript merge_and_uncode_rca_uploads.R -c $cohort -v --production --save_synapse --comment $comment
+      Rscript merge_and_uncode_rca_uploads.R \
+         -c $cohort 
+         -v \
+         --production \
+         --save_synapse \
+         --comment $comment \
+         --use_grs $use_grs
       """
    }
    else {
       """
       cd /usr/local/src/myscripts/
-      Rscript merge_and_uncode_rca_uploads.R -c $cohort -v --save_synapse --comment $comment
+      Rscript merge_and_uncode_rca_uploads.R \
+         -c $cohort \
+         -v \
+         --save_synapse \
+         --comment $comment \
+         --use_grs $use_grs
       """
    }
 }

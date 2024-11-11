@@ -25,6 +25,7 @@ params.production = false
 params.schema_ignore_params = ""
 params.help = false
 params.step = "update_potential_phi_fields_table"
+params.use_grs = false
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -46,6 +47,7 @@ if (params.cohort == null) { exit 1, 'cohort parameter not specified!' }
 if (params.comment == null) { exit 1, 'comment parameter not specified!' }
 if (params.production == null) { exit 1, 'production parameter not specified!' }
 if (params.step == null) { exit 1, 'step parameter not specified!' }
+if (params.use_grs == null) { exit 1, 'use_grs parameter not specified!' }
 
 
 // Print parameter summary log to screen
@@ -96,21 +98,79 @@ workflow BPC_PIPELINE {
     update_potential_phi_fields_table(ch_comment, params.production)
     // validate_data.out.view()
    } else if (params.step == "merge_and_uncode_rca_uploads"){
-    merge_and_uncode_rca_uploads("default", ch_cohort, ch_comment, params.production)
+    merge_and_uncode_rca_uploads(
+        "default", 
+        ch_cohort, 
+        ch_comment, 
+        params.production, 
+        params.use_grs
+    )
    } else if (params.step == "update_data_table") {
-    update_data_table("default", ch_cohort, ch_comment, params.production)
+    update_data_table(
+        "default", 
+        ch_cohort, 
+        ch_comment, 
+        params.production
+    )
    } else if (params.step == "genie_bpc_pipeline"){
     update_potential_phi_fields_table(ch_comment, params.production)
-    run_quac_upload_report_error(update_potential_phi_fields_table.out, ch_cohort)
-    run_quac_upload_report_warning(run_quac_upload_report_error.out, ch_cohort, params.production)
-    merge_and_uncode_rca_uploads(run_quac_upload_report_warning.out, ch_cohort, ch_comment, params.production)
+
+    run_quac_upload_report_error(
+        update_potential_phi_fields_table.out, 
+        ch_cohort
+    )
+
+    run_quac_upload_report_warning(
+        run_quac_upload_report_error.out, 
+        ch_cohort, 
+        params.production
+    )
+
+    merge_and_uncode_rca_uploads(
+        run_quac_upload_report_warning.out, 
+        ch_cohort,
+        ch_comment, 
+        params.production, 
+        params.use_grs
+    )
     // remove_patients_from_merged(merge_and_uncode_rca_uploads.out, ch_cohort, params.production)
-    update_data_table(merge_and_uncode_rca_uploads.out, ch_cohort, ch_comment, params.production)
-    update_date_tracking_table(update_data_table.out, ch_cohort, ch_comment, params.production)
-    run_quac_table_report(update_date_tracking_table.out, ch_cohort, params.production)
-    run_quac_comparison_report(run_quac_table_report.out, ch_cohort, params.production)
-    create_masking_report(run_quac_comparison_report.out, ch_cohort, params.production)
-    update_case_count_table(create_masking_report.out, ch_comment, params.production)
+    update_data_table(
+        merge_and_uncode_rca_uploads.out, 
+        ch_cohort, 
+        ch_comment, 
+        params.production
+    )
+
+    update_date_tracking_table(
+        update_data_table.out, 
+        ch_cohort, 
+        ch_comment, 
+        params.production
+    )
+
+    run_quac_table_report(
+        update_date_tracking_table.out, 
+        ch_cohort, 
+        params.production
+    )
+
+    run_quac_comparison_report(
+        run_quac_table_report.out, 
+        ch_cohort, 
+        params.production
+    )
+
+    create_masking_report(
+        run_quac_comparison_report.out, 
+        ch_cohort, 
+        params.production
+    )
+
+    update_case_count_table(
+        create_masking_report.out, 
+        ch_comment, 
+        params.production
+    )
    } else {
     exit 1, 'step not supported'
    }
