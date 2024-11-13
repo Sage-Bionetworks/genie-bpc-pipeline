@@ -9,6 +9,7 @@
         "NSCLC2": "syn51318735",
         "CRC2": "syn52943208",
         "RENAL": "syn59474241"
+        "OVARIAN": "syn64042751"
     },
     "irr":{
         "BrCa": "syn24241519",
@@ -18,6 +19,7 @@
         "NSCLC2": "syn51318736",
         "CRC2": "syn52943210",
         "RENAL": "syn59474249"
+        "OVARIAN": "syn64042773"
     },
     "main_genie_release_version": "16.6-consortium",
     "main_genie_data_release_files": "syn16804261",
