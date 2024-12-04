@@ -323,16 +323,17 @@ merge_mappings <- function(primarys, secondarys, debug = F) {
 #' @param dd Matrix with two columns, first containing a label and
 #' second columns a mapping string.  
 #' @param grs Another mapping matrix that is used secondarily
-#' if the label is not found in the primary mapping matrix. Optional.
+#' if the label is not found in the primary mapping matrix.
+#' @param use_grs Whether we are using grs or not
 #' @return Data frame of uncoded data.
 #' @example
 #' map_code_to_value(data = my_data, dd = dd, grs = grs)
-uncode_data <- function(df_coded, dd, grs = NULL) {
+uncode_data <- function(df_coded, dd, grs, use_grs) {
   
   df_uncoded <- df_coded
   
   # merge reference mappings
-  if(!is.null(grs)){
+  if(use_grs){
     mappings_primary <- parse_mappings(strs = grs[,config$column_name$variable_mapping], 
                                       labels = grs[,config$column_name$variable_name])
     mappings_secondary <- parse_mappings(strs = dd[[config$column_name$variable_mapping]], 
@@ -597,9 +598,10 @@ get_data_dictionary <- function(cohort) {
   return(dd)
 }
 
-#' Retrieves the Global Response Set (grs)
+#' Retrieves the Global Response Set (grs) depending 
+#' on value of use_grs. If not using grs, returns NULL
 #' 
-#' @param use_grs Whether to retrieve it or not
+#' @param use_grs Whether to use grs or not
 #' @return grs
 get_global_response_set <- function(use_grs){
   if(use_grs){
@@ -744,7 +746,7 @@ main <- function(){
     make_option(c("--comment"), type = "character",
               help="Comment for new table snapshot version. This must be unique and is tied to the cohort run."),
     make_option(c("--use_grs"), type="logical", default = FALSE,
-              help="Whether to use GRS / DD or just DD for mapping")
+              help="Whether to use grs as primary mapping (dd as secondary) or not (using dd only).")
   )
   opt <- parse_args(OptionParser(option_list=option_list))
 
@@ -817,7 +819,8 @@ main <- function(){
     # uncode
     uncoded <- uncode_data(df_coded = coded, 
                           dd = dd,
-                          grs = grs)
+                          grs = grs,
+                          use_grs = opt$use_grs)
     
     if (debug) {
       print(glue("{now(timeOnly = T)}: Formatting uncoded data..."))
