@@ -20,13 +20,21 @@ import json
 import logging
 import math
 import sys
-from typing import List
+from typing import List, Tuple
 
 import numpy
 import pandas
 import synapseclient
 import utilities
-from synapseclient import Schema, Table
+from synapseclient import (
+    Column,
+    Row,
+    RowSet,
+    Schema,
+    Table,
+    as_table_columns,
+    build_table,
+)
 
 TABLES = {
     "production": {
@@ -45,7 +53,7 @@ def get_main_genie_clinical_file(
     syn: synapseclient.Synapse,
     release: str,
     release_files_table_synid: str,
-    form: str, 
+    form: str,
     column_mapping_table: pandas.DataFrame,
     logger: logging.Logger = None,
 ) -> pandas.DataFrame:
@@ -64,20 +72,22 @@ def get_main_genie_clinical_file(
         pandas.DataFrame: the read in clinical file as dataframe
     """
     release_files = utilities.download_synapse_table(syn, release_files_table_synid)
-    if form == "patient_characteristics": 
+    if form == "patient_characteristics":
         clinical_link_synid = release_files[
             (release_files["release"] == release)
             & (release_files["name"] == "data_clinical_patient.txt")
-            ]["fileSynId"].values[0]
-    else: 
+        ]["fileSynId"].values[0]
+    else:
         clinical_link_synid = release_files[
             (release_files["release"] == release)
-            & (release_files["name"] == "data_clinical_sample.txt") 
-            ]["fileSynId"].values[0]
+            & (release_files["name"] == "data_clinical_sample.txt")
+        ]["fileSynId"].values[0]
     clinical_ent = syn.get(clinical_link_synid, followLink=True)
     clinical_df = pandas.read_csv(clinical_ent.path, sep="\t", skiprows=4)
     # get column list for the form
-    column_list = column_mapping_table.loc[column_mapping_table['prissmm_form']== form, ].genie_element.to_list()
+    column_list = column_mapping_table.loc[
+        column_mapping_table["prissmm_form"] == form,
+    ].genie_element.to_list()
     assert (
         not clinical_df.empty
     ), f"Clinical file pulled from {clinical_link_synid} link is empty."
@@ -91,17 +101,25 @@ def get_main_genie_clinical_file(
     return clinical_df
 
 
-def _store_data(syn: synapseclient.Synapse, table_id: str, label_data: pandas.DataFrame, table_type: str, cohort: str, logger: logging.Logger, dry_run: bool):
+def _store_data(
+    syn: synapseclient.Synapse,
+    table_id: str,
+    label_data: pandas.DataFrame,
+    table_type: str,
+    cohort: str,
+    logger: logging.Logger,
+    dry_run: bool,
+):
     """Helper function to store data to each table in the master table.
 
-    Before uploading data to the Synapse table, the provided label data is filtered 
-    based on matching columns between the label data and the table schema, as well 
-    as the form_label. Data cleansing, including the removal of rows with no data 
+    Before uploading data to the Synapse table, the provided label data is filtered
+    based on matching columns between the label data and the table schema, as well
+    as the form_label. Data cleansing, including the removal of rows with no data
     and the conversion of numeric values to integers, is applied to the label data.
 
-    When table_type is set to 'primary', existing data for the cohort is wiped, and 
-    new data is inserted. When table_type is set to 'irr', only records that do not 
-    already exist in the table are added. The dry_run flag can be used to toggle 
+    When table_type is set to 'primary', existing data for the cohort is wiped, and
+    new data is inserted. When table_type is set to 'irr', only records that do not
+    already exist in the table are added. The dry_run flag can be used to toggle
     between uploading the table to Synapse or saving it locally.
 
     Args:
@@ -142,7 +160,9 @@ def _store_data(syn: synapseclient.Synapse, table_id: str, label_data: pandas.Da
         else:
             cols_to_skip.append("redcap_repeat_instance")
     rows_to_drop = temp_data.index[
-        temp_data.apply(lambda row: utilities.check_empty_row(row, cols_to_skip), axis=1)
+        temp_data.apply(
+            lambda row: utilities.check_empty_row(row, cols_to_skip), axis=1
+        )
     ]
     temp_data.drop(index=rows_to_drop, inplace=True)
     # remove .0 from all columns
@@ -163,7 +183,15 @@ def _store_data(syn: synapseclient.Synapse, table_id: str, label_data: pandas.Da
         temp_data.to_csv(table_id + "_temp.csv")
 
 
-def store_data(syn: synapseclient.Synapse, master_table: pandas.DataFrame, label_data: pandas.DataFrame, table_type: str, cohort: str, logger: logging.Logger, dry_run: bool):
+def store_data(
+    syn: synapseclient.Synapse,
+    master_table: pandas.DataFrame,
+    label_data: pandas.DataFrame,
+    table_type: str,
+    cohort: str,
+    logger: logging.Logger,
+    dry_run: bool,
+):
     """Store data to each table in the master table.
 
     Args:
@@ -178,6 +206,7 @@ def store_data(syn: synapseclient.Synapse, master_table: pandas.DataFrame, label
     logger.info("Updating data for %s tables..." % table_type)
     for table_id in master_table["id"]:
         _store_data(syn, table_id, label_data, table_type, cohort, logger, dry_run)
+
 
 def get_phi_cutoff(unit):
     switcher = {"day": math.floor(89 * 365), "month": math.floor(89 * 12), "year": 89}
@@ -274,17 +303,23 @@ def _redact_table(df, interval_cols_info):
     return df, record_to_redact
 
 
-def update_redact_table(syn: synapseclient.Synapse, redacted_table_info: pandas.DataFrame, full_data_table_info: pandas.DataFrame, cohort: str, logger: logging.Logger):
+def update_redact_table(
+    syn: synapseclient.Synapse,
+    redacted_table_info: pandas.DataFrame,
+    full_data_table_info: pandas.DataFrame,
+    cohort: str,
+    logger: logging.Logger,
+):
     """Update redacted table
 
-    Before uploading data to the Synapse table, records are identified for redaction 
-    based on criteria such as birth year, sequencing age, vital status, and interval 
+    Before uploading data to the Synapse table, records are identified for redaction
+    based on criteria such as birth year, sequencing age, vital status, and interval
     fields. The redacted data is then stored in the BPC internal tables.
-    
-    A special case applies to the Patient Characteristics table: flagged records are 
-    updated, with the birth_year field cleared. Additionally, the "redacted" column 
+
+    A special case applies to the Patient Characteristics table: flagged records are
+    updated, with the birth_year field cleared. Additionally, the "redacted" column
     in this table is updated within the Sage Internal project.
-    
+
     Args:
         syn (synapseclient.Synapse): Synapse client connection
         redacted_table_info (pandas.DataFrame): Table of all of the redacted tables
@@ -309,9 +344,18 @@ def update_redact_table(syn: synapseclient.Synapse, redacted_table_info: pandas.
     ].values[0]
     # download tables
     condition = f"cohort = '{cohort}'"
-    curation_info = utilities.download_synapse_table(syn, curation_table_id, "record_id, curation_dt", condition)
-    patient_info = utilities.download_synapse_table(syn, patient_table_id, "record_id, birth_year, hybrid_death_ind", condition)
-    sample_info = utilities.download_synapse_table(syn, sample_table_id, "record_id, cpt_genie_sample_id, age_at_seq_report", condition)
+    curation_info = utilities.download_synapse_table(
+        syn, curation_table_id, "record_id, curation_dt", condition
+    )
+    patient_info = utilities.download_synapse_table(
+        syn, patient_table_id, "record_id, birth_year, hybrid_death_ind", condition
+    )
+    sample_info = utilities.download_synapse_table(
+        syn,
+        sample_table_id,
+        "record_id, cpt_genie_sample_id, age_at_seq_report",
+        condition,
+    )
     patient_curation_info = patient_info.merge(
         curation_info, how="left", on="record_id"
     )
@@ -336,7 +380,7 @@ def update_redact_table(syn: synapseclient.Synapse, redacted_table_info: pandas.
     for _, row in master_table.iterrows():
         if row["name"] != "Patient Characteristics":
             table_id = row["id_full"]
-            df = utilities.download_synapse_table(syn, table_id, condition = condition)
+            df = utilities.download_synapse_table(syn, table_id, condition=condition)
             new_df, new_record_to_redact = _redact_table(df, interval_cols_info)
             new_df.reset_index(drop=True, inplace=True)
             record_to_redact = record_to_redact + new_record_to_redact
@@ -349,7 +393,7 @@ def update_redact_table(syn: synapseclient.Synapse, redacted_table_info: pandas.
             table = syn.store(Table(table_schema, new_df))
 
     # Modify patient table
-    df = utilities.download_synapse_table(syn, patient_table_id, condition = condition)
+    df = utilities.download_synapse_table(syn, patient_table_id, condition=condition)
     new_df, new_record_to_redact = _redact_table(df, interval_cols_info)
     new_df.reset_index(drop=True, inplace=True)
     record_to_redact = record_to_redact + new_record_to_redact
@@ -378,7 +422,9 @@ def update_redact_table(syn: synapseclient.Synapse, redacted_table_info: pandas.
     pt_dat_query = syn.tableQuery(
         f"SELECT cohort, record_id FROM {full_pt_id} where cohort = '{cohort}'"
     )
-    pt_dat = utilities.download_synapse_table(syn, full_pt_id, "cohort, record_id", condition = condition)
+    pt_dat = utilities.download_synapse_table(
+        syn, full_pt_id, "cohort, record_id", condition=condition
+    )
     pt_dat.index = pt_dat.index.map(str)
     pt_dat["index"] = pt_dat.index
     info_to_update = new_df[["cohort", "record_id", "redacted"]]
@@ -386,6 +432,168 @@ def update_redact_table(syn: synapseclient.Synapse, redacted_table_info: pandas.
     result.index = result["index"]
     result = result[["redacted"]]
     syn.store(Table(full_pt_schema, result, etag=pt_dat_query.etag))
+
+
+def check_if_all_join_keys_available(
+    left_table: pandas.DataFrame,
+    right_table: pandas.DataFrame,
+    left_on: str,
+    right_on: str,
+    logger: logging.Logger = None,
+):
+    """Check if all join keys are available in the right table
+
+    Args:
+        left_table (pandas.DataFrame): The left table
+        right_table (pandas.DataFrame): The right table
+        left_on (str): The join key of the left table
+        right_on (str): The join key of the right table
+        logger (logging.Logger, optional): The custom logger. Optional. Defaults to None.
+    Returns:
+        logging.Logger: warning message if join key is not available in the right table
+    """
+    missing_join_keys = left_table.loc[
+        ~left_table[left_on].isin(right_table[right_on])
+    ][left_on]
+    if len(missing_join_keys) > 0:
+        logger.warning(
+            f"Missing {', '.join([str(i) for i in missing_join_keys])} in main GENIE table. Please be advised that tier 1a fields for these records will be filled with NaN."
+        )
+
+
+def update_tier1a(
+    syn: synapseclient.Synapse,
+    form: str,
+    master_table: pandas.DataFrame,
+    main_genie_table: pandas.DataFrame,
+    column_mapping_table: pandas.DataFrame,
+    bpc_column_list: List[str],
+    config: dict,
+    logger: logging.Logger = None,
+    cohort: str = "",
+) -> Tuple[str, pandas.DataFrame]:
+    """Replace tier1a variables in patient_characteristics or cancer_panel_test table with Main GENIE release files
+
+    Args:
+        syn (synapseclient.Synapse): The synapse client connection
+        form (str): The form name, can be either patient_characteristics or cancer_panel_test
+        master_table (pandas.DataFrame): Table of all of the primary or irr BPC tables
+        main_genie_table (pandas.DataFrame): The dataframe of Main GENIE release
+        column_mapping_table (pandas.DataFrame): The column mapping table between BPC and Main GENIE
+        bpc_column_list (List[str]): The column list to be replaced
+        logger (logging.Logger, optional): The custom logger. Optional. Defaults to None.
+        cohort (str, optional): The cohort name. Defaults to "".
+
+    Returns:
+        Tuple[str, pandas.DataFrame]: The synapse ID for BPC table to be modified and the updated table as dataframe
+    """
+    # check the validity of bpc_column_list
+    valid_col = column_mapping_table.loc[
+        column_mapping_table["prissmm_form"] == form,
+    ].prissmm_element.tolist()
+    assert all(
+        item in valid_col for item in bpc_column_list
+    ), f"Invalid bpc_column_list. Column names should be matching {valid_col}."
+
+    logger.info(f"Update {bpc_column_list} in {form}")
+    # load bpc table
+    cpt_table_id = master_table.loc[master_table["form"] == form, "id"].values[0]
+
+    if cohort:
+        condition = f"cohort = '{cohort}'"
+        cpt_dat = utilities.download_synapse_table(
+            syn, cpt_table_id, condition=condition
+        )
+    else:
+        cpt_dat = utilities.download_synapse_table(syn, cpt_table_id)
+    cpt_dat.index = cpt_dat.index.map(str)
+    cpt_dat["index"] = cpt_dat.index
+    # subset main_genie_table based on bpc_column_list
+    main_genie_column_list = [
+        ", ".join(
+            column_mapping_table.loc[
+                column_mapping_table["prissmm_element"] == col,
+            ].genie_element
+        )
+        for col in bpc_column_list
+    ]
+
+    if form == "patient_characteristics":
+        main_genie_table = main_genie_table[main_genie_column_list + ["PATIENT_ID"]]
+        # check if there are genie_patient_ids in bpc table but not in main genie table
+        check_if_all_join_keys_available(
+            left_table=cpt_dat,
+            right_table=main_genie_table,
+            left_on="genie_patient_id",
+            right_on="PATIENT_ID",
+            logger=logger,
+        )
+        cpt_seq_dat = cpt_dat.merge(
+            main_genie_table,
+            how="left",
+            left_on="genie_patient_id",
+            right_on="PATIENT_ID",
+        )
+        utilities.update_tier1a_data_replacement_mapping_table(
+            syn, cpt_seq_dat, form, config
+        )
+    else:
+        # for cancer_panel_test table
+        main_genie_table = main_genie_table[main_genie_column_list + ["SAMPLE_ID"]]
+        # check if there are cpt_genie_sample_ids in bpc table but not in main genie table
+        check_if_all_join_keys_available(
+            left_table=cpt_dat,
+            right_table=main_genie_table,
+            left_on="cpt_genie_sample_id",
+            right_on="SAMPLE_ID",
+            logger=logger,
+        )
+        cpt_seq_dat = cpt_dat.merge(
+            main_genie_table,
+            how="left",
+            left_on="cpt_genie_sample_id",
+            right_on="SAMPLE_ID",
+        )
+        utilities.update_tier1a_data_replacement_mapping_table(
+            syn, cpt_seq_dat, form, config
+        )
+    # reformat the columns
+    cpt_seq_dat.index = cpt_seq_dat["index"]
+    cpt_seq_dat.index.name = None
+    cpt_seq_dat = cpt_seq_dat[main_genie_column_list]
+    cpt_seq_dat.columns = bpc_column_list
+    # reformat cpt_seq_date column
+    if "cpt_seq_date" in cpt_seq_dat.columns:
+        cpt_seq_dat["cpt_seq_date"] = cpt_seq_dat["cpt_seq_date"].map(
+            utilities.float_to_int
+        )
+    return cpt_table_id, cpt_seq_dat
+
+
+def overwrite_tier1a(
+    syn: synapseclient.Synapse,
+    form: str,
+    cpt_table_id: str,
+    cpt_seq_dat: pandas.DataFrame,
+    bpc_column_list: List[str],
+    logger: logging.Logger = None,
+) -> None:
+    """Function to update tier1a columns with outputs from update_tier1a
+
+    Args:
+        syn (synapseclient.Synapse): The synapse client connection
+        form (str): The form name, can be either patient_characteristics or cancer_panel_test
+        cpt_table_id (str): The synapse ID for BPC table to be modified
+        cpt_seq_dat (pandas.DataFrame): The updated BPC table as dataframe
+        bpc_column_list (List[str]): The column list to be replaced
+        logger (logging.Logger, optional): The custom logger. Defaults to None.
+    """
+    # check the validity of bpc_column_list
+    logger.info(f"Overwrite {bpc_column_list} in {form}")
+    # load bpc table
+    cpt_table_schema = syn.get(cpt_table_id)
+    cpt_dat_query = syn.tableQuery(f"SELECT * FROM {cpt_table_id}")
+    syn.store(Table(cpt_table_schema, cpt_seq_dat, etag=cpt_dat_query.etag))
 
 
 def custom_fix_for_tier1a_variable(
@@ -396,7 +604,7 @@ def custom_fix_for_tier1a_variable(
     cohort: str = "",
 ) -> None:
     """
-    This overwrites tier1a 
+    This overwrites tier1a
 
     Args:
         syn (synapseclient.Synapse): synapse client connection
@@ -412,7 +620,7 @@ def custom_fix_for_tier1a_variable(
         syn,
         release=config["main_genie_release_version"],
         release_files_table_synid=config["main_genie_data_release_files"],
-        form = "patient_characteristics",
+        form="patient_characteristics",
         column_mapping_table=column_mapping_table,
         logger=logger,
     )
@@ -420,18 +628,64 @@ def custom_fix_for_tier1a_variable(
         syn,
         release=config["main_genie_release_version"],
         release_files_table_synid=config["main_genie_data_release_files"],
-        form = "cancer_panel_test",
+        form="cancer_panel_test",
         column_mapping_table=column_mapping_table,
         logger=logger,
     )
     # unlist form column in master table
-    master_table["form"] = master_table["form"].apply(lambda x: ', '.join(x))
+    master_table["form"] = master_table["form"].apply(lambda x: ", ".join(x))
     # modify for patient table
-    cpt_table_id, cpt_seq_dat = utilities.update_tier1a(syn, "patient_characteristics", master_table, genie_patient_dat, column_mapping_table, bpc_column_list = ["naaccr_ethnicity_code","naaccr_race_code_primary","naaccr_race_code_secondary","naaccr_race_code_tertiary","naaccr_sex_code"],logger=logger, cohort = cohort)
-    utilities.overwrite_tier1a(syn, "patient_characteristics", cpt_table_id, cpt_seq_dat, bpc_column_list = ["naaccr_ethnicity_code","naaccr_race_code_primary","naaccr_race_code_secondary","naaccr_race_code_tertiary","naaccr_sex_code"], logger=logger)
-    # modify for sample table 
-    cpt_table_id, cpt_seq_dat =  utilities.update_tier1a(syn, "cancer_panel_test", master_table, genie_sample_dat, column_mapping_table, bpc_column_list = ["cpt_sample_type", "cpt_seq_date"], logger=logger,cohort = cohort)
-    utilities.overwrite_tier1a(syn, "cancer_panel_test", cpt_table_id, cpt_seq_dat, bpc_column_list=["cpt_sample_type", "cpt_seq_date"], logger=logger)
+    cpt_table_id, cpt_seq_dat = update_tier1a(
+        syn,
+        "patient_characteristics",
+        master_table,
+        genie_patient_dat,
+        column_mapping_table,
+        bpc_column_list=[
+            "naaccr_ethnicity_code",
+            "naaccr_race_code_primary",
+            "naaccr_race_code_secondary",
+            "naaccr_race_code_tertiary",
+            "naaccr_sex_code",
+        ],
+        config=config,
+        logger=logger,
+        cohort=cohort,
+    )
+    overwrite_tier1a(
+        syn,
+        "patient_characteristics",
+        cpt_table_id,
+        cpt_seq_dat,
+        bpc_column_list=[
+            "naaccr_ethnicity_code",
+            "naaccr_race_code_primary",
+            "naaccr_race_code_secondary",
+            "naaccr_race_code_tertiary",
+            "naaccr_sex_code",
+        ],
+        logger=logger,
+    )
+    # modify for sample table
+    cpt_table_id, cpt_seq_dat = update_tier1a(
+        syn,
+        "cancer_panel_test",
+        master_table,
+        genie_sample_dat,
+        column_mapping_table,
+        bpc_column_list=["cpt_sample_type", "cpt_seq_date"],
+        config=config,
+        logger=logger,
+        cohort=cohort,
+    )
+    overwrite_tier1a(
+        syn,
+        "cancer_panel_test",
+        cpt_table_id,
+        cpt_seq_dat,
+        bpc_column_list=["cpt_sample_type", "cpt_seq_date"],
+        logger=logger,
+    )
     logger.info("Completed")
 
 
@@ -441,7 +695,10 @@ def main():
         description="Update data tables on Synapse for BPC databases"
     )
     parser.add_argument(
-        "table", type=str, help="Specify table type to run", choices=TABLES["production"].keys()
+        "table",
+        type=str,
+        help="Specify table type to run",
+        choices=TABLES["production"].keys(),
     )
     parser.add_argument(
         "-s",
@@ -496,7 +753,7 @@ def main():
     else:
         TABLE_INFO = TABLES["staging"]
     table_id, condition = list(TABLE_INFO[table_type])
-    master_table = utilities.download_synapse_table(syn, table_id, condition = condition)
+    master_table = utilities.download_synapse_table(syn, table_id, condition=condition)
     # download data files
     # TODO: find the cohort that has new data
     # This is a mapping to all the intake data. e.g: ProstateBPCIntake_data
@@ -509,9 +766,18 @@ def main():
     store_data(syn, master_table, label_data, table_type, cohort, logger, dry_run)
     if not dry_run:
         custom_fix_for_tier1a_variable(syn, master_table, logger, config, cohort)
+        logger.info("Updating version for tier1a replacementmapping tables")
+        for table_id in config["tier1a_replacement_mapping"].values():
+            utilities.update_version(
+                syn,
+                table_id,
+                f"{comment}_mainGENIE_{config['main_genie_release_version']}",
+            )
         if table_type == "primary":
             table_id, condition = list(TABLE_INFO["redacted"])
-            redacted_table_info = utilities.download_synapse_table(syn, table_id, condition = condition)
+            redacted_table_info = utilities.download_synapse_table(
+                syn, table_id, condition=condition
+            )
             logger.info("Updating redacted tables...")
             update_redact_table(syn, redacted_table_info, master_table, cohort, logger)
             logger.info("Updating version for redacted tables")
@@ -524,4 +790,5 @@ def main():
 
 
 if __name__ == "__main__":
+    main()
     main()

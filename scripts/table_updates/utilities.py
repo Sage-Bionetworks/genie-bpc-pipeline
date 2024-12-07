@@ -1,4 +1,5 @@
 # !/usr/bin/python
+import builtins
 import logging
 import sys
 from typing import List, Tuple
@@ -6,6 +7,27 @@ from typing import List, Tuple
 import pandas
 import synapseclient
 from synapseclient import Schema, Table
+
+builtins.na_values = [
+    "-1.#IND",
+    "1.#QNAN",
+    "1.#IND",
+    "-1.#QNAN",
+    "#N/A N/A",
+    "#N/A",
+    "N/A",
+    "n/a",
+    "NA",
+    "<NA>",
+    "#NA",
+    "NULL",
+    "null",
+    "NaN",
+    "-NaN",
+    "nan",
+    "-nan",
+    "",
+]
 
 
 def _is_float(val):
@@ -47,7 +69,13 @@ def check_empty_row(row, cols_to_skip):
     return row.drop(cols_to_skip).isnull().all()
 
 
-def download_synapse_table(syn, table_id: str, select: str = "*", condition: str = "") -> pandas.DataFrame:
+def download_synapse_table(
+    syn: synapseclient.Synapse,
+    table_id: str,
+    select: str = "*",
+    condition: str = "",
+    na_values: list = builtins.na_values,
+) -> pandas.DataFrame:
     """Download Synapse Table with the given table ID and condition
 
     Args:
@@ -62,31 +90,18 @@ def download_synapse_table(syn, table_id: str, select: str = "*", condition: str
     if condition:
         condition = " WHERE " + condition
     synapse_table = syn.tableQuery(f"SELECT {select} from {table_id}{condition}")
-    na_values = [
-        "-1.#IND",
-        "1.#QNAN",
-        "1.#IND",
-        "-1.#QNAN",
-        "#N/A N/A",
-        "#N/A",
-        "N/A",
-        "n/a",
-        "NA",
-        "<NA>",
-        "#NA",
-        "NULL",
-        "null",
-        "NaN",
-        "-NaN",
-        "nan",
-        "-nan",
-        ""
-    ]
-    synapse_table = synapse_table.asDataFrame(na_values=na_values, keep_default_na=False)
+    synapse_table = synapse_table.asDataFrame(
+        na_values=na_values, keep_default_na=False
+    )
     return synapse_table
 
 
-def get_data(syn, label_data_id, cohort):
+def get_data(
+    syn: synapseclient.Synapse,
+    label_data_id: str,
+    cohort: str,
+    na_values: list = builtins.na_values,
+):
     """Download csv file from Synapse and add cohort column
 
     Args:
@@ -97,26 +112,6 @@ def get_data(syn, label_data_id, cohort):
     Returns:
         Dataframe: label data
     """
-    na_values = [
-        "-1.#IND",
-        "1.#QNAN",
-        "1.#IND",
-        "-1.#QNAN",
-        "#N/A N/A",
-        "#N/A",
-        "N/A",
-        "n/a",
-        "NA",
-        "<NA>",
-        "#NA",
-        "NULL",
-        "null",
-        "NaN",
-        "-NaN",
-        "nan",
-        "-nan",
-        ""
-    ]
     label_data = pandas.read_csv(
         syn.get(label_data_id).path,
         low_memory=False,
@@ -199,82 +194,51 @@ def revert_table_version(syn, table_id):
     syn.store(Table(table_schema, temp_data))
 
 
-def update_tier1a(syn: synapseclient.Synapse, form: str, master_table: pandas.DataFrame, main_genie_table: pandas.DataFrame, column_mapping_table: pandas.DataFrame, bpc_column_list: List[str],logger: logging.Logger = None, cohort: str = "") -> Tuple[str, pandas.DataFrame]:
-    """Replace tier1a variables in patient_characteristics or cancer_panel_test table with Main GENIE release files
+def update_tier1a_data_replacement_mapping_table(
+    syn: synapseclient.Synapse, merged_table: pandas.DataFrame, form: str, config: dict
+):
+    """Update tier1a data replacement mapping table
 
     Args:
-        syn (synapseclient.Synapse): The synapse client connection
-        form (str): The form name, can be either patient_characteristics or cancer_panel_test
-        master_table (pandas.DataFrame): Table of all of the primary or irr BPC tables
-        main_genie_table (pandas.DataFrame): The dataframe of Main GENIE release
-        column_mapping_table (pandas.DataFrame): The column mapping table between BPC and Main GENIE
-        bpc_column_list (List[str]): The column list to be replaced
-        logger (logging.Logger, optional): The custom logger. Optional. Defaults to None.
-        cohort (str, optional): The cohort name. Defaults to "".
-
-    Returns:
-        Tuple[str, pandas.DataFrame]: The synapse ID for BPC table to be modified and the updated table as dataframe
+        merged_table (pandas.DataFrame): The merged table
+        form (str): The form name
     """
-    # check the validity of bpc_column_list
-    valid_col = column_mapping_table.loc[column_mapping_table["prissmm_form"] == form,].prissmm_element.tolist()
-    assert all(item in valid_col for item in bpc_column_list), (f"Invalid bpc_column_list. Column names should be matching {valid_col}.")
-
-    logger.info(f"Update {bpc_column_list} in {form}")
-    # load bpc table
-    cpt_table_id = master_table.loc[
-        master_table["form"] == form, "id"
-    ].values[0]
-
-    if cohort:
-        condition = f"cohort = '{cohort}'"
-        cpt_dat = download_synapse_table(syn, cpt_table_id, condition = condition)
-    else:
-        cpt_dat = download_synapse_table(syn, cpt_table_id)
-    cpt_dat.index = cpt_dat.index.map(str)
-    cpt_dat["index"] = cpt_dat.index
-    # subset main_genie_table based on bpc_column_list
-    main_genie_column_list = [", ".join(column_mapping_table.loc[column_mapping_table["prissmm_element"] == col,].genie_element) for col in bpc_column_list]
-    
     if form == "patient_characteristics":
-        main_genie_table = main_genie_table[main_genie_column_list + ["PATIENT_ID"]]
-        cpt_seq_dat = cpt_dat.merge(
-            main_genie_table,
-            how="left",
-            left_on="genie_patient_id",
-            right_on="PATIENT_ID",
+        table_schema = syn.get(
+            config["tier1a_replacement_mapping"][
+                "patient_characteristics_tier1a_replacement_mapping_table"
+            ]
         )
-    else: 
-        main_genie_table = main_genie_table[main_genie_column_list + ["SAMPLE_ID"]]
-        cpt_seq_dat = cpt_dat.merge(
-            main_genie_table,
-            how="left",
-            left_on="cpt_genie_sample_id",
-            right_on="SAMPLE_ID",
+        subset_table = merged_table[
+            [
+                "genie_patient_id",
+                "naaccr_ethnicity_code",
+                "naaccr_race_code_primary",
+                "naaccr_race_code_secondary",
+                "naaccr_race_code_tertiary",
+                "naaccr_sex_code",
+                "ETHNICITY_DETAILED",
+                "PRIMARY_RACE_DETAILED",
+                "SECONDARY_RACE_DETAILED",
+                "TERTIARY_RACE_DETAILED",
+                "SEX_DETAILED",
+            ]
+        ]
+    if form == "cancer_panel_test":
+        table_schema = syn.get(
+            config["tier1a_replacement_mapping"][
+                "cancer_panel_test_tier1a_replacement_mapping_table"
+            ]
         )
-    cpt_seq_dat.index = cpt_seq_dat["index"]
-    cpt_seq_dat.index.name =  None
-    cpt_seq_dat = cpt_seq_dat[main_genie_column_list]
-    cpt_seq_dat.columns = bpc_column_list
-    # reformat cpt_seq_date column
-    if "cpt_seq_date" in cpt_seq_dat.columns:
-        cpt_seq_dat["cpt_seq_date"] = cpt_seq_dat["cpt_seq_date"].map(float_to_int)
-    return cpt_table_id, cpt_seq_dat
-
-def overwrite_tier1a(syn: synapseclient.Synapse, form: str, cpt_table_id: str, cpt_seq_dat: pandas.DataFrame, bpc_column_list: List[str], logger: logging.Logger = None) -> None:
-    """Function to update tier1a columns with outputs from update_tier1a
-
-    Args:
-        syn (synapseclient.Synapse): The synapse client connection
-        form (str): The form name, can be either patient_characteristics or cancer_panel_test
-        cpt_table_id (str): The synapse ID for BPC table to be modified
-        cpt_seq_dat (pandas.DataFrame): The updated BPC table as dataframe
-        bpc_column_list (List[str]): The column list to be replaced
-        logger (logging.Logger, optional): The custom logger. Defaults to None.
-    """
-    # check the validity of bpc_column_list
-    logger.info(f"Overwrite {bpc_column_list} in {form}")
-    # load bpc table
-    cpt_table_schema = syn.get(cpt_table_id)
-    cpt_dat_query = syn.tableQuery(f"SELECT * FROM {cpt_table_id}")
-    syn.store(Table(cpt_table_schema, cpt_seq_dat, etag=cpt_dat_query.etag))
-
+        subset_table = merged_table[
+            [
+                "cpt_genie_sample_id",
+                "cpt_sample_type",
+                "cpt_seq_date",
+                "SAMPLE_TYPE_DETAILED",
+                "SEQ_YEAR",
+            ]
+        ]
+    # save the table to sage internal project
+    subset_table.to_csv(f"{form}_tier1a.csv")
+    syn.store(Table(table_schema, subset_table))

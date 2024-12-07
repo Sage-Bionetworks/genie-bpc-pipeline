@@ -19,6 +19,10 @@
         "CRC2": "syn52943210",
         "RENAL": "syn59474249"
     },
+    "tier1a_replacement_mapping":{
+        "patient_characteristics_tier1a_replacement_mapping_table": "syn64331052",
+        "cancer_panel_test_tier1a_replacement_mapping_table": "syn64331055"
+    },
     "main_genie_release_version": "17.4-consortium",
     "main_genie_data_release_files": "syn16804261",
     "main_genie_sample_mapping_table": "syn7434273"
