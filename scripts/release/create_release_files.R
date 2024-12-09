@@ -85,7 +85,8 @@ now <- function(timeOnly = F, tz = "US/Pacific") {
 }
 
 filter_for_release <- function(dataset, selected_dataset, selected_cohort, 
-                               sor_df_filtered, retracted_patient)
+                               sor_df_filtered, retracted_patient,
+                               retracted_sample = NULL)
 {
   # get the list of released columns
   release_cols <- sor_df_filtered %>%
@@ -94,11 +95,17 @@ filter_for_release <- function(dataset, selected_dataset, selected_cohort,
   
   release_cols <- intersect(release_cols, colnames(dataset))
   
-  # filter the data by cohort and release columns
+  # filter the data by cohort, release columns, remove retracted patients
   release_dat <- dataset %>%
     filter(cohort_internal==selected_cohort) %>%
     filter(!record_id %in% retracted_patient) %>%
     select(all_of(release_cols))
+  
+  # remove retracted sample
+  if(!is.null(retracted_sample) && length(retracted_sample) > 0){
+    release_dat <- release_dat %>%
+      filter(!cpt_genie_sample_id %in% retracted_sample)
+  }
   
   return(release_dat)
 }
@@ -159,12 +166,13 @@ if (verbose) {
   print(glue("{now(timeOnly = T)}: extracting release status for {selected_cohort} {release_version}-{release_type} from SOR column '{clinical_column}'..."))
 }
 
-# get the list of retracted patient
+# get the lists of retracted patient and samples
 if (verbose) {
-  print(glue("{now(timeOnly = T)}: loading retracted patients ({syn_id_retraction}) for the release..."))
+  print(glue("{now(timeOnly = T)}: loading retracted patients/samples ({syn_id_retraction}) for the release..."))
 }
-retracted_table <- synTableQuery(glue("SELECT patient_id FROM {syn_id_retraction} WHERE cohort like '%{selected_cohort}%'"))$asDataFrame()
-retracted_pt_list <- retracted_table$patient_id
+retracted_table <- synTableQuery(glue("SELECT * FROM {syn_id_retraction} WHERE cohort like '%{selected_cohort}%'"))$asDataFrame()
+retracted_pt_list <- na.omit(retracted_table$patient_id)
+retracted_sam_list <- na.omit(retracted_table$sample_id)
 
 # main -----------------
 
@@ -234,7 +242,8 @@ cpt_derived_release <- filter_for_release(cpt_derived_redacted,
                                           'Cancer panel test level dataset',
                                           selected_cohort,
                                           sor_df_filtered = sor_df_filtered,
-                                          retracted_patient = retracted_pt_list)
+                                          retracted_patient = retracted_pt_list,
+                                          retracted_sample = retracted_sam_list)
 if('PRISSMM Tumor Marker level dataset' %in% unique(sor_df_filtered$dataset)){
   prissmm_tm_derived_release <- filter_for_release(prissmm_tm_derived_redacted, 
                                                    'PRISSMM Tumor Marker level dataset',
