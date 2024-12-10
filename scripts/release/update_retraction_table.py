@@ -71,17 +71,6 @@ def synapse_login(synapse_config):
         syn.login()
     return syn
 
-#def update_version(syn, table_id, comment):
-#    """Update the version of the table with a new snapshot and comment.
-#    
-#    Args:
-#        syn (Synapse): Synapse client object
-#        table_id (str): Synapse Table ID
-#        comment (str): Comment to attach to the snapshot
-#    """
-#    snapshot_url = f"/entity/{table_id}/table/snapshot"
-#    syn.restPOST(snapshot_url, body=f'{{"snapshotComment":"{comment}"}}')
-
 def get_file_id_by_name(syn, folder_id, file_name):
     """Retrieve the file ID for a given file name in a specified Synapse folder.
     
