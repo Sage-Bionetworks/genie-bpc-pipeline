@@ -6,7 +6,10 @@ import synapseclient
 from synapseclient import Table
 
 # Synapse Table IDs
-RETRACTION_TABLE_ID = "syn52915299"
+RETRACTION_TABLE_IDS = {
+    "production": "syn52915299",
+    "staging": "syn64369514"
+}
 PT_RETRACTION_TABLE_ID = "syn25998970"
 SAMPLE_RETRACTION_TBL_ID = "syn25779833"
 RELEASE_INFO_ID = "syn27628075"
@@ -68,16 +71,16 @@ def synapse_login(synapse_config):
         syn.login()
     return syn
 
-def update_version(syn, table_id, comment):
-    """Update the version of the table with a new snapshot and comment.
-    
-    Args:
-        syn (Synapse): Synapse client object
-        table_id (str): Synapse Table ID
-        comment (str): Comment to attach to the snapshot
-    """
-    snapshot_url = f"/entity/{table_id}/table/snapshot"
-    syn.restPOST(snapshot_url, body=f'{{"snapshotComment":"{comment}"}}')
+#def update_version(syn, table_id, comment):
+#    """Update the version of the table with a new snapshot and comment.
+#    
+#    Args:
+#        syn (Synapse): Synapse client object
+#        table_id (str): Synapse Table ID
+#        comment (str): Comment to attach to the snapshot
+#    """
+#    snapshot_url = f"/entity/{table_id}/table/snapshot"
+#    syn.restPOST(snapshot_url, body=f'{{"snapshotComment":"{comment}"}}')
 
 def get_file_id_by_name(syn, folder_id, file_name):
     """Retrieve the file ID for a given file name in a specified Synapse folder.
@@ -132,6 +135,7 @@ def main():
     parser = argparse.ArgumentParser(description='Update retraction for release table on Synapse for BPC')
     parser.add_argument("-c", "--cohort", help="Cohort to release (e.g., NSCLC, CRC, BrCa, BLADDER)", required=True)
     parser.add_argument("-s", "--synapse_config", default=synapseclient.client.CONFIG_FILE, help="Path to Synapse credentials file")
+    parser.add_argument("-pd", "--production", action="store_true", help="Save output to production table")
     parser.add_argument("-m", "--message", default="", help="Version comment for the table update")
     parser.add_argument("-d", "--dry_run", action="store_true", help="Flag for dry run (no updates will be made)")
 
@@ -140,6 +144,7 @@ def main():
     # Initialize variables
     cohort = args.cohort
     synapse_config = args.synapse_config
+    production = args.production
     comment = args.message
     dry_run = args.dry_run
     
@@ -149,10 +154,16 @@ def main():
     # Create logger
     logger_name = "dry_run" if dry_run else "production"
     logger = setup_logger(logger_name)
-    logger.info('Starting BPC retraction update process!')
+    logger.info('Starting BPC retraction for release update process!')
+    
+    # Get the table ID
+    if production:
+        RETRACTION_TABLE_ID = RETRACTION_TABLE_IDS["production"]
+    else:
+        RETRACTION_TABLE_ID = RETRACTION_TABLE_IDS["staging"]
     
     # Download cohort-specific patient data from BPC table
-    bpc_cohort_patient = download_synapse_table(syn, BPC_PT_TABLE_ID, f"cohort='{cohort}'")
+    bpc_cohort_patient = download_synapse_table(syn, BPC_PT_TABLE_ID, f"cohort like '{cohort}%'")
     cohort_patient_list = list(bpc_cohort_patient['record_id'])
     redacted_patient = bpc_cohort_patient[bpc_cohort_patient['redacted'] == "Yes"]
     redacted_patient_list = list(redacted_patient['record_id'])
@@ -234,10 +245,10 @@ def main():
             logger.info("Dry run: Writing new retracted patients/samples to temp file.")
             new_retracted_df.to_csv("retraction_temp.csv")
         else:
-            logger.info("Updating retraction table...")
+            logger.info(f"Updating retraction table {RETRACTION_TABLE_ID}...")
             table_schema = syn.get(RETRACTION_TABLE_ID)
             table = syn.store(Table(table_schema, new_retracted_df))
-            update_version(syn, RETRACTION_TABLE_ID, comment)
+            syn.create_snapshot_version(RETRACTION_TABLE_ID, comment=comment)
 
 if __name__ == "__main__":
     main()
