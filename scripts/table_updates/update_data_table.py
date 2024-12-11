@@ -26,15 +26,8 @@ import numpy
 import pandas
 import synapseclient
 import utilities
-from synapseclient import (
-    Column,
-    Row,
-    RowSet,
-    Schema,
-    Table,
-    as_table_columns,
-    build_table,
-)
+from synapseclient import (Column, Row, RowSet, Schema, Table,
+                           as_table_columns, build_table)
 
 TABLES = {
     "production": {
@@ -766,7 +759,7 @@ def main():
     store_data(syn, master_table, label_data, table_type, cohort, logger, dry_run)
     if not dry_run:
         custom_fix_for_tier1a_variable(syn, master_table, logger, config, cohort)
-        logger.info("Updating version for tier1a replacementmapping tables")
+        logger.info("Updating version for tier1a replacement mapping tables")
         for table_id in config["tier1a_replacement_mapping"].values():
             utilities.update_version(
                 syn,
