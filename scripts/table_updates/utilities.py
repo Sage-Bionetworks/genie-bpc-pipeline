@@ -81,8 +81,8 @@ def download_synapse_table(
     Args:
         syn: Synapse credential
         table_id: Synapse ID of a table
-        select: Columns to be selected
-        condition: additional condition for querying the table
+        select: Columns to be selected. Defaults to all columns.
+        condition: Additional condition for querying the table. Defaults to all rows.
 
     Returns:
         A Pandas dataframe of the Synapse table
@@ -192,6 +192,24 @@ def revert_table_version(syn, table_id):
     table_query = syn.tableQuery("SELECT * from %s" % table_id)
     syn.delete(table_query.asRowSet())
     syn.store(Table(table_schema, temp_data))
+
+
+def remove_backslash(df: pandas.DataFrame, cols: List[str]) -> pandas.DataFrame:
+    """Function to detect and remove unwanted backslashes in columns from a dataframe
+
+    Args:
+        df (pandas.DataFrame): A dataframe to check against
+        cols (List[str]): The list of columns to be updated
+
+    Returns:
+        pandas.DataFrame: A dataframe with unwanted backslashes removed
+    """
+    # check if the given columns are in the dataframe
+    if all(col in df.columns for col in cols):
+        df[cols] = df[cols].replace(r"\\", "", regex=True)
+        return df
+    else:
+        raise ValueError("Invalid column list. Not all columns are in the dataframe.")
 
 
 def update_tier1a_data_replacement_mapping_table(

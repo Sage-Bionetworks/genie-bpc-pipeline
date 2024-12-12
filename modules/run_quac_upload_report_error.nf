@@ -9,6 +9,7 @@ process run_quac_upload_report_error {
    debug true
 
    input:
+   val previous
    val cohort
 
    output:

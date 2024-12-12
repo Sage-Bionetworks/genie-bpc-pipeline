@@ -19,6 +19,7 @@ import datetime
 import json
 import logging
 import math
+import re
 import sys
 from typing import List, Tuple
 
@@ -26,8 +27,15 @@ import numpy
 import pandas
 import synapseclient
 import utilities
-from synapseclient import (Column, Row, RowSet, Schema, Table,
-                           as_table_columns, build_table)
+from synapseclient import (
+    Column,
+    Row,
+    RowSet,
+    Schema,
+    Table,
+    as_table_columns,
+    build_table,
+)
 
 TABLES = {
     "production": {
@@ -160,13 +168,24 @@ def _store_data(
     temp_data.drop(index=rows_to_drop, inplace=True)
     # remove .0 from all columns
     temp_data = temp_data.applymap(lambda x: utilities.float_to_int(x))
+    # remove backslash from drugs_drug cols in ca_directed_drugs
+    if table_schema.name == "Ca Directed Drugs":
+        # extract drugs_drug_* columns
+        cols = [col for col in temp_data.columns if re.search("drugs_drug_\d$", col)]
+        temp_data = utilities.remove_backslash(temp_data, cols)
     # update table
     table_query = syn.tableQuery(
         f"SELECT * FROM {table_schema.id} where cohort = '{cohort}'"
     )
     if table_type == "irr":
         # check for exsiting id to update for new data only
-        existing_records = list(set(table_query.asDataFrame()["record_id"]))
+        existing_records = list(
+            set(
+                utilities.download_synapse_table(
+                    syn, table_id=table_schema.id, condition=f"cohort = '{cohort}'"
+                )["record_id"]
+            )
+        )
         temp_data = temp_data[~temp_data["record_id"].isin(existing_records)]
     if not dry_run:
         if table_type == "primary":
@@ -338,16 +357,22 @@ def update_redact_table(
     # download tables
     condition = f"cohort = '{cohort}'"
     curation_info = utilities.download_synapse_table(
-        syn, curation_table_id, "record_id, curation_dt", condition
+        syn,
+        table_id=curation_table_id,
+        select="record_id, curation_dt",
+        condition=condition,
     )
     patient_info = utilities.download_synapse_table(
-        syn, patient_table_id, "record_id, birth_year, hybrid_death_ind", condition
+        syn,
+        table_id=patient_table_id,
+        select="record_id, birth_year, hybrid_death_ind",
+        condition=condition,
     )
     sample_info = utilities.download_synapse_table(
         syn,
-        sample_table_id,
-        "record_id, cpt_genie_sample_id, age_at_seq_report",
-        condition,
+        table_id=sample_table_id,
+        select="record_id, cpt_genie_sample_id, age_at_seq_report",
+        condition=condition,
     )
     patient_curation_info = patient_info.merge(
         curation_info, how="left", on="record_id"
@@ -386,7 +411,9 @@ def update_redact_table(
             table = syn.store(Table(table_schema, new_df))
 
     # Modify patient table
-    df = utilities.download_synapse_table(syn, patient_table_id, condition=condition)
+    df = utilities.download_synapse_table(
+        syn, table_id=patient_table_id, condition=condition
+    )
     new_df, new_record_to_redact = _redact_table(df, interval_cols_info)
     new_df.reset_index(drop=True, inplace=True)
     record_to_redact = record_to_redact + new_record_to_redact
@@ -416,7 +443,7 @@ def update_redact_table(
         f"SELECT cohort, record_id FROM {full_pt_id} where cohort = '{cohort}'"
     )
     pt_dat = utilities.download_synapse_table(
-        syn, full_pt_id, "cohort, record_id", condition=condition
+        syn, table_id=full_pt_id, select="cohort, record_id", condition=condition
     )
     pt_dat.index = pt_dat.index.map(str)
     pt_dat["index"] = pt_dat.index
@@ -783,5 +810,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
     main()

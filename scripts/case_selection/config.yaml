@@ -470,13 +470,13 @@ phase:
           #  production: 0
           #  adjusted: 0
           PROV:
-            production: 133
-            adjusted: 133
+            production: 115
+            adjusted: 115
             pressure: 5
             irr: 0
           UCSF:
-            production: 30
-            adjusted: 30
+            production: 38
+            adjusted: 38
             pressure: 5
             irr: 0
           UHN:
@@ -487,8 +487,8 @@ phase:
           #  production: 0
           #  adjusted: 0
           VHIO:
-            production: 70
-            adjusted: 70
+            production: 80
+            adjusted: 80
             pressure: 5
             irr: 0
           #WAKE:
