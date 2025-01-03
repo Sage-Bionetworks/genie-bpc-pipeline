@@ -314,29 +314,36 @@ merge_mappings <- function(primarys, secondarys, debug = F) {
   return(mappings)
 }
 
-#' Map any coded data to actual values as mapped in the 
-#' REDCap Data Dictionary (DD).
+#' Map any coded data to actual values depending on if Global Response Set 
+#' (GRS) is provided. If provided, data will be mapped to the merged
+#' set of REDCap Data Dictionary (DD) and GRS mapping. If not, data will be mapped
+#' just to the DD.
 #' 
-#' @param data Data frame of coded data
-#' @param mappings Matrix with two columns, first containing a label and
+#' @param df_coded Data frame of coded data
+#' @param dd Matrix with two columns, first containing a label and
 #' second columns a mapping string.  
-#' @param secondary_mappings Another mapping matrix that is used secondarily
+#' @param grs Another mapping matrix that is used secondarily
 #' if the label is not found in the primary mapping matrix.
+#' @param use_grs Whether we are using grs or not
 #' @return Data frame of uncoded data.
 #' @example
 #' map_code_to_value(data = my_data, dd = dd, grs = grs)
-uncode_data <- function(df_coded, dd, grs) {
+uncode_data <- function(df_coded, dd, grs, use_grs) {
   
   df_uncoded <- df_coded
   
   # merge reference mappings
-  mappings_primary <- parse_mappings(strs = grs[,config$column_name$variable_mapping], 
-                                     labels = grs[,config$column_name$variable_name])
-  mappings_secondary <- parse_mappings(strs = dd[[config$column_name$variable_mapping]], 
-                                labels = dd[[config$column_name$variable_name]])
-  mappings <- merge_mappings(mappings_primary, mappings_secondary)
-  
-  # custom mappings
+  if(use_grs){
+    mappings_primary <- parse_mappings(strs = grs[,config$column_name$variable_mapping], 
+                                      labels = grs[,config$column_name$variable_name])
+    mappings_secondary <- parse_mappings(strs = dd[[config$column_name$variable_mapping]], 
+                            labels = dd[[config$column_name$variable_name]])
+    mappings <- merge_mappings(mappings_primary, mappings_secondary)
+  } else {
+    mappings <- parse_mappings(strs = dd[[config$column_name$variable_mapping]], 
+                            labels = dd[[config$column_name$variable_name]])
+  }
+
   mapping_complete <- data.frame(codes = names(config$mapping$complete),
                                  values = as.character(config$mapping$complete),
                                  stringsAsFactors = F)
@@ -576,6 +583,7 @@ synLogin <- function(auth = NA, silent = T) {
   return(syn)
 }
 
+
 get_data_dictionary <- function(cohort) {
   synid_dd <- get_bpc_synid_prissmm(synid_table_prissmm = config$synapse$prissmm$id, 
                                     cohort = cohort,
@@ -588,6 +596,24 @@ get_data_dictionary <- function(cohort) {
                  na.strings = c(""))
   
   return(dd)
+}
+
+#' Retrieves the Global Response Set (grs) depending 
+#' on value of use_grs. If not using grs, returns NULL
+#' 
+#' @param use_grs Whether to use grs or not
+#' @return grs
+get_global_response_set <- function(use_grs){
+  if(use_grs){
+    grs <- read.csv(synGet(config$synapse$grs$id)$path, 
+                sep = ",", 
+                stringsAsFactors = F,
+                check.names = F,
+                na.strings = c(""))
+  } else{
+    grs <- NULL
+  }
+  return(grs)
 }
 
 get_data_uploads <- function(cohort) {
@@ -639,30 +665,46 @@ get_output_folder_id <- function(config, environment){
   return(config$synapse$rca_files[[glue(environment, "_id")]])
 }
 
+
+#' Retrieves the provenance used
+#' @param cohort Synaspe id of the data dictionary use
+#' @param use_grs Whether we are using grs or not
+#' @return list of the synapse ids used in provenance
+get_prov_used <- function(cohort, use_grs){
+  synid_dd <- get_bpc_synid_prissmm(synid_table_prissmm = config$synapse$prissmm$id, 
+                                    cohort = cohort,
+                                    file_name = "Data Dictionary non-PHI")
+  if(use_grs){
+    prov_used <- c(as.character(unlist(config$upload[[cohort]])), 
+                                synid_dd,
+                                config$synapse$grs$id)
+  } else{
+    prov_used <- c(as.character(unlist(config$upload[[cohort]])), 
+                                synid_dd)
+  }
+  return(prov_used)
+}
+
 #' Write to Synapse and clean up
 #' Remove leading and trailing whitespace from a string.
 #' @param cohort (string) name of cohort
 #' @param environment (string) whether we are running in production env or staging env
 #' @param comment (string) some sort of comment about the new version of the file 
 #'  related to cohort run
-save_output_synapse <- function(cohort, environment, comment) {
-  
+save_output_synapse <- function(cohort, environment, comment, use_grs) {
+
   parent_id <- get_output_folder_id(config, environment)
   file_output_pri <- get_pri_file_name(cohort)
   file_output_irr <- get_irr_file_name(cohort)
-  synid_dd <- get_bpc_synid_prissmm(synid_table_prissmm = config$synapse$prissmm$id, 
-                                                cohort = cohort,
-                                                file_name = "Data Dictionary non-PHI")
   
+  prov_used <- get_prov_used(cohort, use_grs)
   save_to_synapse(path = file_output_pri,
                   file_name = gsub(pattern = ".csv|.tsv", replacement = "", x = file_output_pri),
                   parent_id = parent_id,
                   comment = comment,
                   prov_name = "BPC non-IRR upload data",
                   prov_desc = "Merged and uncoded BPC upload data from sites academic REDCap instances with IRR cases removed",
-                  prov_used = c(as.character(unlist(config$upload[[cohort]])), 
-                                synid_dd,
-                                config$synapse$grs$id),
+                  prov_used = prov_used,
                   prov_exec = "https://github.com/Sage-Bionetworks/genie-bpc-pipeline/tree/develop/scripts/uploads/merge_and_uncode_rca_uploads.R")
   
   if (file.exists(file_output_irr)) {
@@ -672,9 +714,7 @@ save_output_synapse <- function(cohort, environment, comment) {
                     comment = comment,
                     prov_name = "BPC IRR upload data",
                     prov_desc = "Merged and uncoded BPC upload IRR case data from sites academic REDCap instances",
-                    prov_used = c(as.character(unlist(config$upload[[cohort]])), 
-                                  synid_dd,
-                                  config$synapse$grs$id),
+                    prov_used = prov_used,
                     prov_exec = "https://github.com/Sage-Bionetworks/genie-bpc-pipeline/tree/develop/scripts/uploads/merge_and_uncode_rca_uploads.R")
   }
   
@@ -704,7 +744,9 @@ main <- function(){
     make_option(c("-v", "--verbose"), action="store_true", default = FALSE, 
                 help="Print out verbose output on script progress"),
     make_option(c("--comment"), type = "character",
-              help="Comment for new table snapshot version. This must be unique and is tied to the cohort run.")
+              help="Comment for new table snapshot version. This must be unique and is tied to the cohort run."),
+    make_option(c("--use_grs"), type="logical", default = FALSE,
+              help="Whether to use grs as primary mapping (dd as secondary) or not (using dd only).")
   )
   opt <- parse_args(OptionParser(option_list=option_list))
 
@@ -745,11 +787,7 @@ main <- function(){
     print(glue("{now(timeOnly = T)}: Reading global response set..."))
   }
 
-  grs <- read.csv(synGet(config$synapse$grs$id)$path, 
-                  sep = ",", 
-                  stringsAsFactors = F,
-                  check.names = F,
-                  na.strings = c(""))
+  grs <- get_global_response_set(use_grs = opt$use_grs)
 
   # for each user-specified cohort
   for (cohort in cohort_input) {
@@ -781,7 +819,8 @@ main <- function(){
     # uncode
     uncoded <- uncode_data(df_coded = coded, 
                           dd = dd,
-                          grs = grs)
+                          grs = grs,
+                          use_grs = opt$use_grs)
     
     if (debug) {
       print(glue("{now(timeOnly = T)}: Formatting uncoded data..."))
@@ -806,7 +845,7 @@ main <- function(){
         print(glue("{now(timeOnly = T)}: Saving uncoded data to Synapse..."))
       }
       
-      save_output_synapse(cohort, environment = env, comment = opt$comment)
+      save_output_synapse(cohort, environment = env, comment = opt$comment, use_grs = opt$use_grs)
     }
     
     # clean up for memory
