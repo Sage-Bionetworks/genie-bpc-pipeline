@@ -93,6 +93,9 @@ Options:
 
         --production
                 Whether to run in production mode or not (staging mode).
+
+        --use_grs
+                Whether to use grs as primary mapping (dd as secondary) or not (using dd only).
 ```
 
 Example run (staging run):
@@ -103,6 +106,11 @@ Rscript merge_and_uncode_rca_uploads.R -c NSCLC -u -a $SYNAPSE_AUTH_TOKEN
 Example run (production run):
 ```
 Rscript merge_and_uncode_rca_uploads.R -c NSCLC -u -a $SYNAPSE_AUTH_TOKEN --production
+```
+
+Example run (production run) using grs:
+```
+Rscript merge_and_uncode_rca_uploads.R -c NSCLC -u -a $SYNAPSE_AUTH_TOKEN --production --use_grs true
 ```
 
 ## Usage: remove patient IDs from a REDCap formatted file
