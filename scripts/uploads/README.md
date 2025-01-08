@@ -110,7 +110,7 @@ Rscript merge_and_uncode_rca_uploads.R -c NSCLC -u -a $SYNAPSE_AUTH_TOKEN --prod
 
 Example run (production run) using grs:
 ```
-Rscript merge_and_uncode_rca_uploads.R -c NSCLC -u -a $SYNAPSE_AUTH_TOKEN --production --use_grs
+Rscript merge_and_uncode_rca_uploads.R -c NSCLC -u -a $SYNAPSE_AUTH_TOKEN --production --use_grs true
 ```
 
 ## Usage: remove patient IDs from a REDCap formatted file
