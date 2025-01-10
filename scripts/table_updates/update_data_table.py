@@ -27,15 +27,8 @@ import numpy
 import pandas
 import synapseclient
 import utilities
-from synapseclient import (
-    Column,
-    Row,
-    RowSet,
-    Schema,
-    Table,
-    as_table_columns,
-    build_table,
-)
+from synapseclient import (Column, Row, RowSet, Schema, Table,
+                           as_table_columns, build_table)
 
 TABLES = {
     "production": {
@@ -89,13 +82,13 @@ def get_main_genie_clinical_file(
     column_list = column_mapping_table.loc[
         column_mapping_table["prissmm_form"] == form,
     ].genie_element.to_list()
-    assert (
-        not clinical_df.empty
-    ), f"Clinical file pulled from {clinical_link_synid} link is empty."
-    assert set(column_list) < set(clinical_df.columns), (
-        f"Clinical file pulled from {clinical_link_synid} link is missing an expected column. \\n"
-        f"Expected columns: {column_list}"
-    )
+    if clinical_df.empty:
+        raise ValueError(f"Clinical file pulled from {clinical_link_synid} link is empty.")
+    if not set(column_list) < set(clinical_df.columns):
+        raise ValueError(
+            f"Clinical file pulled from {clinical_link_synid} link is missing an expected column. \n"
+            f"Expected columns: {column_list}"
+        )
     if logger:
         logger.info(f"CLINICAL_FILE_LINK:{clinical_link_synid}")
         logger.info(f"RELEASE_FILES_TABLE_SYNID:{release_files_table_synid}")
@@ -511,9 +504,8 @@ def update_tier1a(
     valid_col = column_mapping_table.loc[
         column_mapping_table["prissmm_form"] == form,
     ].prissmm_element.tolist()
-    assert all(
-        item in valid_col for item in bpc_column_list
-    ), f"Invalid bpc_column_list. Column names should be matching {valid_col}."
+    if not all(item in valid_col for item in bpc_column_list):
+        raise ValueError(f"Invalid bpc_column_list. Column names should be matching {valid_col}.")
 
     logger.info(f"Update {bpc_column_list} in {form}")
     # load bpc table
@@ -554,9 +546,6 @@ def update_tier1a(
             left_on="genie_patient_id",
             right_on="PATIENT_ID",
         )
-        utilities.update_tier1a_data_replacement_mapping_table(
-            syn, cpt_seq_dat, form, config
-        )
     else:
         # for cancer_panel_test table
         main_genie_table = main_genie_table[main_genie_column_list + ["SAMPLE_ID"]]
@@ -574,9 +563,7 @@ def update_tier1a(
             left_on="cpt_genie_sample_id",
             right_on="SAMPLE_ID",
         )
-        utilities.update_tier1a_data_replacement_mapping_table(
-            syn, cpt_seq_dat, form, config
-        )
+    utilities.update_tier1a_data_replacement_mapping_table(syn, cpt_seq_dat, form, config)
     # reformat the columns
     cpt_seq_dat.index = cpt_seq_dat["index"]
     cpt_seq_dat.index.name = None
@@ -661,13 +648,7 @@ def custom_fix_for_tier1a_variable(
         master_table,
         genie_patient_dat,
         column_mapping_table,
-        bpc_column_list=[
-            "naaccr_ethnicity_code",
-            "naaccr_race_code_primary",
-            "naaccr_race_code_secondary",
-            "naaccr_race_code_tertiary",
-            "naaccr_sex_code",
-        ],
+        bpc_column_list= config['patient_tier1a_column_list_to_be_replaced'],
         config=config,
         logger=logger,
         cohort=cohort,
@@ -677,13 +658,7 @@ def custom_fix_for_tier1a_variable(
         "patient_characteristics",
         cpt_table_id,
         cpt_seq_dat,
-        bpc_column_list=[
-            "naaccr_ethnicity_code",
-            "naaccr_race_code_primary",
-            "naaccr_race_code_secondary",
-            "naaccr_race_code_tertiary",
-            "naaccr_sex_code",
-        ],
+        bpc_column_list=config['patient_tier1a_column_list_to_be_replaced'],
         logger=logger,
     )
     # modify for sample table
@@ -693,7 +668,7 @@ def custom_fix_for_tier1a_variable(
         master_table,
         genie_sample_dat,
         column_mapping_table,
-        bpc_column_list=["cpt_sample_type", "cpt_seq_date"],
+        bpc_column_list=config["sample_tier1a_column_list_to_be_replaced"],
         config=config,
         logger=logger,
         cohort=cohort,
@@ -703,7 +678,7 @@ def custom_fix_for_tier1a_variable(
         "cancer_panel_test",
         cpt_table_id,
         cpt_seq_dat,
-        bpc_column_list=["cpt_sample_type", "cpt_seq_date"],
+        bpc_column_list=config["sample_tier1a_column_list_to_be_replaced"],
         logger=logger,
     )
     logger.info("Completed")
