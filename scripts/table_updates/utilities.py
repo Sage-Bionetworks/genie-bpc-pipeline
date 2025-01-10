@@ -258,5 +258,7 @@ def update_tier1a_data_replacement_mapping_table(
             ]
         ]
     # save the table to sage internal project
-    subset_table.to_csv(f"{form}_tier1a.csv")
-    syn.store(Table(table_schema, subset_table))
+    subset_table.reset_index(drop=True, inplace=True)
+    table_query = syn.tableQuery(f"SELECT * FROM {table_schema.id}")
+    table = syn.delete(table_query)
+    table = syn.store(Table(table_schema, subset_table))
