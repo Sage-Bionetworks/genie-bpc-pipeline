@@ -1,10 +1,33 @@
+# !/usr/bin/python
+import builtins
 import logging
 import sys
-from typing import List
+from typing import List, Tuple
 
 import pandas
 import synapseclient
 from synapseclient import Schema, Table
+
+builtins.na_values = [
+    "-1.#IND",
+    "1.#QNAN",
+    "1.#IND",
+    "-1.#QNAN",
+    "#N/A N/A",
+    "#N/A",
+    "N/A",
+    "n/a",
+    "NA",
+    "<NA>",
+    "#NA",
+    "NULL",
+    "null",
+    "NaN",
+    "-NaN",
+    "nan",
+    "-nan",
+    "",
+]
 
 
 def _is_float(val):
@@ -47,7 +70,11 @@ def check_empty_row(row, cols_to_skip):
 
 
 def download_synapse_table(
-    syn, table_id: str, select: str = "*", condition: str = ""
+    syn: synapseclient.Synapse,
+    table_id: str,
+    select: str = "*",
+    condition: str = "",
+    na_values: list = builtins.na_values,
 ) -> pandas.DataFrame:
     """Download Synapse Table with the given table ID and condition
 
@@ -63,33 +90,18 @@ def download_synapse_table(
     if condition:
         condition = " WHERE " + condition
     synapse_table = syn.tableQuery(f"SELECT {select} from {table_id}{condition}")
-    na_values = [
-        "-1.#IND",
-        "1.#QNAN",
-        "1.#IND",
-        "-1.#QNAN",
-        "#N/A N/A",
-        "#N/A",
-        "N/A",
-        "n/a",
-        "NA",
-        "<NA>",
-        "#NA",
-        "NULL",
-        "null",
-        "NaN",
-        "-NaN",
-        "nan",
-        "-nan",
-        "",
-    ]
     synapse_table = synapse_table.asDataFrame(
         na_values=na_values, keep_default_na=False
     )
     return synapse_table
 
 
-def get_data(syn, label_data_id, cohort):
+def get_data(
+    syn: synapseclient.Synapse,
+    label_data_id: str,
+    cohort: str,
+    na_values: list = builtins.na_values,
+):
     """Download csv file from Synapse and add cohort column
 
     Args:
@@ -100,26 +112,6 @@ def get_data(syn, label_data_id, cohort):
     Returns:
         Dataframe: label data
     """
-    na_values = [
-        "-1.#IND",
-        "1.#QNAN",
-        "1.#IND",
-        "-1.#QNAN",
-        "#N/A N/A",
-        "#N/A",
-        "N/A",
-        "n/a",
-        "NA",
-        "<NA>",
-        "#NA",
-        "NULL",
-        "null",
-        "NaN",
-        "-NaN",
-        "nan",
-        "-nan",
-        "",
-    ]
     label_data = pandas.read_csv(
         syn.get(label_data_id).path,
         low_memory=False,
@@ -218,3 +210,55 @@ def remove_backslash(df: pandas.DataFrame, cols: List[str]) -> pandas.DataFrame:
         return df
     else:
         raise ValueError("Invalid column list. Not all columns are in the dataframe.")
+
+
+def update_tier1a_data_replacement_mapping_table(
+    syn: synapseclient.Synapse, merged_table: pandas.DataFrame, form: str, config: dict
+):
+    """Update tier1a data replacement mapping table
+
+    Args:
+        merged_table (pandas.DataFrame): The merged table
+        form (str): The form name
+    """
+    if form == "patient_characteristics":
+        table_schema = syn.get(
+            config["tier1a_replacement_mapping"][
+                "patient_characteristics_tier1a_replacement_mapping_table"
+            ]
+        )
+        subset_table = merged_table[
+            [
+                "genie_patient_id",
+                "naaccr_ethnicity_code",
+                "naaccr_race_code_primary",
+                "naaccr_race_code_secondary",
+                "naaccr_race_code_tertiary",
+                "naaccr_sex_code",
+                "ETHNICITY_DETAILED",
+                "PRIMARY_RACE_DETAILED",
+                "SECONDARY_RACE_DETAILED",
+                "TERTIARY_RACE_DETAILED",
+                "SEX_DETAILED",
+            ]
+        ]
+    if form == "cancer_panel_test":
+        table_schema = syn.get(
+            config["tier1a_replacement_mapping"][
+                "cancer_panel_test_tier1a_replacement_mapping_table"
+            ]
+        )
+        subset_table = merged_table[
+            [
+                "cpt_genie_sample_id",
+                "cpt_sample_type",
+                "cpt_seq_date",
+                "SAMPLE_TYPE_DETAILED",
+                "SEQ_YEAR",
+            ]
+        ]
+    # save the table to sage internal project
+    subset_table.reset_index(drop=True, inplace=True)
+    table_query = syn.tableQuery(f"SELECT * FROM {table_schema.id}")
+    table = syn.delete(table_query)
+    table = syn.store(Table(table_schema, subset_table))

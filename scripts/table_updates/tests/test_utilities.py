@@ -4,8 +4,8 @@ import numpy as np
 import pandas as pd
 import pytest
 import synapseclient
-from synapseclient import Schema, Table
-from table_updates import utilities
+from synapseclient import Schema, Table, client
+from utilities import *
 
 
 @pytest.fixture(scope="session")
@@ -16,12 +16,24 @@ def syn():
 @pytest.fixture(scope="session")
 def table_schema():
     schema = synapseclient.table.Schema(
+        id="syn123456",
         name="test_table",
         parent="syn123",
         column_names=["col1", "col2"],
         column_types=["STRING", "INTEGER"],
     )
+
     return schema
+
+
+@pytest.fixture
+def config():
+    yield {
+        "tier1a_replacement_mapping": {
+            "patient_characteristics_tier1a_replacement_mapping_table": "syn22222",
+            "cancer_panel_test_tier1a_replacement_mapping_table": "syn33333",
+        }
+    }
 
 
 @pytest.mark.parametrize(
@@ -63,7 +75,7 @@ def test_download_synapse_table_default_condition(
     syn, table_schema, query_return_df, select, query, expected_df
 ):
     syn.tableQuery = MagicMock(return_value=Table(table_schema, query_return_df))
-    result = utilities.download_synapse_table(syn, "syn123456", select)
+    result = download_synapse_table(syn, "syn123456", select)
 
     # validate
     syn.tableQuery.assert_called_once_with(query)
@@ -92,7 +104,7 @@ def test_download_synapse_table_with_condition(
     syn, table_schema, query_return_df, condition, query, expected_df
 ):
     syn.tableQuery = MagicMock(return_value=Table(table_schema, query_return_df))
-    result = utilities.download_synapse_table(syn, "syn123456", condition=condition)
+    result = download_synapse_table(syn, "syn123456", condition=condition)
 
     # validate
     syn.tableQuery.assert_called_once_with(query)
@@ -126,7 +138,7 @@ def test_download_synapse_table_with_select_and_condition(
     syn, table_schema, query_return_df, select, condition, query, expected_df
 ):
     syn.tableQuery = MagicMock(return_value=Table(table_schema, query_return_df))
-    result = utilities.download_synapse_table(
+    result = download_synapse_table(
         syn, "syn123456", select=select, condition=condition
     )
 
@@ -142,7 +154,7 @@ def test_download_empty_synapse_table_with_condition(
     syn.tableQuery = MagicMock(
         return_value=Table(table_schema, pd.DataFrame(columns=["col1", "col2"]))
     )
-    result = utilities.download_synapse_table(syn, "syn123456", condition="col2 = 1")
+    result = download_synapse_table(syn, "syn123456", condition="col2 = 1")
 
     # validate
     syn.tableQuery.assert_called_once_with("SELECT * from syn123456 WHERE col2 = 1")
@@ -213,7 +225,7 @@ def test_download_empty_synapse_table_with_condition(
     ],
 )
 def test_remove_backslash(input_df, cols, expected_df):
-    results = utilities.remove_backslash(input_df, cols)
+    results = remove_backslash(input_df, cols)
     pd.testing.assert_frame_equal(results, expected_df)
 
 
@@ -227,4 +239,95 @@ def test_remove_backslsh_fail(input_df, cols):
     with pytest.raises(
         ValueError, match="Invalid column list. Not all columns are in the dataframe."
     ):
-        utilities.remove_backslash(input_df, cols)
+        remove_backslash(input_df, cols)
+
+
+def get__update_tier1a_data_replacement_mapping_table_test_cases():
+    return [
+        {
+            "name": "patient_characteristics_mapping",
+            "merged_table": pd.DataFrame(
+                {
+                    "genie_patient_id": [1, 2, 3],
+                    "naaccr_ethnicity_code": ["A", "B", "C"],
+                    "naaccr_race_code_primary": ["X", "Y", "Z"],
+                    "naaccr_race_code_secondary": ["P", "Q", "R"],
+                    "naaccr_race_code_tertiary": ["M", "N", "O"],
+                    "naaccr_sex_code": ["M", "F", "M"],
+                    "ETHNICITY_DETAILED": ["Ethnicity A", "Ethnicity B", "Ethnicity C"],
+                    "PRIMARY_RACE_DETAILED": ["Race X", "Race Y", "Race Z"],
+                    "SECONDARY_RACE_DETAILED": ["Race P", "Race Q", "Race R"],
+                    "TERTIARY_RACE_DETAILED": ["Race M", "Race N", "Race O"],
+                    "SEX_DETAILED": ["Male", "Female", "Male"],
+                    "other_cols": [1, 2, 3],
+                }
+            ),
+            "form": "patient_characteristics",
+            "expected_df": pd.DataFrame(
+                {
+                    "genie_patient_id": [1, 2, 3],
+                    "naaccr_ethnicity_code": ["A", "B", "C"],
+                    "naaccr_race_code_primary": ["X", "Y", "Z"],
+                    "naaccr_race_code_secondary": ["P", "Q", "R"],
+                    "naaccr_race_code_tertiary": ["M", "N", "O"],
+                    "naaccr_sex_code": ["M", "F", "M"],
+                    "ETHNICITY_DETAILED": ["Ethnicity A", "Ethnicity B", "Ethnicity C"],
+                    "PRIMARY_RACE_DETAILED": ["Race X", "Race Y", "Race Z"],
+                    "SECONDARY_RACE_DETAILED": ["Race P", "Race Q", "Race R"],
+                    "TERTIARY_RACE_DETAILED": ["Race M", "Race N", "Race O"],
+                    "SEX_DETAILED": ["Male", "Female", "Male"],
+                }
+            ),
+        },
+        {
+            "name": "cancer_panel_test_mapping",
+            "merged_table": pd.DataFrame(
+                {
+                    "cpt_genie_sample_id": [1, 2, 3],
+                    "cpt_sample_type": ["A", "B", "C"],
+                    "cpt_seq_date": ["X", "Y", "Z"],
+                    "SAMPLE_TYPE_DETAILED": ["P", "Q", "R"],
+                    "SEQ_YEAR": ["M", "N", "O"],
+                    "other_cols": [1, 2, 3],
+                }
+            ),
+            "form": "cancer_panel_test",
+            "expected_df": pd.DataFrame(
+                {
+                    "cpt_genie_sample_id": [1, 2, 3],
+                    "cpt_sample_type": ["A", "B", "C"],
+                    "cpt_seq_date": ["X", "Y", "Z"],
+                    "SAMPLE_TYPE_DETAILED": ["P", "Q", "R"],
+                    "SEQ_YEAR": ["M", "N", "O"],
+                }
+            ),
+        },
+    ]
+
+
+@pytest.mark.parametrize(
+    "test_cases",
+    get__update_tier1a_data_replacement_mapping_table_test_cases(),
+    ids=lambda x: x["name"],
+)
+def test_update_tier1a_data_replacement_mapping_table(syn, table_schema, test_cases, config):
+    with patch.object(syn, "get", return_value=table_schema) as patch_get, patch.object(
+        syn, "tableQuery"
+    ) as patch_table_query, patch.object(syn, "store") as patch_store, patch.object(syn, "delete") as patch_delete:
+        patch_table_query.return_value = MagicMock(etag="test_etag")
+        # Call the function
+        update_tier1a_data_replacement_mapping_table(
+            syn, test_cases["merged_table"], test_cases["form"], config
+        )
+
+        # Validate
+        patch_get.assert_called_with(
+            config["tier1a_replacement_mapping"][f"{test_cases['form']}_tier1a_replacement_mapping_table"])
+        patch_table_query.assert_called_with(f"SELECT * FROM {table_schema.id}")
+        patch_delete.assert_called_once()
+        args, kwargs = patch_store.call_args
+        stored_table = args[0]
+        assert stored_table.schema == table_schema
+        pd.testing.assert_frame_equal(
+            stored_table.asDataFrame(), test_cases["expected_df"]
+        )

@@ -8,7 +8,7 @@
         "BLADDER": "syn26721150",
         "NSCLC2": "syn51318735",
         "CRC2": "syn52943208",
-        "RENAL": "syn59474241"
+        "RENAL": "syn59474241",
         "OVARIAN": "syn64042751"
     },
     "irr":{
@@ -18,10 +18,24 @@
         "BLADDER": "syn26721151",
         "NSCLC2": "syn51318736",
         "CRC2": "syn52943210",
-        "RENAL": "syn59474249"
+        "RENAL": "syn59474249",
         "OVARIAN": "syn64042773"
     },
-    "main_genie_release_version": "16.6-consortium",
+    "tier1a_replacement_mapping":{
+        "patient_characteristics_tier1a_replacement_mapping_table": "syn64331052",
+        "cancer_panel_test_tier1a_replacement_mapping_table": "syn64331055"
+    },
+    "main_genie_release_version": "17.6-consortium",
     "main_genie_data_release_files": "syn16804261",
-    "main_genie_sample_mapping_table": "syn7434273"
+    "main_genie_sample_mapping_table": "syn7434273",
+    "patient_tier1a_column_list_to_be_replaced": [
+        "naaccr_ethnicity_code",
+        "naaccr_race_code_primary",
+        "naaccr_race_code_secondary",
+        "naaccr_race_code_tertiary",
+        "naaccr_sex_code"
+    ],
+    "sample_tier1a_column_list_to_be_replaced": [
+        "cpt_sample_type", "cpt_seq_date"
+    ]
 }
