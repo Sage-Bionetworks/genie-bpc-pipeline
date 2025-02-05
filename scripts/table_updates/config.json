@@ -33,9 +33,14 @@
         "naaccr_race_code_primary",
         "naaccr_race_code_secondary",
         "naaccr_race_code_tertiary",
-        "naaccr_sex_code"
+        "naaccr_sex_code",
+        "birth_year"
     ],
     "sample_tier1a_column_list_to_be_replaced": [
-        "cpt_sample_type", "cpt_seq_date"
+        "cpt_sample_type",
+        "cpt_seq_date",
+        "cpt_oncotree_code",
+        "cpt_seq_assay_id",
+        "age_at_seq_report"
     ]
 }
