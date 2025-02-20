@@ -531,9 +531,10 @@ phase:
             production: 40
             adjusted: 40
             irr: 0
-          #VICC:
-          #  production: 0
-          #  adjusted: 0
+          VICC:
+            production: 35
+            adjusted: 35
+            irr: 0
           JHU:
             production: 177
             adjusted: 177
