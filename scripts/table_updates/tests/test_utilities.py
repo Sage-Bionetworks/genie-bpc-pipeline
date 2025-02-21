@@ -32,7 +32,8 @@ def config():
         "tier1a_replacement_mapping": {
             "patient_characteristics_tier1a_replacement_mapping_table": "syn22222",
             "cancer_panel_test_tier1a_replacement_mapping_table": "syn33333",
-        }
+        },
+        "main_genie_release_version": "V1",
     }
 
 
@@ -248,6 +249,7 @@ def get__update_tier1a_data_replacement_mapping_table_test_cases():
             "name": "patient_characteristics_mapping",
             "merged_table": pd.DataFrame(
                 {
+                    "cohort": ["A","A", "A"],
                     "genie_patient_id": [1, 2, 3],
                     "naaccr_ethnicity_code": ["A", "B", "C"],
                     "naaccr_race_code_primary": ["X", "Y", "Z"],
@@ -263,8 +265,10 @@ def get__update_tier1a_data_replacement_mapping_table_test_cases():
                 }
             ),
             "form": "patient_characteristics",
+            "cohort": 'A',
             "expected_df": pd.DataFrame(
                 {
+                    "cohort": ["A","A", "A"],
                     "genie_patient_id": [1, 2, 3],
                     "naaccr_ethnicity_code": ["A", "B", "C"],
                     "naaccr_race_code_primary": ["X", "Y", "Z"],
@@ -276,6 +280,7 @@ def get__update_tier1a_data_replacement_mapping_table_test_cases():
                     "SECONDARY_RACE_DETAILED": ["Race P", "Race Q", "Race R"],
                     "TERTIARY_RACE_DETAILED": ["Race M", "Race N", "Race O"],
                     "SEX_DETAILED": ["Male", "Female", "Male"],
+                    "Main_Genie_Release_Version": ["V1", "V1", "V1"],
                 }
             ),
         },
@@ -283,6 +288,7 @@ def get__update_tier1a_data_replacement_mapping_table_test_cases():
             "name": "cancer_panel_test_mapping",
             "merged_table": pd.DataFrame(
                 {
+                    "cohort": ["A","A", "A"],
                     "cpt_genie_sample_id": [1, 2, 3],
                     "cpt_sample_type": ["A", "B", "C"],
                     "cpt_seq_date": ["X", "Y", "Z"],
@@ -292,13 +298,43 @@ def get__update_tier1a_data_replacement_mapping_table_test_cases():
                 }
             ),
             "form": "cancer_panel_test",
+            "cohort": 'A',
             "expected_df": pd.DataFrame(
                 {
+                    "cohort": ["A","A", "A"],
                     "cpt_genie_sample_id": [1, 2, 3],
                     "cpt_sample_type": ["A", "B", "C"],
                     "cpt_seq_date": ["X", "Y", "Z"],
                     "SAMPLE_TYPE_DETAILED": ["P", "Q", "R"],
                     "SEQ_YEAR": ["M", "N", "O"],
+                    "Main_Genie_Release_Version": ["V1", "V1", "V1"],
+                }
+            ),
+        },
+        {
+            "name": "cancer_panel_test_mapping_all_cohorts",
+            "merged_table": pd.DataFrame(
+                {
+                    "cohort": ["A","A", "A"],
+                    "cpt_genie_sample_id": [1, 2, 3],
+                    "cpt_sample_type": ["A", "B", "C"],
+                    "cpt_seq_date": ["X", "Y", "Z"],
+                    "SAMPLE_TYPE_DETAILED": ["P", "Q", "R"],
+                    "SEQ_YEAR": ["M", "N", "O"],
+                    "other_cols": [1, 2, 3],
+                }
+            ),
+            "form": "cancer_panel_test",
+            "cohort": "",
+            "expected_df": pd.DataFrame(
+                {
+                    "cohort": ["A","A", "A"],
+                    "cpt_genie_sample_id": [1, 2, 3],
+                    "cpt_sample_type": ["A", "B", "C"],
+                    "cpt_seq_date": ["X", "Y", "Z"],
+                    "SAMPLE_TYPE_DETAILED": ["P", "Q", "R"],
+                    "SEQ_YEAR": ["M", "N", "O"],
+                    "Main_Genie_Release_Version": ["V1", "V1", "V1"],
                 }
             ),
         },
@@ -313,17 +349,23 @@ def get__update_tier1a_data_replacement_mapping_table_test_cases():
 def test_update_tier1a_data_replacement_mapping_table(syn, table_schema, test_cases, config):
     with patch.object(syn, "get", return_value=table_schema) as patch_get, patch.object(
         syn, "tableQuery"
-    ) as patch_table_query, patch.object(syn, "store") as patch_store, patch.object(syn, "delete") as patch_delete:
+    ) as patch_table_query, patch.object(syn, "store") as patch_store, patch.object(syn, "delete") as patch_delete, patch('utilities.update_version') as update_version:
         patch_table_query.return_value = MagicMock(etag="test_etag")
+        logger = MagicMock(spec=logging.Logger)
+
+        comment = "test comment"
         # Call the function
         update_tier1a_data_replacement_mapping_table(
-            syn, test_cases["merged_table"], test_cases["form"], config
+            syn, test_cases["merged_table"], test_cases["form"], config, comment=comment, logger=logger, cohort=test_cases["cohort"]
         )
 
         # Validate
         patch_get.assert_called_with(
             config["tier1a_replacement_mapping"][f"{test_cases['form']}_tier1a_replacement_mapping_table"])
-        patch_table_query.assert_called_with(f"SELECT * FROM {table_schema.id}")
+        if test_cases["cohort"]:
+            patch_table_query.assert_called_with(f"SELECT * FROM {table_schema.id} where cohort = '{test_cases['cohort']}'")
+        else:
+            patch_table_query.assert_called_with(f"SELECT * FROM {table_schema.id}")
         patch_delete.assert_called_once()
         args, kwargs = patch_store.call_args
         stored_table = args[0]
@@ -331,3 +373,6 @@ def test_update_tier1a_data_replacement_mapping_table(syn, table_schema, test_ca
         pd.testing.assert_frame_equal(
             stored_table.asDataFrame(), test_cases["expected_df"]
         )
+        logger.info.assert_called_with("Updating version for tier1a data replacement mapping table")
+        update_version.assert_called_with(syn, table_schema.id, f"{comment}_mainGENIE_{config['main_genie_release_version']}")
+
