@@ -33,8 +33,7 @@
         "naaccr_race_code_primary",
         "naaccr_race_code_secondary",
         "naaccr_race_code_tertiary",
-        "naaccr_sex_code",
-        "birth_year"
+        "naaccr_sex_code"
     ],
     "sample_tier1a_column_list_to_be_replaced": [
         "cpt_sample_type",
