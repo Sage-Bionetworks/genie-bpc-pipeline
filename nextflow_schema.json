@@ -64,6 +64,24 @@
                         false
                     ]
                 },
+                "replace_patient_tier1a": {
+                    "type": "boolean",
+                    "description": "Whether to overwrite tier1a variables in patient_characteristics table.",
+                    "default": false,
+                    "enum": [
+                        true,
+                        false
+                    ]
+                },
+                "replace_sample_tier1a": {
+                    "type": "boolean",
+                    "description": "Whether to overwrite tier1a variables in cancer_panel_test table.",
+                    "default": false,
+                    "enum": [
+                        true,
+                        false
+                    ]
+                },
                 "references_docker":{
                     "type": "string",
                     "description": "Name of docker to use in processes in scripts/references"
