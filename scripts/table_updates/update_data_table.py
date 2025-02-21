@@ -484,6 +484,7 @@ def update_tier1a(
     config: dict,
     logger: logging.Logger = None,
     cohort: str = "",
+    comment: str = "",
 ) -> Tuple[str, pandas.DataFrame]:
     """Replace tier1a variables in patient_characteristics or cancer_panel_test table with Main GENIE release files
 
@@ -563,7 +564,7 @@ def update_tier1a(
             left_on="cpt_genie_sample_id",
             right_on="SAMPLE_ID",
         )
-    utilities.update_tier1a_data_replacement_mapping_table(syn, cpt_seq_dat, form, config)
+    utilities.update_tier1a_data_replacement_mapping_table(syn, merged_table = cpt_seq_dat, form = form, config = config, comment = comment, logger = logger,cohort = cohort)
     # reformat the columns
     cpt_seq_dat.index = cpt_seq_dat["index"]
     cpt_seq_dat.index.name = None
@@ -609,6 +610,9 @@ def custom_fix_for_tier1a_variable(
     logger: logging.Logger,
     config: dict,
     cohort: str = "",
+    replace_patient_tier1a: bool = False, 
+    replace_sample_tier1a: bool = False, 
+    comment: str = "",
 ) -> None:
     """
     This overwrites tier1a
@@ -619,70 +623,81 @@ def custom_fix_for_tier1a_variable(
         logger (logging.Logger): logger object
         config (dict): config read in
         cohort (str): cohort name
+        replace_patient_tier1a (bool): whether to replace patient tier1a variables
+        replace_sample_tier1a (bool): whether to replace sample tier1a variables
+        comment (str): version comment
     """
-    logger.info("Overwrite tier1a variables in progress...")
-    # load GENIE BPC elements mapping table
-    column_mapping_table = utilities.download_synapse_table(syn, "syn20945902")
-    genie_patient_dat = get_main_genie_clinical_file(
-        syn,
-        release=config["main_genie_release_version"],
-        release_files_table_synid=config["main_genie_data_release_files"],
-        form="patient_characteristics",
-        column_mapping_table=column_mapping_table,
-        logger=logger,
-    )
-    genie_sample_dat = get_main_genie_clinical_file(
-        syn,
-        release=config["main_genie_release_version"],
-        release_files_table_synid=config["main_genie_data_release_files"],
-        form="cancer_panel_test",
-        column_mapping_table=column_mapping_table,
-        logger=logger,
-    )
     # unlist form column in master table
     master_table["form"] = master_table["form"].apply(lambda x: ", ".join(x))
-    # modify for patient table
-    cpt_table_id, cpt_seq_dat = update_tier1a(
-        syn,
-        "patient_characteristics",
-        master_table,
-        genie_patient_dat,
-        column_mapping_table,
-        bpc_column_list= config['patient_tier1a_column_list_to_be_replaced'],
-        config=config,
-        logger=logger,
-        cohort=cohort,
-    )
-    overwrite_tier1a(
-        syn,
-        "patient_characteristics",
-        cpt_table_id,
-        cpt_seq_dat,
-        bpc_column_list=config['patient_tier1a_column_list_to_be_replaced'],
-        logger=logger,
-    )
-    # modify for sample table
-    cpt_table_id, cpt_seq_dat = update_tier1a(
-        syn,
-        "cancer_panel_test",
-        master_table,
-        genie_sample_dat,
-        column_mapping_table,
-        bpc_column_list=config["sample_tier1a_column_list_to_be_replaced"],
-        config=config,
-        logger=logger,
-        cohort=cohort,
-    )
-    overwrite_tier1a(
-        syn,
-        "cancer_panel_test",
-        cpt_table_id,
-        cpt_seq_dat,
-        bpc_column_list=config["sample_tier1a_column_list_to_be_replaced"],
-        logger=logger,
-    )
-    logger.info("Completed")
+    # load GENIE BPC elements mapping table
+    column_mapping_table = utilities.download_synapse_table(syn, "syn20945902")
 
+    if replace_patient_tier1a:
+        logger.info("Replace patient tier1a variables in progress...")
+        # load main genie patient file
+        genie_patient_dat = get_main_genie_clinical_file(
+            syn,
+            release=config["main_genie_release_version"],
+            release_files_table_synid=config["main_genie_data_release_files"],
+            form="patient_characteristics",
+            column_mapping_table=column_mapping_table,
+            logger=logger,
+        )
+        # modify for patient table
+        cpt_table_id, cpt_seq_dat = update_tier1a(
+            syn,
+            "patient_characteristics",
+            master_table,
+            genie_patient_dat,
+            column_mapping_table,
+            bpc_column_list= config['patient_tier1a_column_list_to_be_replaced'],
+            config=config,
+            logger=logger,
+            cohort=cohort,
+            comment=comment
+        )
+        overwrite_tier1a(
+            syn,
+            "patient_characteristics",
+            cpt_table_id,
+            cpt_seq_dat,
+            bpc_column_list=config['patient_tier1a_column_list_to_be_replaced'],
+            logger=logger,
+        )
+        logger.info("Overwrite tier1a patient variables completed!")
+
+    if replace_sample_tier1a:
+        # load main genie sample file
+        genie_sample_dat = get_main_genie_clinical_file(
+            syn,
+            release=config["main_genie_release_version"],
+            release_files_table_synid=config["main_genie_data_release_files"],
+            form="cancer_panel_test",
+            column_mapping_table=column_mapping_table,
+            logger=logger,
+    )
+        # modify for sample table
+        cpt_table_id, cpt_seq_dat = update_tier1a(
+            syn,
+            "cancer_panel_test",
+            master_table,
+            genie_sample_dat,
+            column_mapping_table,
+            bpc_column_list=config["sample_tier1a_column_list_to_be_replaced"],
+            config=config,
+            logger=logger,
+            cohort=cohort,
+            comment=comment
+        )
+        overwrite_tier1a(
+            syn,
+            "cancer_panel_test",
+            cpt_table_id,
+            cpt_seq_dat,
+            bpc_column_list=config["sample_tier1a_column_list_to_be_replaced"],
+            logger=logger,
+        )
+        logger.info("Overwrite tier1a sample variables completed!")
 
 def main():
     # add arguments
@@ -716,6 +731,18 @@ def main():
         action="store_true",
         help="Save output to production folder",
     )
+    parser.add_argument(
+        "-rp",
+        "--replace_patient_tier1a",
+        action="store_true",
+        help="Replace tier1a variables in patient_characteristics table",
+    )
+    parser.add_argument(
+        "-rs",
+        "--replace_sample_tier1a",
+        action="store_true",
+        help="Replace tier1a variables in cancer_panel_test table",
+    )
     parser.add_argument("-m", "--message", default="", help="Version comment")
     parser.add_argument("-d", "--dry_run", action="store_true", help="dry run flag")
 
@@ -725,6 +752,8 @@ def main():
     project_config = args.project_config
     cohort = args.cohort
     production = args.production
+    replace_patient_tier1a = args.replace_patient_tier1a
+    replace_sample_tier1a = args.replace_sample_tier1a
     comment = args.message
     dry_run = args.dry_run
 
@@ -760,14 +789,8 @@ def main():
     # update data tables
     store_data(syn, master_table, label_data, table_type, cohort, logger, dry_run)
     if not dry_run:
-        custom_fix_for_tier1a_variable(syn, master_table, logger, config, cohort)
-        logger.info("Updating version for tier1a replacement mapping tables")
-        for table_id in config["tier1a_replacement_mapping"].values():
-            utilities.update_version(
-                syn,
-                table_id,
-                f"{comment}_mainGENIE_{config['main_genie_release_version']}",
-            )
+        if replace_patient_tier1a or replace_sample_tier1a:
+            custom_fix_for_tier1a_variable(syn, master_table, logger, config, cohort, replace_patient_tier1a, replace_sample_tier1a, comment)
         if table_type == "primary":
             table_id, condition = list(TABLE_INFO["redacted"])
             redacted_table_info = utilities.download_synapse_table(
