@@ -697,7 +697,55 @@ def custom_fix_for_tier1a_variable(
             bpc_column_list=config["sample_tier1a_column_list_to_be_replaced"],
             logger=logger,
         )
-        logger.info("Overwrite tier1a sample variables completed!")
+        logger.info("Overwrite tier1a sample variables completed!")            
+
+def custom_fix_for_cpt_seq_data(
+        syn: synapseclient.Synapse,
+        master_table: pandas.DataFrame,
+        logger: logging.Logger,
+        config: dict,
+        cohort: str = "",
+        comment: str = "",
+    ) -> None:
+    # unlist form column in master table
+    master_table["form"] = master_table["form"].apply(lambda x: ", ".join(x))
+    # load GENIE BPC elements mapping table
+    column_mapping_table = utilities.download_synapse_table(syn, "syn20945902")
+
+    # load main genie sample file
+    genie_sample_dat = get_main_genie_clinical_file(
+        syn,
+        release=config["main_genie_release_version"],
+        release_files_table_synid=config["main_genie_data_release_files"],
+        form="cancer_panel_test",
+        column_mapping_table=column_mapping_table,
+        logger=logger,
+        )
+    # modify for sample table
+    cpt_table_id, cpt_seq_dat = update_tier1a(
+        syn,
+        "cancer_panel_test",
+        master_table,
+        genie_sample_dat,
+        column_mapping_table,
+        bpc_column_list=["cpt_seq_date"],
+        config=config,
+        logger=logger,
+        cohort=cohort,
+        comment=comment
+    )
+    # reformat cpt_seq_date column
+    cpt_seq_dat["cpt_seq_date"] = cpt_seq_dat["cpt_seq_date"].map(utilities.float_to_int)
+    overwrite_tier1a(
+        syn,
+        "cancer_panel_test",
+        cpt_table_id,
+        cpt_seq_dat,
+        bpc_column_list=["cpt_seq_date"],
+        logger=logger,
+    )
+
+    logger.info("Overwrite cpt_seq_date completed!")            
 
 def main():
     # add arguments
@@ -791,6 +839,9 @@ def main():
     if not dry_run:
         if replace_patient_tier1a or replace_sample_tier1a:
             custom_fix_for_tier1a_variable(syn, master_table, logger, config, cohort, replace_patient_tier1a, replace_sample_tier1a, comment)
+        if not replace_sample_tier1a:
+            # replace cpt_seq_date separately if not replace other tier1a variables in cancer panel test table
+            custom_fix_for_cpt_seq_data(syn, master_table, logger, config, cohort, comment)
         if table_type == "primary":
             table_id, condition = list(TABLE_INFO["redacted"])
             redacted_table_info = utilities.download_synapse_table(
