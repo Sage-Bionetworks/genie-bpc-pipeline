@@ -37,9 +37,6 @@
     ],
     "sample_tier1a_column_list_to_be_replaced": [
         "cpt_sample_type",
-        "cpt_seq_date",
-        "cpt_oncotree_code",
-        "cpt_seq_assay_id",
-        "age_at_seq_report"
+        "cpt_seq_date"
     ]
 }
