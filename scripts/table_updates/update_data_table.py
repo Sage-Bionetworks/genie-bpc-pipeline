@@ -564,7 +564,7 @@ def update_tier1a(
             left_on="cpt_genie_sample_id",
             right_on="SAMPLE_ID",
         )
-    utilities.update_tier1a_data_replacement_mapping_table(syn, merged_table = cpt_seq_dat, form = form, config = config, comment = comment, logger = logger,cohort = cohort)
+    utilities.update_tier1a_data_replacement_mapping_table(syn, merged_table = cpt_seq_dat, form = form, config = config, comment = comment, logger = logger, bpc_column_list = bpc_column_list, main_genie_column_list = main_genie_column_list, cohort = cohort)
     # reformat the columns
     cpt_seq_dat.index = cpt_seq_dat["index"]
     cpt_seq_dat.index.name = None
@@ -706,9 +706,12 @@ def custom_fix_for_cpt_seq_data(
         config: dict,
         cohort: str = "",
         comment: str = "",
+        replace_patient_tier1a: bool = False, 
+        replace_sample_tier1a: bool = False, 
     ) -> None:
-    # unlist form column in master table
-    master_table["form"] = master_table["form"].apply(lambda x: ", ".join(x))
+    # unlist form column in master table only when not replacing tier1a variables
+    if not (replace_patient_tier1a or replace_sample_tier1a):
+        master_table["form"] = master_table["form"].apply(lambda x: ", ".join(x))
     # load GENIE BPC elements mapping table
     column_mapping_table = utilities.download_synapse_table(syn, "syn20945902")
 
@@ -782,14 +785,16 @@ def main():
     parser.add_argument(
         "-rp",
         "--replace_patient_tier1a",
-        action="store_true",
-        help="Replace tier1a variables in patient_characteristics table",
+        type = lambda x: x.lower()== 'true',
+        default=False,
+        help="Whether to replace tier1a variables in patient_characteristics table",
     )
     parser.add_argument(
         "-rs",
         "--replace_sample_tier1a",
-        action="store_true",
-        help="Replace tier1a variables in cancer_panel_test table",
+        type = lambda x: x.lower()== 'true',
+        default=False,
+        help="Whether to replace tier1a variables in cancer_panel_test table",
     )
     parser.add_argument("-m", "--message", default="", help="Version comment")
     parser.add_argument("-d", "--dry_run", action="store_true", help="dry run flag")
@@ -841,7 +846,7 @@ def main():
             custom_fix_for_tier1a_variable(syn, master_table, logger, config, cohort, replace_patient_tier1a, replace_sample_tier1a, comment)
         if not replace_sample_tier1a:
             # replace cpt_seq_date separately if not replace other tier1a variables in cancer panel test table
-            custom_fix_for_cpt_seq_data(syn, master_table, logger, config, cohort, comment)
+            custom_fix_for_cpt_seq_data(syn, master_table, logger, config, cohort, comment, replace_patient_tier1a, replace_sample_tier1a)
         if table_type == "primary":
             table_id, condition = list(TABLE_INFO["redacted"])
             redacted_table_info = utilities.download_synapse_table(
