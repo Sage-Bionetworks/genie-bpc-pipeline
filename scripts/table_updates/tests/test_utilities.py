@@ -265,6 +265,8 @@ def get__update_tier1a_data_replacement_mapping_table_test_cases():
                 }
             ),
             "form": "patient_characteristics",
+            "bpc_column_list": ["naaccr_ethnicity_code", "naaccr_race_code_primary", "naaccr_race_code_secondary", "naaccr_race_code_tertiary", "naaccr_sex_code"],
+            "main_genie_column_list": ["ETHNICITY_DETAILED", "PRIMARY_RACE_DETAILED", "SECONDARY_RACE_DETAILED", "TERTIARY_RACE_DETAILED", "SEX_DETAILED"],
             "cohort": 'A',
             "expected_df": pd.DataFrame(
                 {
@@ -298,6 +300,8 @@ def get__update_tier1a_data_replacement_mapping_table_test_cases():
                 }
             ),
             "form": "cancer_panel_test",
+            "bpc_column_list": ["cpt_sample_type", "cpt_seq_date"],
+            "main_genie_column_list": ["SAMPLE_TYPE_DETAILED", "SEQ_YEAR"],
             "cohort": 'A',
             "expected_df": pd.DataFrame(
                 {
@@ -325,6 +329,8 @@ def get__update_tier1a_data_replacement_mapping_table_test_cases():
                 }
             ),
             "form": "cancer_panel_test",
+            "bpc_column_list": ["cpt_sample_type", "cpt_seq_date"],
+            "main_genie_column_list": ["SAMPLE_TYPE_DETAILED", "SEQ_YEAR"],
             "cohort": "",
             "expected_df": pd.DataFrame(
                 {
@@ -356,7 +362,7 @@ def test_update_tier1a_data_replacement_mapping_table(syn, table_schema, test_ca
         comment = "test comment"
         # Call the function
         update_tier1a_data_replacement_mapping_table(
-            syn, test_cases["merged_table"], test_cases["form"], config, comment=comment, logger=logger, cohort=test_cases["cohort"]
+            syn, test_cases["merged_table"], test_cases["form"], config, comment=comment, logger=logger, bpc_column_list = test_cases["bpc_column_list"], main_genie_column_list=test_cases["main_genie_column_list"],cohort=test_cases["cohort"]
         )
 
         # Validate
