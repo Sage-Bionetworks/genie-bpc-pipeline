@@ -142,7 +142,9 @@ workflow BPC_PIPELINE {
         merge_and_uncode_rca_uploads.out, 
         ch_cohort, 
         ch_comment, 
-        params.production
+        params.production,
+        params.replace_patient_tier1a,
+        params.replace_sample_tier1a
     )
 
     update_date_tracking_table(
