@@ -22,7 +22,7 @@ process merge_and_uncode_rca_uploads {
       """
       cd /usr/local/src/myscripts/
       Rscript merge_and_uncode_rca_uploads.R \
-         -c $cohort 
+         -c $cohort \
          -v \
          --production \
          --save_synapse \
