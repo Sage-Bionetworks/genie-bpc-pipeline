@@ -26,6 +26,8 @@ params.schema_ignore_params = ""
 params.help = false
 params.step = "update_potential_phi_fields_table"
 params.use_grs = false
+params.replace_patient_tier1a = false
+params.replace_sample_tier1a = false
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -110,7 +112,9 @@ workflow BPC_PIPELINE {
         "default", 
         ch_cohort, 
         ch_comment, 
-        params.production
+        params.production,
+        params.replace_patient_tier1a,
+        params.replace_sample_tier1a
     )
    } else if (params.step == "genie_bpc_pipeline"){
     update_potential_phi_fields_table(ch_comment, params.production)
@@ -138,7 +142,9 @@ workflow BPC_PIPELINE {
         merge_and_uncode_rca_uploads.out, 
         ch_cohort, 
         ch_comment, 
-        params.production
+        params.production,
+        params.replace_patient_tier1a,
+        params.replace_sample_tier1a
     )
 
     update_date_tracking_table(

@@ -12,6 +12,8 @@ process update_data_table {
    val cohort
    val comment
    val production
+   val replace_patient_tier1a
+   val replace_sample_tier1a
 
    output:
    stdout
@@ -20,12 +22,12 @@ process update_data_table {
    if (production) {
       """
       cd /root/scripts/
-      python update_data_table.py -p /root/scripts/config.json -c $cohort -m "$comment" primary -pd
+      python update_data_table.py -p /root/scripts/config.json -c $cohort -m "$comment" primary -pd -rp $replace_patient_tier1a -rs $replace_sample_tier1a
       """
    } else {
       """
       cd /root/scripts/
-      python update_data_table.py -p /root/scripts/config.json -c $cohort -m "$comment" primary
+      python update_data_table.py -p /root/scripts/config.json -c $cohort -m "$comment" primary -rp $replace_patient_tier1a -rs $replace_sample_tier1a
       """
    }
 }

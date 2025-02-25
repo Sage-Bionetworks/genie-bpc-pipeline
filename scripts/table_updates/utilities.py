@@ -213,13 +213,17 @@ def remove_backslash(df: pandas.DataFrame, cols: List[str]) -> pandas.DataFrame:
 
 
 def update_tier1a_data_replacement_mapping_table(
-    syn: synapseclient.Synapse, merged_table: pandas.DataFrame, form: str, config: dict
-):
+    syn: synapseclient.Synapse, merged_table: pandas.DataFrame, form: str, config: dict, comment: str, logger: logging.Logger, bpc_column_list: List[str], main_genie_column_list: List[str],cohort: str = ""):
     """Update tier1a data replacement mapping table
 
     Args:
+        syn (synapseclient.Synapse): Synapse object
         merged_table (pandas.DataFrame): The merged table
         form (str): The form name
+        config (dict): config read in
+        comment (str): The version comment
+        logger (logging.Logger): The logger object
+        cohort (str): The cohort name
     """
     if form == "patient_characteristics":
         table_schema = syn.get(
@@ -228,20 +232,13 @@ def update_tier1a_data_replacement_mapping_table(
             ]
         )
         subset_table = merged_table[
-            [
-                "genie_patient_id",
-                "naaccr_ethnicity_code",
-                "naaccr_race_code_primary",
-                "naaccr_race_code_secondary",
-                "naaccr_race_code_tertiary",
-                "naaccr_sex_code",
-                "ETHNICITY_DETAILED",
-                "PRIMARY_RACE_DETAILED",
-                "SECONDARY_RACE_DETAILED",
-                "TERTIARY_RACE_DETAILED",
-                "SEX_DETAILED",
+            [   
+                "cohort",
+                "genie_patient_id"
             ]
-        ]
+                + bpc_column_list
+                + main_genie_column_list
+            ]
     if form == "cancer_panel_test":
         table_schema = syn.get(
             config["tier1a_replacement_mapping"][
@@ -250,15 +247,21 @@ def update_tier1a_data_replacement_mapping_table(
         )
         subset_table = merged_table[
             [
-                "cpt_genie_sample_id",
-                "cpt_sample_type",
-                "cpt_seq_date",
-                "SAMPLE_TYPE_DETAILED",
-                "SEQ_YEAR",
+                "cohort",
+                "cpt_genie_sample_id"]
+                + bpc_column_list
+                + main_genie_column_list
             ]
-        ]
+
+    subset_table["Main_Genie_Release_Version"] = config["main_genie_release_version"]
     # save the table to sage internal project
     subset_table.reset_index(drop=True, inplace=True)
-    table_query = syn.tableQuery(f"SELECT * FROM {table_schema.id}")
-    table = syn.delete(table_query)
+    if cohort:
+        table_query = syn.tableQuery(f"SELECT * FROM {table_schema.id} where cohort = '{cohort}'")
+    else:
+        table_query = syn.tableQuery(f"SELECT * FROM {table_schema.id}")
+    table = syn.delete(table_query)  # wipe the cohort data
     table = syn.store(Table(table_schema, subset_table))
+    # update the version
+    logger.info("Updating version for tier1a data replacement mapping table")
+    update_version(syn, table_schema.id, f"{comment}_mainGENIE_{config['main_genie_release_version']}")
