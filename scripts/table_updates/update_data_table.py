@@ -627,8 +627,9 @@ def custom_fix_for_tier1a_variable(
         replace_sample_tier1a (bool): whether to replace sample tier1a variables
         comment (str): version comment
     """
-    # unlist form column in master table
-    master_table["form"] = master_table["form"].apply(lambda x: ", ".join(x))
+    # BUG: unlist form column in master table only works for STAGING table
+    #master_table["form"] = master_table["form"].apply(lambda x: ", ".join(x))
+    
     # load GENIE BPC elements mapping table
     column_mapping_table = utilities.download_synapse_table(syn, "syn20945902")
 
@@ -709,9 +710,11 @@ def custom_fix_for_cpt_seq_data(
         replace_patient_tier1a: bool = False, 
         replace_sample_tier1a: bool = False, 
     ) -> None:
-    # unlist form column in master table only when not replacing tier1a variables
-    if not (replace_patient_tier1a or replace_sample_tier1a):
-        master_table["form"] = master_table["form"].apply(lambda x: ", ".join(x))
+    # BUG: unlist form column in master table only when not replacing tier1a variables
+    # works only for STAGING table
+    #if not (replace_patient_tier1a or replace_sample_tier1a):
+    #    master_table["form"] = master_table["form"].apply(lambda x: ", ".join(x))
+    
     # load GENIE BPC elements mapping table
     column_mapping_table = utilities.download_synapse_table(syn, "syn20945902")
 
