@@ -22,8 +22,8 @@
         "OVARIAN": "syn64042773"
     },
     "tier1a_replacement_mapping":{
-        "patient_characteristics_tier1a_replacement_mapping_table": "syn64331052",
-        "cancer_panel_test_tier1a_replacement_mapping_table": "syn64331055"
+        "patient_characteristics_tier1a_replacement_mapping_table": "syn65880480",
+        "cancer_panel_test_tier1a_replacement_mapping_table": "syn65880475"
     },
     "main_genie_release_version": "9.1-consortium",
     "main_genie_data_release_files": "syn16804261",
