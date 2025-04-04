@@ -225,13 +225,13 @@ def extract_site_name_from_sample_id(sample_id: str) -> str:
     return sample_id.split("-")[1]
 
 
-def convert_mapping_table_to_long(
+def convert_tier1a_data_replacement_mapping_table_to_long(
     df: pandas.DataFrame,
     id_vars: List[str],
     bpc_column_list: List[str],
     main_genie_column_list: List[str],
 ) -> pandas.DataFrame:
-    """Convert a the dataframe from wide to long format
+    """Convert a the tier1a_data_replacement_mapping_table from wide to long format
 
     Args:
         df (pandas.DataFrame): The dataframe to be converted from wide to long
@@ -328,7 +328,7 @@ def update_tier1a_data_replacement_mapping_table(
 
         id_vars = ["cohort", "cpt_genie_sample_id", "site"]
     # convert table from wide to long
-    subset_table = convert_mapping_table_to_long(
+    subset_table = convert_tier1a_data_replacement_mapping_table_to_long(
         subset_table, id_vars, bpc_column_list, main_genie_column_list
     )
     # add Main_Genie_Release_Version

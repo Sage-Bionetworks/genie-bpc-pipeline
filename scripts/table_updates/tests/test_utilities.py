@@ -519,53 +519,95 @@ def test_update_tier1a_data_replacement_mapping_table(
 
 
 def test_extract_site_name_from_sample_id_single_str():
-    cpt_genie_sample_id = "GENIE-1"
-    assert extract_site_name_from_sample_id(cpt_genie_sample_id) == "1"
+    cpt_genie_sample_id = "GENIE-SAGE-1"
+    assert extract_site_name_from_sample_id(cpt_genie_sample_id) == "SAGE"
 
 
-def test_convert_mapping_table_to_long():
-    # Sample input DataFrame
-    df = pd.DataFrame(
-        {
-            "cohort": ["A", "A"],
-            "cpt_sample_id": ["cohortA-site1-sample01", "cohortA-site1-sample02"],
-            "bpc_col1": [10, 20],
-            "bpc_col2": [30, 40],
-            "genie_col1": [50, 60],
-            "genie_col2": [70, 80],
-        }
-    )
-
+@pytest.mark.parametrize(
+    "input_df,expected_df",
+    [
+        (
+            pd.DataFrame(
+                {
+                    "cohort": ["A", "A"],
+                    "cpt_sample_id": [
+                        "cohortA-site1-sample01",
+                        "cohortA-site1-sample02",
+                    ],
+                    "bpc_col1": [10, 20],
+                    "bpc_col2": [30, 40],
+                    "genie_col1": [50, 60],
+                    "genie_col2": [70, 80],
+                }
+            ),
+            pd.DataFrame(
+                {
+                    "cohort": ["A", "A", "A", "A"],
+                    "cpt_sample_id": [
+                        "cohortA-site1-sample01",
+                        "cohortA-site1-sample02",
+                        "cohortA-site1-sample01",
+                        "cohortA-site1-sample02",
+                    ],
+                    "bpc_field": ["bpc_col1", "bpc_col1", "bpc_col2", "bpc_col2"],
+                    "bpc_field_value": [10, 20, 30, 40],
+                    "main_genie_field": [
+                        "genie_col1",
+                        "genie_col1",
+                        "genie_col2",
+                        "genie_col2",
+                    ],
+                    "main_genie_field_value": [50, 60, 70, 80],
+                }
+            ),
+        ),
+        (
+            pd.DataFrame(
+                {
+                    "cohort": ["A", "A"],
+                    "cpt_sample_id": [
+                        "cohortA-site1-sample01",
+                        "cohortA-site1-sample02",
+                    ],
+                    "bpc_col1": [10, 20],
+                    "bpc_col2": [30, np.nan],
+                    "genie_col1": [np.nan, 60],
+                    "genie_col2": [70, 80],
+                }
+            ),
+            pd.DataFrame(
+                {
+                    "cohort": ["A", "A", "A", "A"],
+                    "cpt_sample_id": [
+                        "cohortA-site1-sample01",
+                        "cohortA-site1-sample02",
+                        "cohortA-site1-sample01",
+                        "cohortA-site1-sample02",
+                    ],
+                    "bpc_field": ["bpc_col1", "bpc_col1", "bpc_col2", "bpc_col2"],
+                    "bpc_field_value": [10, 20, 30, np.nan],
+                    "main_genie_field": [
+                        "genie_col1",
+                        "genie_col1",
+                        "genie_col2",
+                        "genie_col2",
+                    ],
+                    "main_genie_field_value": [np.nan, 60, 70, 80],
+                }
+            ),
+        ),
+    ],
+    ids=["dataframe_without_NAs", "dataframe_with_NAs"],
+)
+def test_convert_tier1a_data_replacement_mapping_table_to_long(input_df, expected_df):
     # Define input parameters
     id_vars = ["cohort", "cpt_sample_id"]
     bpc_column_list = ["bpc_col1", "bpc_col2"]
     main_genie_column_list = ["genie_col1", "genie_col2"]
 
-    # Expected output DataFrame
-    expected_df = pd.DataFrame(
-        {
-            "cohort": ["A", "A", "A", "A"],
-            "cpt_sample_id": [
-                "cohortA-site1-sample01",
-                "cohortA-site1-sample02",
-                "cohortA-site1-sample01",
-                "cohortA-site1-sample02",
-            ],
-            "bpc_field": ["bpc_col1", "bpc_col1", "bpc_col2", "bpc_col2"],
-            "bpc_field_value": [10, 20, 30, 40],
-            "main_genie_field": [
-                "genie_col1",
-                "genie_col1",
-                "genie_col2",
-                "genie_col2",
-            ],
-            "main_genie_field_value": [50, 60, 70, 80],
-        }
-    )
-
     # Call the function
-    result_df = convert_mapping_table_to_long(
-        df, id_vars, bpc_column_list, main_genie_column_list
+    result_df = convert_tier1a_data_replacement_mapping_table_to_long(
+        input_df, id_vars, bpc_column_list, main_genie_column_list
     )
     # Assert that the result matches the expected DataFrame
     pd.testing.assert_frame_equal(
