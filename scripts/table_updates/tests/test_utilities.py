@@ -249,8 +249,9 @@ def get__update_tier1a_data_replacement_mapping_table_test_cases():
             "name": "patient_characteristics_mapping",
             "merged_table": pd.DataFrame(
                 {
-                    "cohort": ["A","A", "A"],
-                    "genie_patient_id": [1, 2, 3],
+                    "cohort": ["A", "A", "B"],
+                    "genie_patient_id": ["A-1-2", "A-2-3", "B-1-2"],
+                    "site": ["1", "2", "1"],
                     "naaccr_ethnicity_code": ["A", "B", "C"],
                     "naaccr_race_code_primary": ["X", "Y", "Z"],
                     "naaccr_race_code_secondary": ["P", "Q", "R"],
@@ -265,24 +266,97 @@ def get__update_tier1a_data_replacement_mapping_table_test_cases():
                 }
             ),
             "form": "patient_characteristics",
-            "bpc_column_list": ["naaccr_ethnicity_code", "naaccr_race_code_primary", "naaccr_race_code_secondary", "naaccr_race_code_tertiary", "naaccr_sex_code"],
-            "main_genie_column_list": ["ETHNICITY_DETAILED", "PRIMARY_RACE_DETAILED", "SECONDARY_RACE_DETAILED", "TERTIARY_RACE_DETAILED", "SEX_DETAILED"],
-            "cohort": 'A',
+            "bpc_column_list": [
+                "naaccr_ethnicity_code",
+                "naaccr_race_code_primary",
+                "naaccr_race_code_secondary",
+                "naaccr_race_code_tertiary",
+                "naaccr_sex_code",
+            ],
+            "main_genie_column_list": [
+                "ETHNICITY_DETAILED",
+                "PRIMARY_RACE_DETAILED",
+                "SECONDARY_RACE_DETAILED",
+                "TERTIARY_RACE_DETAILED",
+                "SEX_DETAILED",
+            ],
+            "cohort": "A",
             "expected_df": pd.DataFrame(
                 {
-                    "cohort": ["A","A", "A"],
-                    "genie_patient_id": [1, 2, 3],
-                    "naaccr_ethnicity_code": ["A", "B", "C"],
-                    "naaccr_race_code_primary": ["X", "Y", "Z"],
-                    "naaccr_race_code_secondary": ["P", "Q", "R"],
-                    "naaccr_race_code_tertiary": ["M", "N", "O"],
-                    "naaccr_sex_code": ["M", "F", "M"],
-                    "ETHNICITY_DETAILED": ["Ethnicity A", "Ethnicity B", "Ethnicity C"],
-                    "PRIMARY_RACE_DETAILED": ["Race X", "Race Y", "Race Z"],
-                    "SECONDARY_RACE_DETAILED": ["Race P", "Race Q", "Race R"],
-                    "TERTIARY_RACE_DETAILED": ["Race M", "Race N", "Race O"],
-                    "SEX_DETAILED": ["Male", "Female", "Male"],
-                    "Main_Genie_Release_Version": ["V1", "V1", "V1"],
+                    "cohort": ["A", "A", "A", "A", "A", "A", "A", "A", "A", "A"],
+                    "genie_patient_id": [
+                        "A-1-2",
+                        "A-2-3",
+                        "A-1-2",
+                        "A-2-3",
+                        "A-1-2",
+                        "A-2-3",
+                        "A-1-2",
+                        "A-2-3",
+                        "A-1-2",
+                        "A-2-3",
+                    ],
+                    "site": ["1", "2", "1", "2", "1", "2", "1", "2", "1", "2"],
+                    "bpc_field": [
+                        "naaccr_ethnicity_code",
+                        "naaccr_ethnicity_code",
+                        "naaccr_race_code_primary",
+                        "naaccr_race_code_primary",
+                        "naaccr_race_code_secondary",
+                        "naaccr_race_code_secondary",
+                        "naaccr_race_code_tertiary",
+                        "naaccr_race_code_tertiary",
+                        "naaccr_sex_code",
+                        "naaccr_sex_code",
+                    ],
+                    "bpc_field_value": [
+                        "A",
+                        "B",
+                        "X",
+                        "Y",
+                        "P",
+                        "Q",
+                        "M",
+                        "N",
+                        "M",
+                        "F",
+                    ],
+                    "main_genie_field": [
+                        "ETHNICITY_DETAILED",
+                        "ETHNICITY_DETAILED",
+                        "PRIMARY_RACE_DETAILED",
+                        "PRIMARY_RACE_DETAILED",
+                        "SECONDARY_RACE_DETAILED",
+                        "SECONDARY_RACE_DETAILED",
+                        "TERTIARY_RACE_DETAILED",
+                        "TERTIARY_RACE_DETAILED",
+                        "SEX_DETAILED",
+                        "SEX_DETAILED",
+                    ],
+                    "main_genie_field_value": [
+                        "Ethnicity A",
+                        "Ethnicity B",
+                        "Race X",
+                        "Race Y",
+                        "Race P",
+                        "Race Q",
+                        "Race M",
+                        "Race N",
+                        "Male",
+                        "Female",
+                    ],
+                    "Main_Genie_Release_Version": [
+                        "V1",
+                        "V1",
+                        "V1",
+                        "V1",
+                        "V1",
+                        "V1",
+                        "V1",
+                        "V1",
+                        "V1",
+                        "V1",
+                    ],
                 }
             ),
         },
@@ -290,28 +364,41 @@ def get__update_tier1a_data_replacement_mapping_table_test_cases():
             "name": "cancer_panel_test_mapping",
             "merged_table": pd.DataFrame(
                 {
-                    "cohort": ["A","A", "A"],
-                    "cpt_genie_sample_id": [1, 2, 3],
-                    "cpt_sample_type": ["A", "B", "C"],
-                    "cpt_seq_date": ["X", "Y", "Z"],
-                    "SAMPLE_TYPE_DETAILED": ["P", "Q", "R"],
-                    "SEQ_YEAR": ["M", "N", "O"],
-                    "other_cols": [1, 2, 3],
+                    "cohort": ["A", "A"],
+                    "cpt_genie_sample_id": ["A-1-2", "A-2-3"],
+                    "site": ["1", "2"],
+                    "cpt_sample_type": ["A", "B"],
+                    "cpt_seq_date": ["X", "Y"],
+                    "SAMPLE_TYPE_DETAILED": ["P", "Q"],
+                    "SAMPLE_TYPE": ["P1", "Q1"],
+                    "SEQ_YEAR": ["M", "N"],
+                    "other_cols": [1, 2],
                 }
             ),
             "form": "cancer_panel_test",
             "bpc_column_list": ["cpt_sample_type", "cpt_seq_date"],
             "main_genie_column_list": ["SAMPLE_TYPE_DETAILED", "SEQ_YEAR"],
-            "cohort": 'A',
+            "cohort": "A",
             "expected_df": pd.DataFrame(
                 {
-                    "cohort": ["A","A", "A"],
-                    "cpt_genie_sample_id": [1, 2, 3],
-                    "cpt_sample_type": ["A", "B", "C"],
-                    "cpt_seq_date": ["X", "Y", "Z"],
-                    "SAMPLE_TYPE_DETAILED": ["P", "Q", "R"],
-                    "SEQ_YEAR": ["M", "N", "O"],
-                    "Main_Genie_Release_Version": ["V1", "V1", "V1"],
+                    "cohort": ["A", "A", "A", "A"],
+                    "cpt_genie_sample_id": ["A-1-2", "A-2-3", "A-1-2", "A-2-3"],
+                    "site": ["1", "2", "1", "2"],
+                    "bpc_field": [
+                        "cpt_sample_type",
+                        "cpt_sample_type",
+                        "cpt_seq_date",
+                        "cpt_seq_date",
+                    ],
+                    "bpc_field_value": ["A", "B", "X", "Y"],
+                    "main_genie_field": [
+                        "SAMPLE_TYPE_DETAILED",
+                        "SAMPLE_TYPE_DETAILED",
+                        "SEQ_YEAR",
+                        "SEQ_YEAR",
+                    ],
+                    "main_genie_field_value": ["P", "Q", "M", "N"],
+                    "Main_Genie_Release_Version": ["V1", "V1", "V1", "V1"],
                 }
             ),
         },
@@ -319,8 +406,9 @@ def get__update_tier1a_data_replacement_mapping_table_test_cases():
             "name": "cancer_panel_test_mapping_all_cohorts",
             "merged_table": pd.DataFrame(
                 {
-                    "cohort": ["A","A", "A"],
-                    "cpt_genie_sample_id": [1, 2, 3],
+                    "cohort": ["A", "A", "B"],
+                    "cpt_genie_sample_id": ["A-1-2", "A-2-3", "B-1-2"],
+                    "site": ["1", "2", "1"],
                     "cpt_sample_type": ["A", "B", "C"],
                     "cpt_seq_date": ["X", "Y", "Z"],
                     "SAMPLE_TYPE_DETAILED": ["P", "Q", "R"],
@@ -334,13 +422,35 @@ def get__update_tier1a_data_replacement_mapping_table_test_cases():
             "cohort": "",
             "expected_df": pd.DataFrame(
                 {
-                    "cohort": ["A","A", "A"],
-                    "cpt_genie_sample_id": [1, 2, 3],
-                    "cpt_sample_type": ["A", "B", "C"],
-                    "cpt_seq_date": ["X", "Y", "Z"],
-                    "SAMPLE_TYPE_DETAILED": ["P", "Q", "R"],
-                    "SEQ_YEAR": ["M", "N", "O"],
-                    "Main_Genie_Release_Version": ["V1", "V1", "V1"],
+                    "cohort": ["A", "A", "B", "A", "A", "B"],
+                    "cpt_genie_sample_id": [
+                        "A-1-2",
+                        "A-2-3",
+                        "B-1-2",
+                        "A-1-2",
+                        "A-2-3",
+                        "B-1-2",
+                    ],
+                    "site": ["1", "2", "1", "1", "2", "1"],
+                    "bpc_field": [
+                        "cpt_sample_type",
+                        "cpt_sample_type",
+                        "cpt_sample_type",
+                        "cpt_seq_date",
+                        "cpt_seq_date",
+                        "cpt_seq_date",
+                    ],
+                    "bpc_field_value": ["A", "B", "C", "X", "Y", "Z"],
+                    "main_genie_field": [
+                        "SAMPLE_TYPE_DETAILED",
+                        "SAMPLE_TYPE_DETAILED",
+                        "SAMPLE_TYPE_DETAILED",
+                        "SEQ_YEAR",
+                        "SEQ_YEAR",
+                        "SEQ_YEAR",
+                    ],
+                    "main_genie_field_value": ["P", "Q", "R", "M", "N", "O"],
+                    "Main_Genie_Release_Version": ["V1", "V1", "V1", "V1", "V1", "V1"],
                 }
             ),
         },
@@ -352,24 +462,43 @@ def get__update_tier1a_data_replacement_mapping_table_test_cases():
     get__update_tier1a_data_replacement_mapping_table_test_cases(),
     ids=lambda x: x["name"],
 )
-def test_update_tier1a_data_replacement_mapping_table(syn, table_schema, test_cases, config):
+def test_update_tier1a_data_replacement_mapping_table(
+    syn, table_schema, test_cases, config
+):
     with patch.object(syn, "get", return_value=table_schema) as patch_get, patch.object(
         syn, "tableQuery"
-    ) as patch_table_query, patch.object(syn, "store") as patch_store, patch.object(syn, "delete") as patch_delete, patch('utilities.update_version') as update_version:
+    ) as patch_table_query, patch.object(syn, "store") as patch_store, patch.object(
+        syn, "delete"
+    ) as patch_delete, patch(
+        "utilities.update_version"
+    ) as update_version:
         patch_table_query.return_value = MagicMock(etag="test_etag")
         logger = MagicMock(spec=logging.Logger)
 
         comment = "test comment"
         # Call the function
         update_tier1a_data_replacement_mapping_table(
-            syn, test_cases["merged_table"], test_cases["form"], config, comment=comment, logger=logger, bpc_column_list = test_cases["bpc_column_list"], main_genie_column_list=test_cases["main_genie_column_list"],cohort=test_cases["cohort"]
+            syn,
+            test_cases["merged_table"],
+            test_cases["form"],
+            config,
+            comment=comment,
+            logger=logger,
+            bpc_column_list=test_cases["bpc_column_list"],
+            main_genie_column_list=test_cases["main_genie_column_list"],
+            cohort=test_cases["cohort"],
         )
 
         # Validate
         patch_get.assert_called_with(
-            config["tier1a_replacement_mapping"][f"{test_cases['form']}_tier1a_replacement_mapping_table"])
+            config["tier1a_replacement_mapping"][
+                f"{test_cases['form']}_tier1a_replacement_mapping_table"
+            ]
+        )
         if test_cases["cohort"]:
-            patch_table_query.assert_called_with(f"SELECT * FROM {table_schema.id} where cohort = '{test_cases['cohort']}'")
+            patch_table_query.assert_called_with(
+                f"SELECT * FROM {table_schema.id} where cohort = '{test_cases['cohort']}'"
+            )
         else:
             patch_table_query.assert_called_with(f"SELECT * FROM {table_schema.id}")
         patch_delete.assert_called_once()
@@ -379,6 +508,108 @@ def test_update_tier1a_data_replacement_mapping_table(syn, table_schema, test_ca
         pd.testing.assert_frame_equal(
             stored_table.asDataFrame(), test_cases["expected_df"]
         )
-        logger.info.assert_called_with("Updating version for tier1a data replacement mapping table")
-        update_version.assert_called_with(syn, table_schema.id, f"{comment}_mainGENIE_{config['main_genie_release_version']}")
+        logger.info.assert_called_with(
+            "Updating version for tier1a data replacement mapping table"
+        )
+        update_version.assert_called_with(
+            syn,
+            table_schema.id,
+            f"{comment}_mainGENIE_{config['main_genie_release_version']}",
+        )
 
+
+def test_extract_site_name_from_sample_id_single_str():
+    cpt_genie_sample_id = "GENIE-SAGE-1"
+    assert extract_site_name_from_sample_id(cpt_genie_sample_id) == "SAGE"
+
+
+@pytest.mark.parametrize(
+    "input_df,expected_df",
+    [
+        (
+            pd.DataFrame(
+                {
+                    "cohort": ["A", "A"],
+                    "cpt_sample_id": [
+                        "cohortA-site1-sample01",
+                        "cohortA-site1-sample02",
+                    ],
+                    "bpc_col1": [10, 20],
+                    "bpc_col2": [30, 40],
+                    "genie_col1": [50, 60],
+                    "genie_col2": [70, 80],
+                }
+            ),
+            pd.DataFrame(
+                {
+                    "cohort": ["A", "A", "A", "A"],
+                    "cpt_sample_id": [
+                        "cohortA-site1-sample01",
+                        "cohortA-site1-sample02",
+                        "cohortA-site1-sample01",
+                        "cohortA-site1-sample02",
+                    ],
+                    "bpc_field": ["bpc_col1", "bpc_col1", "bpc_col2", "bpc_col2"],
+                    "bpc_field_value": [10, 20, 30, 40],
+                    "main_genie_field": [
+                        "genie_col1",
+                        "genie_col1",
+                        "genie_col2",
+                        "genie_col2",
+                    ],
+                    "main_genie_field_value": [50, 60, 70, 80],
+                }
+            ),
+        ),
+        (
+            pd.DataFrame(
+                {
+                    "cohort": ["A", "A"],
+                    "cpt_sample_id": [
+                        "cohortA-site1-sample01",
+                        "cohortA-site1-sample02",
+                    ],
+                    "bpc_col1": [10, 20],
+                    "bpc_col2": [30, np.nan],
+                    "genie_col1": [np.nan, 60],
+                    "genie_col2": [70, 80],
+                }
+            ),
+            pd.DataFrame(
+                {
+                    "cohort": ["A", "A", "A", "A"],
+                    "cpt_sample_id": [
+                        "cohortA-site1-sample01",
+                        "cohortA-site1-sample02",
+                        "cohortA-site1-sample01",
+                        "cohortA-site1-sample02",
+                    ],
+                    "bpc_field": ["bpc_col1", "bpc_col1", "bpc_col2", "bpc_col2"],
+                    "bpc_field_value": [10, 20, 30, np.nan],
+                    "main_genie_field": [
+                        "genie_col1",
+                        "genie_col1",
+                        "genie_col2",
+                        "genie_col2",
+                    ],
+                    "main_genie_field_value": [np.nan, 60, 70, 80],
+                }
+            ),
+        ),
+    ],
+    ids=["dataframe_without_NAs", "dataframe_with_NAs"],
+)
+def test_convert_tier1a_data_replacement_mapping_table_to_long(input_df, expected_df):
+    # Define input parameters
+    id_vars = ["cohort", "cpt_sample_id"]
+    bpc_column_list = ["bpc_col1", "bpc_col2"]
+    main_genie_column_list = ["genie_col1", "genie_col2"]
+
+    # Call the function
+    result_df = convert_tier1a_data_replacement_mapping_table_to_long(
+        input_df, id_vars, bpc_column_list, main_genie_column_list
+    )
+    # Assert that the result matches the expected DataFrame
+    pd.testing.assert_frame_equal(
+        result_df.reset_index(drop=True), expected_df.reset_index(drop=True)
+    )

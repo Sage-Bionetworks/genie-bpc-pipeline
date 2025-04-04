@@ -212,8 +212,71 @@ def remove_backslash(df: pandas.DataFrame, cols: List[str]) -> pandas.DataFrame:
         raise ValueError("Invalid column list. Not all columns are in the dataframe.")
 
 
+def extract_site_name_from_sample_id(sample_id: str) -> str:
+    """Extract site name from CPT Genie Sample ID
+       Site name is the second substring of the sample ID
+
+    Args:
+        cpt_genie_sample_id (str): sample ID
+
+    Returns:
+        str: Site name
+    """
+    return sample_id.split("-")[1]
+
+
+def convert_tier1a_data_replacement_mapping_table_to_long(
+    df: pandas.DataFrame,
+    id_vars: List[str],
+    bpc_column_list: List[str],
+    main_genie_column_list: List[str],
+) -> pandas.DataFrame:
+    """Convert a the tier1a_data_replacement_mapping_table from wide to long format
+
+    Args:
+        df (pandas.DataFrame): The dataframe to be converted from wide to long
+        id_vars (List[str]): The list of columns to be used as identifier variables
+        bpc_column_list (List[str]): The list of BPC columns
+        main_genie_column_list (List[str]): The list of main GENIE columns
+
+    Returns:
+        pandas.DataFrame: A long format dataframe
+    """
+    bpc_df = df.melt(
+        id_vars=id_vars,
+        value_vars=bpc_column_list,
+        var_name="bpc_field",
+        value_name="bpc_field_value",
+    )
+    main_genie_df = df.melt(
+        id_vars=id_vars,
+        value_vars=main_genie_column_list,
+        var_name="main_genie_field",
+        value_name="main_genie_field_value",
+    )
+
+    # Drop id_vars from the main_genie_df before concat
+    main_genie_df = main_genie_df.drop(columns=id_vars)
+
+    # Concatenate horizontally
+    merged_df = pandas.concat(
+        [bpc_df.reset_index(drop=True), main_genie_df.reset_index(drop=True)], axis=1
+    )
+
+    return merged_df
+
+
 def update_tier1a_data_replacement_mapping_table(
-    syn: synapseclient.Synapse, merged_table: pandas.DataFrame, form: str, config: dict, comment: str, logger: logging.Logger, bpc_column_list: List[str], main_genie_column_list: List[str],cohort: str = ""):
+    syn: synapseclient.Synapse,
+    merged_table: pandas.DataFrame,
+    form: str,
+    config: dict,
+    comment: str,
+    logger: logging.Logger,
+    bpc_column_list: List[str],
+    main_genie_column_list: List[str],
+    cohort: str = "",
+):
     """Update tier1a data replacement mapping table
 
     Args:
@@ -223,45 +286,68 @@ def update_tier1a_data_replacement_mapping_table(
         config (dict): config read in
         comment (str): The version comment
         logger (logging.Logger): The logger object
+        bpc_column_list (List[str]): The list of BPC columns
+        main_genie_column_list (List[str]): The list of main GENIE columns
         cohort (str): The cohort name
     """
+    if cohort:
+        merged_table = merged_table[merged_table["cohort"] == cohort]
+
     if form == "patient_characteristics":
         table_schema = syn.get(
             config["tier1a_replacement_mapping"][
                 "patient_characteristics_tier1a_replacement_mapping_table"
             ]
         )
+        # extract site name from genie_patient_id
+        merged_table["site"] = merged_table["genie_patient_id"].apply(
+            extract_site_name_from_sample_id
+        )
         subset_table = merged_table[
-            [   
-                "cohort",
-                "genie_patient_id"
-            ]
-                + bpc_column_list
-                + main_genie_column_list
-            ]
+            ["cohort", "site", "genie_patient_id"]
+            + bpc_column_list
+            + main_genie_column_list
+        ]
+        id_vars = ["cohort", "genie_patient_id", "site"]
+
     if form == "cancer_panel_test":
         table_schema = syn.get(
             config["tier1a_replacement_mapping"][
                 "cancer_panel_test_tier1a_replacement_mapping_table"
             ]
         )
+        # extract site name from cpt_genie_sample_id
+        merged_table["site"] = merged_table["cpt_genie_sample_id"].apply(
+            extract_site_name_from_sample_id
+        )
         subset_table = merged_table[
-            [
-                "cohort",
-                "cpt_genie_sample_id"]
-                + bpc_column_list
-                + main_genie_column_list
-            ]
+            ["cohort", "site", "cpt_genie_sample_id"]
+            + bpc_column_list
+            + main_genie_column_list
+        ]
 
+        id_vars = ["cohort", "cpt_genie_sample_id", "site"]
+    # convert table from wide to long
+    subset_table = convert_tier1a_data_replacement_mapping_table_to_long(
+        subset_table, id_vars, bpc_column_list, main_genie_column_list
+    )
+    # add Main_Genie_Release_Version
     subset_table["Main_Genie_Release_Version"] = config["main_genie_release_version"]
+
     # save the table to sage internal project
     subset_table.reset_index(drop=True, inplace=True)
     if cohort:
-        table_query = syn.tableQuery(f"SELECT * FROM {table_schema.id} where cohort = '{cohort}'")
+        table_query = syn.tableQuery(
+            f"SELECT * FROM {table_schema.id} where cohort = '{cohort}'"
+        )
     else:
         table_query = syn.tableQuery(f"SELECT * FROM {table_schema.id}")
     table = syn.delete(table_query)  # wipe the cohort data
     table = syn.store(Table(table_schema, subset_table))
     # update the version
     logger.info("Updating version for tier1a data replacement mapping table")
-    update_version(syn, table_schema.id, f"{comment}_mainGENIE_{config['main_genie_release_version']}")
+    update_version(
+        syn,
+        table_schema.id,
+        f"{comment}_mainGENIE_{config['main_genie_release_version']}",
+    )
