@@ -27,8 +27,15 @@ import numpy
 import pandas
 import synapseclient
 import utilities
-from synapseclient import (Column, Row, RowSet, Schema, Table,
-                           as_table_columns, build_table)
+from synapseclient import (
+    Column,
+    Row,
+    RowSet,
+    Schema,
+    Table,
+    as_table_columns,
+    build_table,
+)
 
 TABLES = {
     "production": {
@@ -46,6 +53,7 @@ TABLES = {
 def get_main_genie_clinical_file(
     syn: synapseclient.Synapse,
     release: str,
+    cohort: str,
     release_files_table_synid: str,
     form: str,
     column_mapping_table: pandas.DataFrame,
@@ -56,6 +64,7 @@ def get_main_genie_clinical_file(
     Args:
         syn (synapseclient.Synapse): synapse client connection
         release (str): release version to pull from for main genie
+        cohort (str): cohort name
         release_files_table_synid (str): synapse id of the data relese files table
         from main genie
         form (str): form name, can be either patient_characteristics or cancer_panel_test
@@ -80,10 +89,14 @@ def get_main_genie_clinical_file(
     clinical_df = pandas.read_csv(clinical_ent.path, sep="\t", skiprows=4)
     # get column list for the form
     column_list = column_mapping_table.loc[
-        column_mapping_table["prissmm_form"] == form,
+        (column_mapping_table["prissmm_form"] == form)
+        & (column_mapping_table["main_genie_release"] == release)
+        & (column_mapping_table["cohort"] == cohort),
     ].genie_element.to_list()
     if clinical_df.empty:
-        raise ValueError(f"Clinical file pulled from {clinical_link_synid} link is empty.")
+        raise ValueError(
+            f"Clinical file pulled from {clinical_link_synid} link is empty."
+        )
     if not set(column_list) < set(clinical_df.columns):
         raise ValueError(
             f"Clinical file pulled from {clinical_link_synid} link is missing an expected column. \n"
@@ -502,11 +515,20 @@ def update_tier1a(
         Tuple[str, pandas.DataFrame]: The synapse ID for BPC table to be modified and the updated table as dataframe
     """
     # check the validity of bpc_column_list
-    valid_col = column_mapping_table.loc[
-        column_mapping_table["prissmm_form"] == form,
-    ].prissmm_element.tolist()
+    subset_column_mapping_table = column_mapping_table.loc[
+        (column_mapping_table["prissmm_form"] == form)
+        & (
+            column_mapping_table["main_genie_release"]
+            == config["main_genie_release_version"]
+        )
+        & (column_mapping_table["cohort"] == cohort),
+    ]
+    valid_col = subset_column_mapping_table.prissmm_element.tolist()
+    # import pdb; pdb.set_trace()
     if not all(item in valid_col for item in bpc_column_list):
-        raise ValueError(f"Invalid bpc_column_list. Column names should be matching {valid_col}.")
+        raise ValueError(
+            f"Invalid bpc_column_list. Column names should be matching {valid_col}."
+        )
 
     logger.info(f"Update {bpc_column_list} in {form}")
     # load bpc table
@@ -523,11 +545,9 @@ def update_tier1a(
     cpt_dat["index"] = cpt_dat.index
     # subset main_genie_table based on bpc_column_list
     main_genie_column_list = [
-        ", ".join(
-            column_mapping_table.loc[
-                column_mapping_table["prissmm_element"] == col,
-            ].genie_element
-        )
+        subset_column_mapping_table.loc[
+            subset_column_mapping_table["prissmm_element"] == col, "genie_element"
+        ].values[0]
         for col in bpc_column_list
     ]
 
@@ -564,7 +584,17 @@ def update_tier1a(
             left_on="cpt_genie_sample_id",
             right_on="SAMPLE_ID",
         )
-    utilities.update_tier1a_data_replacement_mapping_table(syn, merged_table = cpt_seq_dat, form = form, config = config, comment = comment, logger = logger, bpc_column_list = bpc_column_list, main_genie_column_list = main_genie_column_list, cohort = cohort)
+    utilities.update_tier1a_data_replacement_mapping_table(
+        syn,
+        merged_table=cpt_seq_dat,
+        form=form,
+        config=config,
+        comment=comment,
+        logger=logger,
+        bpc_column_list=bpc_column_list,
+        main_genie_column_list=main_genie_column_list,
+        cohort=cohort,
+    )
     # reformat the columns
     cpt_seq_dat.index = cpt_seq_dat["index"]
     cpt_seq_dat.index.name = None
@@ -610,8 +640,8 @@ def custom_fix_for_tier1a_variable(
     logger: logging.Logger,
     config: dict,
     cohort: str = "",
-    replace_patient_tier1a: bool = False, 
-    replace_sample_tier1a: bool = False, 
+    replace_patient_tier1a: bool = False,
+    replace_sample_tier1a: bool = False,
     comment: str = "",
 ) -> None:
     """
@@ -628,8 +658,8 @@ def custom_fix_for_tier1a_variable(
         comment (str): version comment
     """
     # BUG: unlist form column in master table only works for STAGING table
-    #master_table["form"] = master_table["form"].apply(lambda x: ", ".join(x))
-    
+    # master_table["form"] = master_table["form"].apply(lambda x: ", ".join(x))
+
     # load GENIE BPC elements mapping table
     column_mapping_table = utilities.download_synapse_table(syn, "syn20945902")
 
@@ -639,6 +669,7 @@ def custom_fix_for_tier1a_variable(
         genie_patient_dat = get_main_genie_clinical_file(
             syn,
             release=config["main_genie_release_version"],
+            cohort=cohort,
             release_files_table_synid=config["main_genie_data_release_files"],
             form="patient_characteristics",
             column_mapping_table=column_mapping_table,
@@ -651,18 +682,18 @@ def custom_fix_for_tier1a_variable(
             master_table,
             genie_patient_dat,
             column_mapping_table,
-            bpc_column_list= config['patient_tier1a_column_list_to_be_replaced'],
+            bpc_column_list=config["patient_tier1a_column_list_to_be_replaced"],
             config=config,
             logger=logger,
             cohort=cohort,
-            comment=comment
+            comment=comment,
         )
         overwrite_tier1a(
             syn,
             "patient_characteristics",
             cpt_table_id,
             cpt_seq_dat,
-            bpc_column_list=config['patient_tier1a_column_list_to_be_replaced'],
+            bpc_column_list=config["patient_tier1a_column_list_to_be_replaced"],
             logger=logger,
         )
         logger.info("Overwrite tier1a patient variables completed!")
@@ -672,11 +703,12 @@ def custom_fix_for_tier1a_variable(
         genie_sample_dat = get_main_genie_clinical_file(
             syn,
             release=config["main_genie_release_version"],
+            cohort=cohort,
             release_files_table_synid=config["main_genie_data_release_files"],
             form="cancer_panel_test",
             column_mapping_table=column_mapping_table,
             logger=logger,
-    )
+        )
         # modify for sample table
         cpt_table_id, cpt_seq_dat = update_tier1a(
             syn,
@@ -688,7 +720,7 @@ def custom_fix_for_tier1a_variable(
             config=config,
             logger=logger,
             cohort=cohort,
-            comment=comment
+            comment=comment,
         )
         overwrite_tier1a(
             syn,
@@ -698,23 +730,24 @@ def custom_fix_for_tier1a_variable(
             bpc_column_list=config["sample_tier1a_column_list_to_be_replaced"],
             logger=logger,
         )
-        logger.info("Overwrite tier1a sample variables completed!")            
+        logger.info("Overwrite tier1a sample variables completed!")
+
 
 def custom_fix_for_cpt_seq_data(
-        syn: synapseclient.Synapse,
-        master_table: pandas.DataFrame,
-        logger: logging.Logger,
-        config: dict,
-        cohort: str = "",
-        comment: str = "",
-        replace_patient_tier1a: bool = False, 
-        replace_sample_tier1a: bool = False, 
-    ) -> None:
+    syn: synapseclient.Synapse,
+    master_table: pandas.DataFrame,
+    logger: logging.Logger,
+    config: dict,
+    cohort: str = "",
+    comment: str = "",
+    replace_patient_tier1a: bool = False,
+    replace_sample_tier1a: bool = False,
+) -> None:
     # BUG: unlist form column in master table only when not replacing tier1a variables
     # works only for STAGING table
-    #if not (replace_patient_tier1a or replace_sample_tier1a):
+    # if not (replace_patient_tier1a or replace_sample_tier1a):
     #    master_table["form"] = master_table["form"].apply(lambda x: ", ".join(x))
-    
+
     # load GENIE BPC elements mapping table
     column_mapping_table = utilities.download_synapse_table(syn, "syn20945902")
 
@@ -722,11 +755,12 @@ def custom_fix_for_cpt_seq_data(
     genie_sample_dat = get_main_genie_clinical_file(
         syn,
         release=config["main_genie_release_version"],
+        cohort=cohort,
         release_files_table_synid=config["main_genie_data_release_files"],
         form="cancer_panel_test",
         column_mapping_table=column_mapping_table,
         logger=logger,
-        )
+    )
     # modify for sample table
     cpt_table_id, cpt_seq_dat = update_tier1a(
         syn,
@@ -738,10 +772,12 @@ def custom_fix_for_cpt_seq_data(
         config=config,
         logger=logger,
         cohort=cohort,
-        comment=comment
+        comment=comment,
     )
     # reformat cpt_seq_date column
-    cpt_seq_dat["cpt_seq_date"] = cpt_seq_dat["cpt_seq_date"].map(utilities.float_to_int)
+    cpt_seq_dat["cpt_seq_date"] = cpt_seq_dat["cpt_seq_date"].map(
+        utilities.float_to_int
+    )
     overwrite_tier1a(
         syn,
         "cancer_panel_test",
@@ -751,7 +787,8 @@ def custom_fix_for_cpt_seq_data(
         logger=logger,
     )
 
-    logger.info("Overwrite cpt_seq_date completed!")            
+    logger.info("Overwrite cpt_seq_date completed!")
+
 
 def main():
     # add arguments
@@ -788,14 +825,14 @@ def main():
     parser.add_argument(
         "-rp",
         "--replace_patient_tier1a",
-        type = lambda x: x.lower()== 'true',
+        type=lambda x: x.lower() == "true",
         default=False,
         help="Whether to replace tier1a variables in patient_characteristics table",
     )
     parser.add_argument(
         "-rs",
         "--replace_sample_tier1a",
-        type = lambda x: x.lower()== 'true',
+        type=lambda x: x.lower() == "true",
         default=False,
         help="Whether to replace tier1a variables in cancer_panel_test table",
     )
@@ -846,10 +883,28 @@ def main():
     store_data(syn, master_table, label_data, table_type, cohort, logger, dry_run)
     if not dry_run:
         if replace_patient_tier1a or replace_sample_tier1a:
-            custom_fix_for_tier1a_variable(syn, master_table, logger, config, cohort, replace_patient_tier1a, replace_sample_tier1a, comment)
+            custom_fix_for_tier1a_variable(
+                syn,
+                master_table,
+                logger,
+                config,
+                cohort,
+                replace_patient_tier1a,
+                replace_sample_tier1a,
+                comment,
+            )
         if not replace_sample_tier1a:
             # replace cpt_seq_date separately if not replace other tier1a variables in cancer panel test table
-            custom_fix_for_cpt_seq_data(syn, master_table, logger, config, cohort, comment, replace_patient_tier1a, replace_sample_tier1a)
+            custom_fix_for_cpt_seq_data(
+                syn,
+                master_table,
+                logger,
+                config,
+                cohort,
+                comment,
+                replace_patient_tier1a,
+                replace_sample_tier1a,
+            )
         if table_type == "primary":
             table_id, condition = list(TABLE_INFO["redacted"])
             redacted_table_info = utilities.download_synapse_table(
