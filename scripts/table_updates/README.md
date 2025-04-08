@@ -49,6 +49,7 @@ Usage
     python update_data_table.py -c [cohort_name] -m [version_comment] primary
 
 ##### 4. replace tier1a variables in patient_characteristics and cancer_panel_test tables
+Once the column mappings are confirmed for both the cohort and the main GENIE release version in [GENIE BPC Elements Mapping](https://www.synapse.org/Synapse:syn20945902/tables/), proceed to run
 
     python update_data_table.py -c [cohort_name] -m [version_comment] primary -rs true -rp true
 
