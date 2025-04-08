@@ -27,8 +27,15 @@ import numpy
 import pandas
 import synapseclient
 import utilities
-from synapseclient import (Column, Row, RowSet, Schema, Table,
-                           as_table_columns, build_table)
+from synapseclient import (
+    Column,
+    Row,
+    RowSet,
+    Schema,
+    Table,
+    as_table_columns,
+    build_table,
+)
 
 TABLES = {
     "production": {
@@ -517,7 +524,7 @@ def update_tier1a(
         & (column_mapping_table["cohort"] == cohort),
     ]
     valid_col = subset_column_mapping_table.prissmm_element.tolist()
-    # import pdb; pdb.set_trace()
+
     if not all(item in valid_col for item in bpc_column_list):
         raise ValueError(
             f"Invalid bpc_column_list. Column names should be matching {valid_col}."
@@ -654,7 +661,9 @@ def custom_fix_for_tier1a_variable(
     # master_table["form"] = master_table["form"].apply(lambda x: ", ".join(x))
 
     # load GENIE BPC elements mapping table
-    column_mapping_table = utilities.download_synapse_table(syn, config["genie_bpc_elements_mapping"])
+    column_mapping_table = utilities.download_synapse_table(
+        syn, config["genie_bpc_elements_mapping"]
+    )
 
     if replace_patient_tier1a:
         logger.info("Replace patient tier1a variables in progress...")
@@ -742,7 +751,9 @@ def custom_fix_for_cpt_seq_data(
     #    master_table["form"] = master_table["form"].apply(lambda x: ", ".join(x))
 
     # load GENIE BPC elements mapping table
-    column_mapping_table = utilities.download_synapse_table(syn, config["genie_bpc_elements_mapping"])
+    column_mapping_table = utilities.download_synapse_table(
+        syn, config["genie_bpc_elements_mapping"]
+    )
 
     # load main genie sample file
     genie_sample_dat = get_main_genie_clinical_file(
