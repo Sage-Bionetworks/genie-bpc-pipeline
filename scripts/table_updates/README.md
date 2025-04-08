@@ -47,6 +47,10 @@ Usage
 
 ##### 3. staging (Save output to staging projects)
     python update_data_table.py -c [cohort_name] -m [version_comment] primary
-    
+
+##### 4. replace tier1a variables in patient_characteristics and cancer_panel_test tables
+
+    python update_data_table.py -c [cohort_name] -m [version_comment] primary -rs true -rp true
+
 #### IRR Case Tables (Deprecated)
     python update_data_table.py -m [version_comment] irr
