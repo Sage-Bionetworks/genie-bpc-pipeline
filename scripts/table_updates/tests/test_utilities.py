@@ -518,9 +518,13 @@ def test_update_tier1a_data_replacement_mapping_table(
         )
 
 
-def test_extract_site_name_from_sample_id_single_str():
-    cpt_genie_sample_id = "GENIE-SAGE-1"
-    assert extract_site_name_from_sample_id(cpt_genie_sample_id) == "SAGE"
+@pytest.mark.parametrize(
+    "input_str, expected_output",
+    [(float("nan"), ""), ("GENIE-SAGE-1", "SAGE")],
+    ids=["NaN_value", "normal_string"],
+)
+def test_extract_site_name_from_id(input_str, expected_output):
+    assert extract_site_name_from_id(input_str) == expected_output
 
 
 @pytest.mark.parametrize(
