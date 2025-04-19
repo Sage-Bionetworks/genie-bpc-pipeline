@@ -212,17 +212,23 @@ def remove_backslash(df: pandas.DataFrame, cols: List[str]) -> pandas.DataFrame:
         raise ValueError("Invalid column list. Not all columns are in the dataframe.")
 
 
-def extract_site_name_from_sample_id(sample_id: str) -> str:
-    """Extract site name from CPT Genie Sample ID
-       Site name is the second substring of the sample ID
+def extract_site_name_from_id(id: str) -> str:
+    """Extract site name from CPT ID column
+       Site name is the second substring of the ID string
 
     Args:
-        cpt_genie_sample_id (str): sample ID
+        id (str): genie_patient_id or cpt_genie_sample_id
 
     Returns:
         str: Site name
     """
-    return sample_id.split("-")[1]
+    # convert nan to empty string
+    id = "" if pandas.isna(id) else str(id)
+    if id:
+        # Split the ID by "-" and return the second substring if the ID is not empty
+        return id.split("-")[1]
+    else:
+        return id
 
 
 def convert_tier1a_data_replacement_mapping_table_to_long(
@@ -301,7 +307,7 @@ def update_tier1a_data_replacement_mapping_table(
         )
         # extract site name from genie_patient_id
         merged_table["site"] = merged_table["genie_patient_id"].apply(
-            extract_site_name_from_sample_id
+            extract_site_name_from_id
         )
         subset_table = merged_table[
             ["cohort", "site", "genie_patient_id"]
@@ -318,7 +324,7 @@ def update_tier1a_data_replacement_mapping_table(
         )
         # extract site name from cpt_genie_sample_id
         merged_table["site"] = merged_table["cpt_genie_sample_id"].apply(
-            extract_site_name_from_sample_id
+            extract_site_name_from_id
         )
         subset_table = merged_table[
             ["cohort", "site", "cpt_genie_sample_id"]
