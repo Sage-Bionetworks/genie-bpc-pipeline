@@ -341,7 +341,7 @@ uncode_data <- function(df_coded, dd, grs, use_grs) {
     mappings <- merge_mappings(mappings_primary, mappings_secondary)
   } else {
     mappings_dd <- parse_mappings(strs = dd[[config$column_name$variable_mapping]], 
-                            labels = dd[[config$column_name$variable_name]])
+                                  labels = dd[[config$column_name$variable_name]])
     yesno_vars <- dd[config$column_name$variable_name][dd[config$column_name$field_type] == 'yesno']
     mappings_yesno <- setNames(lapply(yesno_vars, function(name) parse_mapping("0, No|1, Yes")), yesno_vars)
     mappings <- c(mappings_dd, mappings_yesno)
