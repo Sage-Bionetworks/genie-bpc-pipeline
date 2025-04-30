@@ -180,7 +180,7 @@ get_eligibility_data <- function(synid_clinical, site) {
            SAMPLE_ID, 
            ONCOTREE_CODE, 
            SEQ_DATE, 
-           AGE_AT_SEQ_REPORT,
+           AGE_AT_SEQ_REPORT_DAYS,
            SEQ_YEAR,
            YEAR_DEATH,
            INT_CONTACT)
@@ -213,7 +213,7 @@ create_eligibility_matrix <- function(data,
     mutate(FLAG_ALLOWED_CODE = is.element(ONCOTREE_CODE, allowed_codes)) %>%   
     
     # >=18 years old at sequencing
-    mutate(FLAG_ADULT = AGE_AT_SEQ_REPORT != '<6570') %>%            
+    mutate(FLAG_ADULT = AGE_AT_SEQ_REPORT_DAYS != '<6570') %>%            
     
     # sequenced within specified time range
     mutate(FLAG_SEQ_DATE = my(SEQ_DATE) >= my(seq_min) & my(SEQ_DATE) <= my(seq_max)) %>%
@@ -221,7 +221,7 @@ create_eligibility_matrix <- function(data,
     # patient was alive at sequencing
     mutate(SEQ_ALIVE_YR = !is_double(YEAR_DEATH) | YEAR_DEATH >= SEQ_YEAR)  %>% 
 
-    mutate(SEQ_ALIVE_INT = !is_double(INT_CONTACT) | INT_CONTACT >= AGE_AT_SEQ_REPORT) %>%
+    mutate(SEQ_ALIVE_INT = !is_double(INT_CONTACT) | INT_CONTACT >= AGE_AT_SEQ_REPORT_DAYS) %>%
     
     # patient not explicitly excluded
     mutate(FLAG_NOT_EXCLUDED = !is.element(PATIENT_ID, exclude_patient_id) & !is.element(SAMPLE_ID, exclude_sample_id))  %>% 
@@ -229,7 +229,7 @@ create_eligibility_matrix <- function(data,
     select(PATIENT_ID, 
            SAMPLE_ID, 
            ONCOTREE_CODE, 
-           AGE_AT_SEQ_REPORT,
+           AGE_AT_SEQ_REPORT_DAYS,
            INT_CONTACT,
            SEQ_DATE,
            SEQ_YEAR,
