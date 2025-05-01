@@ -230,7 +230,7 @@ create_eligibility_matrix <- function(data,
   # <= age max at sequencing
   if (!is.infinite(age_max)) {
     mat <- mat %>%
-      mutate(FLAG_AGE_MAX = is.double(AGE_AT_SEQ_REPORT_DAYS) & AGE_AT_SEQ_REPORT_DAYS <= age_max)
+      mutate(FLAG_AGE_MAX = as.numeric(AGE_AT_SEQ_REPORT_DAYS) <= age_max)
   }else{
     mat <- mat %>%
       mutate(FLAG_AGE_MAX = TRUE)
