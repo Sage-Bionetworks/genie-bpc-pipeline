@@ -103,11 +103,16 @@ get_irr <- function(config, phase, cohort, site) {
 }
 
 get_age_max <- function(config, phase, cohort) {
+  age_max <- get_default_global(config, "age_max")
   cohort_age_max <- get_custom_cohort(config, phase, cohort, "age_max")
   if(!is.null(cohort_age_max)){
-    return(cohort_age_max)
+    age_max <- cohort_age_max
   }
-  return(get_default_global(config, "age_max"))
+  return(as.numeric(age_max))
+}
+
+get_age_max_days <- function(config, phase, cohort) {
+  return(get_age_max(config, phase, cohort)*365)
 }
 
 now <- function(timeOnly = F, tz = "US/Pacific") {
