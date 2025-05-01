@@ -216,9 +216,6 @@ create_eligibility_matrix <- function(data,
     # >=18 years old at sequencing
     mutate(FLAG_ADULT = AGE_AT_SEQ_REPORT_DAYS != '<6570') %>%       
     
-    # <= age max at sequencing
-    mutate(FLAG_AGE_MAX = AGE_AT_SEQ_REPORT_DAYS <= age_max) %>%
-    
     # sequenced within specified time range
     mutate(FLAG_SEQ_DATE = my(SEQ_DATE) >= my(seq_min) & my(SEQ_DATE) <= my(seq_max)) %>%
     
@@ -228,8 +225,18 @@ create_eligibility_matrix <- function(data,
     mutate(SEQ_ALIVE_INT = !is_double(INT_CONTACT) | INT_CONTACT >= AGE_AT_SEQ_REPORT_DAYS) %>%
     
     # patient not explicitly excluded
-    mutate(FLAG_NOT_EXCLUDED = !is.element(PATIENT_ID, exclude_patient_id) & !is.element(SAMPLE_ID, exclude_sample_id))  %>% 
-
+    mutate(FLAG_NOT_EXCLUDED = !is.element(PATIENT_ID, exclude_patient_id) & !is.element(SAMPLE_ID, exclude_sample_id))
+  
+  # <= age max at sequencing
+  if (!is.infinite(age_max)) {
+    mat <- mat %>%
+      mutate(FLAG_AGE_MAX = is.double(AGE_AT_SEQ_REPORT_DAYS) & AGE_AT_SEQ_REPORT_DAYS <= age_max)
+  }else{
+    mat <- mat %>%
+      mutate(FLAG_AGE_MAX = TRUE)
+  }
+    
+  mat <- mat %>% 
     select(PATIENT_ID, 
            SAMPLE_ID, 
            ONCOTREE_CODE, 
