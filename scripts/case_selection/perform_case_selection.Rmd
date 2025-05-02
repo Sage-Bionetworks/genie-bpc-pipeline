@@ -92,7 +92,7 @@ Eligible samples are defined with following criteria:
     * Allowed codes: `r paste0(config$phase[[phase]]$cohort[[cohort]]$oncotree$allowed_codes, collapse = ", ")`
 2. Patient contributing sample was within the allowable age range at the time of sequencing
     * Minimum age: `r config$default$global$age_min`
-    * Maximum age: `r if (!is.null(config$phase[[1]]$cohort[[cohort]]$age_max)) config$phase[[1]]$cohort$BrCa$age_max else config$default$global$age_max`
+    * Maximum age: `r get_age_max(config, phase, cohort)`
 3. Sample was sequenced between allowed date range
     * Minimum sequencing date: `r config$phase[[phase]]$cohort[[cohort]]$date$seq_min`
     * Maximum sequencing date: `r config$phase[[phase]]$cohort[[cohort]]$date$seq_max`

@@ -204,6 +204,7 @@ create_eligibility_matrix <- function(data,
                                       allowed_codes, 
                                       seq_min, 
                                       seq_max,
+                                      age_max,
                                       exclude_patient_id = c(),
                                       exclude_sample_id = c()) {
   
@@ -213,7 +214,7 @@ create_eligibility_matrix <- function(data,
     mutate(FLAG_ALLOWED_CODE = is.element(ONCOTREE_CODE, allowed_codes)) %>%   
     
     # >=18 years old at sequencing
-    mutate(FLAG_ADULT = AGE_AT_SEQ_REPORT_DAYS != '<6570') %>%            
+    mutate(FLAG_ADULT = AGE_AT_SEQ_REPORT_DAYS != '<6570') %>%       
     
     # sequenced within specified time range
     mutate(FLAG_SEQ_DATE = my(SEQ_DATE) >= my(seq_min) & my(SEQ_DATE) <= my(seq_max)) %>%
@@ -224,8 +225,18 @@ create_eligibility_matrix <- function(data,
     mutate(SEQ_ALIVE_INT = !is_double(INT_CONTACT) | INT_CONTACT >= AGE_AT_SEQ_REPORT_DAYS) %>%
     
     # patient not explicitly excluded
-    mutate(FLAG_NOT_EXCLUDED = !is.element(PATIENT_ID, exclude_patient_id) & !is.element(SAMPLE_ID, exclude_sample_id))  %>% 
-
+    mutate(FLAG_NOT_EXCLUDED = !is.element(PATIENT_ID, exclude_patient_id) & !is.element(SAMPLE_ID, exclude_sample_id))
+  
+  # <= age max at sequencing
+  if (!is.infinite(age_max)) {
+    mat <- mat %>%
+      mutate(FLAG_AGE_MAX = as.numeric(AGE_AT_SEQ_REPORT_DAYS) <= age_max)
+  }else{
+    mat <- mat %>%
+      mutate(FLAG_AGE_MAX = TRUE)
+  }
+    
+  mat <- mat %>% 
     select(PATIENT_ID, 
            SAMPLE_ID, 
            ONCOTREE_CODE, 
@@ -237,6 +248,7 @@ create_eligibility_matrix <- function(data,
            SEQ_ALIVE_INT,
            FLAG_ALLOWED_CODE, 
            FLAG_ADULT, 
+           FLAG_AGE_MAX,
            FLAG_SEQ_DATE, 
            SEQ_ALIVE_YR,
            FLAG_NOT_EXCLUDED)         
@@ -335,6 +347,7 @@ if (debug) {
 exclude_patient_id <- c()
 exclude_sample_id <- c()
 seq_dates <- get_seq_dates(config, phase, cohort, site)
+age_max_days <- get_age_max_days(config, phase, cohort)
 
 flag_prev_release <- (config$release$cohort[[cohort]]$patient_level_dataset != "NA")
 if (phase == 2 && flag_prev_release) {
@@ -350,6 +363,7 @@ eligibility_matrix <- create_eligibility_matrix(data = eligibility_data,
                                                 allowed_codes = config$phase[[phase]]$cohort[[cohort]]$oncotree$allowed_codes, 
                                                 seq_min = seq_dates$seq_min, 
                                                 seq_max = seq_dates$seq_max,
+                                                age_max = age_max_days,
                                                 exclude_patient_id = exclude_patient_id,
                                                 exclude_sample_id = exclude_sample_id)
 

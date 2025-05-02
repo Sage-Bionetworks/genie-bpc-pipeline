@@ -26,16 +26,20 @@ get_default_site <- function(config, site, key) {
   return(config$default$site[[site]][[key]])
 }
 
-get_custom <- function(config, phase, cohort, site, key) {
+get_custom_site <- function(config, phase, cohort, site, key) {
   return(config$phase[[phase]]$cohort[[cohort]]$site[[site]][[key]])
 }
 
+get_custom_cohort <- function(config, phase, cohort, key) {
+  return(config$phase[[phase]]$cohort[[cohort]][[key]])
+}
+
 get_production <- function(config, phase, cohort, site) {
-  get_custom(config = config, phase = phase, cohort = cohort, site = site, key = "production")
+  get_custom_site(config = config, phase = phase, cohort = cohort, site = site, key = "production")
 }
 
 get_adjusted <- function(config, phase, cohort, site) {
-  get_custom(config = config, phase = phase, cohort = cohort, site = site, key = "adjusted")
+  get_custom_site(config = config, phase = phase, cohort = cohort, site = site, key = "adjusted")
 }
 
 get_pressure <- function(config, phase, cohort, site) {
@@ -62,7 +66,7 @@ get_sdv_or_irr_value <- function(config, phase, cohort, site, key = c("sdv", "ir
   }
   
   # custom
-  val_custom <- get_custom(config, phase, cohort, site, key)
+  val_custom <- get_custom_site(config, phase, cohort, site, key)
   if (!is.null(val_custom) && !is.na(val_custom)) {
     if (val_custom < 1) {
       return(round(val_custom * (n_prod)))
@@ -96,6 +100,19 @@ get_sdv <- function(config, phase, cohort, site) {
 
 get_irr <- function(config, phase, cohort, site) {
   return(get_sdv_or_irr_value(config, phase, cohort, site, "irr"))
+}
+
+get_age_max <- function(config, phase, cohort) {
+  age_max <- get_default_global(config, "age_max")
+  cohort_age_max <- get_custom_cohort(config, phase, cohort, "age_max")
+  if(!is.null(cohort_age_max)){
+    age_max <- cohort_age_max
+  }
+  return(as.numeric(age_max))
+}
+
+get_age_max_days <- function(config, phase, cohort) {
+  return(get_age_max(config, phase, cohort)*365)
 }
 
 now <- function(timeOnly = F, tz = "US/Pacific") {
