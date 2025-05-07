@@ -560,10 +560,12 @@ phase:
           DFCI:
             production: 315
             adjusted: 315
+            pressure: 15
             irr: 0
           MSK:
             production: 515
             adjusted: 515
+            pressure: 15
             irr: 0
           PROV:
             production: 100
@@ -572,22 +574,27 @@ phase:
           UCSF:
             production: 45
             adjusted: 45
+            pressure: 5
             irr: 0
           UHN:
             production: 100
             adjusted: 100
+            pressure: 3
             irr: 0
-          #VICC:
-          #  production: 0
-          #  adjusted: 0
-          #  irr: 0
+          VICC:
+            production: 92
+            adjusted: 92
+            pressure: 5
+            irr: 0
           VHIO:
             production: 45
             adjusted: 45
+            pressure: 2
             irr: 0
           JHU: 
             production: 38
             adjusted: 38
+            pressure: 4
             irr: 0
           WAKE:
             production: 92
@@ -595,7 +602,8 @@ phase:
             irr: 0
         date: 
           seq_min: Apr-2012
-          seq_max: Feb-2023
+          seq_max: Oct-2022
+        age_max: 31025
         oncotree:
           root: EGC
           allowed_codes: 
