@@ -603,7 +603,7 @@ phase:
         date: 
           seq_min: Apr-2012
           seq_max: Oct-2022
-        age_max: 31025
+        age_max: 85
         oncotree:
           root: EGC
           allowed_codes: 
