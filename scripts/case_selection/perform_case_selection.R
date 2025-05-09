@@ -309,9 +309,8 @@ create_selection_matrix <- function(eligible_cohort, n_prod, n_pressure, n_sdv, 
   # randomly disperse additional SDV cases among non-pressure
   col_sdv <- rep("", n_eligible)
   set.seed(site_seed)
-  idx_sdv <- sample((n_pressure+1):n_prod, n_sdv)
   col_sdv[1:n_pressure] <- "sdv"
-  col_sdv[idx_sdv] <- "sdv"
+  col_sdv[(n_pressure+1):n_prod] <- ifelse(rbinom(n_prod-n_pressure, 1, 0.2) == 1, "sdv", "")
   
   # randomly disperse addition IRR cases among non-pressure and non-sdv
   col_irr <- rep("", n_eligible)
