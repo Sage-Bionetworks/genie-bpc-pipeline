@@ -306,15 +306,21 @@ create_selection_matrix <- function(eligible_cohort, n_prod, n_pressure, n_sdv, 
     stop(glue("not enough eligible patients for production target ({n_eligible} < {n_prod}) for phase {phase} {site} {cohort}.  Please revise eligibility criteria."))
   }
   
+  # For reproducibility
+  set.seed(site_seed)
+  
   # randomly disperse additional SDV cases among non-pressure
   col_sdv <- rep("", n_eligible)
-  set.seed(site_seed)
+  # all pressure cases are sdv cases
   col_sdv[1:n_pressure] <- "sdv"
+  # use binomial distribution to assign SDV flag (1 = selected, 0 = not) for non-pressure cases
   col_sdv[(n_pressure+1):n_prod] <- ifelse(rbinom(n_prod-n_pressure, 1, 0.2) == 1, "sdv", "")
+  
+  # get the index of sdv and non-pressure cases
+  idx_sdv <- which(col_sdv == "sdv" & seq_along(col_sdv) > n_pressure)
   
   # randomly disperse addition IRR cases among non-pressure and non-sdv
   col_irr <- rep("", n_eligible)
-  set.seed(site_seed)
   idx_irr <- sample(setdiff((n_pressure+1):n_prod, idx_sdv), n_irr)
   col_irr[idx_irr] <- "irr"
   
