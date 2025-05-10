@@ -227,10 +227,10 @@ create_eligibility_matrix <- function(data,
     # patient not explicitly excluded
     mutate(FLAG_NOT_EXCLUDED = !is.element(PATIENT_ID, exclude_patient_id) & !is.element(SAMPLE_ID, exclude_sample_id))
   
-  # <= age max at sequencing
+  # < age max at sequencing
   if (!is.infinite(age_max)) {
     mat <- mat %>%
-      mutate(FLAG_AGE_MAX = as.numeric(AGE_AT_SEQ_REPORT_DAYS) <= age_max)
+      mutate(FLAG_AGE_MAX = as.numeric(AGE_AT_SEQ_REPORT_DAYS) < age_max)
   }else{
     mat <- mat %>%
       mutate(FLAG_AGE_MAX = TRUE)
