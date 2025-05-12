@@ -23,6 +23,7 @@ option_list <- list(
               help="Main GENIE clinical file release version name, e.g. 17.2-consortium.",
               default = NULL)
 )
+
 # functions ----------------------------
 
 is_double_value <- function(x) {
