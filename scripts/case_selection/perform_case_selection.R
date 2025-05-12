@@ -11,12 +11,7 @@ library(yaml)
 library(glue)
 source("shared_fxns.R")
 
-# read in all global parameters
-waitifnot(cond = file.exists("config.yaml"), msg = glue("File 'config.yaml' does not exist.  Is '{getwd()}' the correct working directory?"))
-config <- read_yaml("config.yaml")
-
-# user input --------------------------
-
+# user input ----------------------------
 option_list <- list( 
   make_option(c("-p", "--phase"), type = "character",
               help="BPC phase"),
@@ -25,70 +20,9 @@ option_list <- list(
   make_option(c("-s", "--site"), type = "character",
               help="BPC site"),
   make_option(c("-r", "--release"), type = "character",
-              help="Main GENIE clinical file release version name, e.g. 17.2-consortium.")
+              help="Main GENIE clinical file release version name, e.g. 17.2-consortium.",
+              default = NULL)
 )
-opt <- parse_args(OptionParser(option_list=option_list))
-waitifnot(!is.null(opt$phase) && !is.null(opt$cohort) && !is.null(opt$site),
-          msg = "Usage: Rscript workflow_case_selection.R -h")
-
-phase <- opt$phase
-cohort <- opt$cohort
-site <- opt$site
-release <- opt$release
-
-# check user input -----------------
-
-phase_str <- paste0(names(config$phase), collapse = ", ")
-waitifnot(is.element(phase, names(config$phase)),
-          msg = c(glue("Error: phase {phase} is not valid.  Valid values: {phase_str}"),
-                  "Usage: Rscript perform_case_selection.R -h"))
-
-cohort_in_config <- names(config$phase[[phase]]$cohort)
-cohort_str <- paste0(cohort_in_config, collapse = ", ")
-waitifnot(is.element(cohort, cohort_in_config),
-          msg = c(glue("Error: cohort {cohort} is not valid for phase {phase}.  Valid values: {cohort_str}"),
-                  "Usage: Rscript perform_case_selection.R -h"))
-
-sites_in_config <- get_sites_in_config(config, phase, cohort)
-site_str <- paste0(sites_in_config, collapse = ", ")
-waitifnot(is.element(site, sites_in_config),
-          msg = c(glue("Error: site {site} is not valid for phase {phase} and cohort {cohort}.  Valid values: {site_str}"),
-                  "Usage: Rscript perform_case_selection.R -h"))
-
-# additional parameters
-flag_additional <- grepl(pattern = "addition", x = phase)
-
-if (!flag_additional){
-  if(get_production(config, phase, cohort, site) == 0) {
-    stop(glue("Production target is 0 for phase {phase} {site} {cohort}.  Please revise eligibility criteria."))
-  }
-}  
-
-# setup ----------------------------
-
-tic = as.double(Sys.time())
-
-library(RCurl)
-library(jsonlite)
-library(dplyr)
-library(lubridate)
-library(synapser)
-synLogin()
-
-# set random seed
-default_site_seed <- config$default$site[[site]]$seed
-cohort_site_seed <- config$phase[[phase]]$cohort[[cohort]]$site[[site]]$seed
-site_seed <- if (!is.null(cohort_site_seed)) cohort_site_seed else default_site_seed
-set.seed(site_seed)
-
-# output files
-file_matrix <- tolower(glue("{cohort}_{site}_phase{phase}_eligibility_matrix.csv"))
-file_selection <- tolower(glue("{cohort}_{site}_phase{phase}_case_selection.csv"))
-file_add <- tolower(glue("{cohort}_{site}_phase{phase}_samples.csv"))
-
-# misc parameters
-debug <- config$misc$debug
-
 # functions ----------------------------
 
 is_double_value <- function(x) {
@@ -334,161 +268,232 @@ create_selection_matrix <- function(eligible_cohort, n_prod, n_pressure, n_sdv, 
 }
 
 # main ----------------------------
+main <- function() {
+  # read in all global parameters
+  waitifnot(cond = file.exists("config.yaml"), msg = glue("File 'config.yaml' does not exist.  Is '{getwd()}' the correct working directory?"))
+  config <- read_yaml("config.yaml")
 
-if (debug) {
-  print(glue("{now(timeOnly = T)}: querying data to determine eligibility..."))
-}
+  opt <- parse_args(OptionParser(option_list=option_list))
+  waitifnot(!is.null(opt$phase) && !is.null(opt$cohort) && !is.null(opt$site),
+            msg = "Usage: Rscript workflow_case_selection.R -h")
 
-# get main genie clinical file synapse id
-main_clinical <- get_main_genie_clinical_id(release = release)
-  
-eligibility_data <- get_eligibility_data(synid_clinical =main_clinical, 
-                                         site = site)
+  phase <- opt$phase
+  cohort <- opt$cohort
+  site <- opt$site
+  release <- opt$release
 
-if (debug) {
-  print(glue("{now(timeOnly = T)}: calculating eligibility criteria..."))
-}
+  # set random seed
+  default_site_seed <- config$default$site[[site]]$seed
+  cohort_site_seed <- config$phase[[phase]]$cohort[[cohort]]$site[[site]]$seed
+  # set random seed as a global variable
+  site_seed <<- if (!is.null(cohort_site_seed)) cohort_site_seed else default_site_seed
+  set.seed(site_seed)
 
-exclude_patient_id <- c()
-exclude_sample_id <- c()
-seq_dates <- get_seq_dates(config, phase, cohort, site)
-age_max_days <- get_age_max_days(config, phase, cohort)
+  # check user input -----------------
 
-flag_prev_release <- (config$release$cohort[[cohort]]$patient_level_dataset != "NA")
-if (phase == 2 && flag_prev_release) {
-  exclude_patient_id <- get_patient_ids_in_release(synid_file_release = config$release$cohort[[cohort]]$patient_level_dataset)
-  exclude_patient_id <- append(exclude_patient_id, 
-                               get_patient_ids_bpc_removed(synid_table_patient_removal = config$synapse$bpc_removal_patient$id, 
-                                                           cohort = cohort))
-  exclude_sample_id <- get_sample_ids_bpc_removed(synid_table_sample_removal = config$synapse$bpc_removal_sample$id, 
-                                                  cohort = cohort)
-}
+  phase_str <- paste0(names(config$phase), collapse = ", ")
+  waitifnot(is.element(phase, names(config$phase)),
+            msg = c(glue("Error: phase {phase} is not valid.  Valid values: {phase_str}"),
+                    "Usage: Rscript perform_case_selection.R -h"))
 
-eligibility_matrix <- create_eligibility_matrix(data = eligibility_data, 
-                                                allowed_codes = config$phase[[phase]]$cohort[[cohort]]$oncotree$allowed_codes, 
-                                                seq_min = seq_dates$seq_min, 
-                                                seq_max = seq_dates$seq_max,
-                                                age_max = age_max_days,
-                                                exclude_patient_id = exclude_patient_id,
-                                                exclude_sample_id = exclude_sample_id)
+  cohort_in_config <- names(config$phase[[phase]]$cohort)
+  cohort_str <- paste0(cohort_in_config, collapse = ", ")
+  waitifnot(is.element(cohort, cohort_in_config),
+            msg = c(glue("Error: cohort {cohort} is not valid for phase {phase}.  Valid values: {cohort_str}"),
+                    "Usage: Rscript perform_case_selection.R -h"))
 
-if (debug) {
-  print(glue("{now(timeOnly = T)}: extracting eligible patient IDs..."))
-}
+  sites_in_config <- get_sites_in_config(config, phase, cohort)
+  site_str <- paste0(sites_in_config, collapse = ", ")
+  waitifnot(is.element(site, sites_in_config),
+            msg = c(glue("Error: site {site} is not valid for phase {phase} and cohort {cohort}.  Valid values: {site_str}"),
+                    "Usage: Rscript perform_case_selection.R -h"))
 
-eligible_cohort <- get_eligible_cohort(x = eligibility_matrix, randomize = T) 
+  # additional parameters
+  flag_additional <- grepl(pattern = "addition", x = phase)
 
-if (debug) {
-  print(glue("{now(timeOnly = T)}: conducting case selection..."))
-}
-
-# assign case selection categories
-if (flag_additional) {
-  
-  query <- glue("SELECT record_id AS PATIENT_ID FROM {config$synapse$bpc_patient$id} WHERE cohort = '{cohort}' AND redcap_data_access_group = '{site}'")
-  bpc_pat_ids <- as.data.frame(synTableQuery(query, includeRowIdAndRowVersion = F))
-  
-  added_sam <- eligible_cohort %>% 
-    filter(is.element(PATIENT_ID, unlist(bpc_pat_ids))) %>%
-    select(PATIENT_ID, SAMPLE_IDS)
-  
-  added_sam$ALREADY_IN_BPC <- rep(F, nrow(added_sam))
-  if (nrow(added_sam)) {
-    for (i in 1:nrow(added_sam)) {
-      ids_sam <- added_sam[i, "SAMPLE_IDS"]
-      str_ids_sam <- paste0("'", paste0(unlist(strsplit(ids_sam, split = ";")), collapse = "','"), "'")
-      query <- glue("SELECT cpt_genie_sample_id FROM {config$synapse$bpc_sample$id} WHERE cpt_genie_sample_id IN ({str_ids_sam})")
-      res <- as.data.frame(synTableQuery(query, includeRowIdAndRowVersion = F))
-      if (nrow(res)) {
-        added_sam$ALREADY_IN_BPC[i] <- T
-      }
+  if (!flag_additional){
+    if(get_production(config, phase, cohort, site) == 0) {
+      stop(glue("Production target is 0 for phase {phase} {site} {cohort}.  Please revise eligibility criteria."))
     }
-  } 
-} else {
-  case_selection <- create_selection_matrix(eligible_cohort = eligible_cohort,
-                                            n_prod = get_production(config, phase, cohort, site), 
-                                            n_pressure = get_pressure(config, phase, cohort, site), 
-                                            n_sdv = get_sdv(config, phase, cohort, site), 
-                                            n_irr = get_irr(config, phase, cohort, site))
+  }  
+  # setup ----------------------------
+
+  tic = as.double(Sys.time())
+
+  library(RCurl)
+  library(jsonlite)
+  library(dplyr)
+  library(lubridate)
+  library(synapser)
+  synLogin()
+
+  # output files
+  file_matrix <- tolower(glue("{cohort}_{site}_phase{phase}_eligibility_matrix.csv"))
+  file_selection <- tolower(glue("{cohort}_{site}_phase{phase}_case_selection.csv"))
+  file_add <- tolower(glue("{cohort}_{site}_phase{phase}_samples.csv"))
+
+  # misc parameters
+  debug <- config$misc$debug
+
+  if (debug) {
+    print(glue("{now(timeOnly = T)}: querying data to determine eligibility..."))
+  }
+
+  # get main genie clinical file synapse id
+  main_clinical <- get_main_genie_clinical_id(release = release)
+    
+  eligibility_data <- get_eligibility_data(synid_clinical =main_clinical, 
+                                          site = site)
+
+  if (debug) {
+    print(glue("{now(timeOnly = T)}: calculating eligibility criteria..."))
+  }
+
+  exclude_patient_id <- c()
+  exclude_sample_id <- c()
+  seq_dates <- get_seq_dates(config, phase, cohort, site)
+  age_max_days <- get_age_max_days(config, phase, cohort)
+
+  flag_prev_release <- (config$release$cohort[[cohort]]$patient_level_dataset != "NA")
+  if (phase == 2 && flag_prev_release) {
+    exclude_patient_id <- get_patient_ids_in_release(synid_file_release = config$release$cohort[[cohort]]$patient_level_dataset)
+    exclude_patient_id <- append(exclude_patient_id, 
+                                get_patient_ids_bpc_removed(synid_table_patient_removal = config$synapse$bpc_removal_patient$id, 
+                                                            cohort = cohort))
+    exclude_sample_id <- get_sample_ids_bpc_removed(synid_table_sample_removal = config$synapse$bpc_removal_sample$id, 
+                                                    cohort = cohort)
+  }
+
+  eligibility_matrix <- create_eligibility_matrix(data = eligibility_data, 
+                                                  allowed_codes = config$phase[[phase]]$cohort[[cohort]]$oncotree$allowed_codes, 
+                                                  seq_min = seq_dates$seq_min, 
+                                                  seq_max = seq_dates$seq_max,
+                                                  age_max = age_max_days,
+                                                  exclude_patient_id = exclude_patient_id,
+                                                  exclude_sample_id = exclude_sample_id)
+
+  if (debug) {
+    print(glue("{now(timeOnly = T)}: extracting eligible patient IDs..."))
+  }
+
+  eligible_cohort <- get_eligible_cohort(x = eligibility_matrix, randomize = T) 
+
+  if (debug) {
+    print(glue("{now(timeOnly = T)}: conducting case selection..."))
+  }
+
+  # assign case selection categories
+  if (flag_additional) {
+    
+    query <- glue("SELECT record_id AS PATIENT_ID FROM {config$synapse$bpc_patient$id} WHERE cohort = '{cohort}' AND redcap_data_access_group = '{site}'")
+    bpc_pat_ids <- as.data.frame(synTableQuery(query, includeRowIdAndRowVersion = F))
+    
+    added_sam <- eligible_cohort %>% 
+      filter(is.element(PATIENT_ID, unlist(bpc_pat_ids))) %>%
+      select(PATIENT_ID, SAMPLE_IDS)
+    
+    added_sam$ALREADY_IN_BPC <- rep(F, nrow(added_sam))
+    if (nrow(added_sam)) {
+      for (i in 1:nrow(added_sam)) {
+        ids_sam <- added_sam[i, "SAMPLE_IDS"]
+        str_ids_sam <- paste0("'", paste0(unlist(strsplit(ids_sam, split = ";")), collapse = "','"), "'")
+        query <- glue("SELECT cpt_genie_sample_id FROM {config$synapse$bpc_sample$id} WHERE cpt_genie_sample_id IN ({str_ids_sam})")
+        res <- as.data.frame(synTableQuery(query, includeRowIdAndRowVersion = F))
+        if (nrow(res)) {
+          added_sam$ALREADY_IN_BPC[i] <- T
+        }
+      }
+    } 
+  } else {
+    case_selection <- create_selection_matrix(eligible_cohort = eligible_cohort,
+                                              n_prod = get_production(config, phase, cohort, site), 
+                                              n_pressure = get_pressure(config, phase, cohort, site), 
+                                              n_sdv = get_sdv(config, phase, cohort, site), 
+                                              n_irr = get_irr(config, phase, cohort, site))
+  }
+
+  # write locally -----------------------
+
+  if (debug) {
+    print(glue("{now(timeOnly = T)}: writing eligibility matrix and case selection to file..."))
+  }
+
+  case_selection_samples <- extract_sample_ids(case_selection$SAMPLE_IDS)
+  selected_samples <- extract_sample_ids(eligible_cohort$SAMPLE_ID)
+
+  n_unique_patients_eligible_matrix = length(unique(eligibility_matrix$PATIENT_ID))
+  n_unique_samples_eligible_matrix = length(unique(eligibility_matrix$SAMPLE_ID))
+  n_unique_patients_case_selection = length(unique(case_selection$PATIENT_ID))
+  n_unique_samples_case_selection = length(unique(case_selection_samples))
+  n_unique_selected_patients = length(unique(eligible_cohort$PATIENT_ID))
+  n_unique_selected_samples = length(unique(selected_samples))
+
+  if (debug) {
+    print("validation")
+    print(paste("eligibility matrix file N unique patients", n_unique_patients_eligible_matrix))
+    print(paste("eligibility matrix file N unique samples", n_unique_samples_eligible_matrix))
+    print(paste("case selection file N unique patients", n_unique_patients_case_selection))
+    print(paste("case selection file N unique samples", n_unique_samples_case_selection))
+    print(paste("N Unique selected patients", n_unique_selected_patients))
+    print(paste("N Unique selected samples", n_unique_selected_samples))
+  }
+  if (n_unique_samples_case_selection != n_unique_selected_samples){
+    stop("Number of unique samples in case selection file does not match number of selected samples")
+  }
+  if (n_unique_patients_case_selection != n_unique_selected_patients){
+    stop("Number of unique patients in case selection file does not match number of selected patients")
+  }
+
+  if (!all(case_selection$PATIENT_ID %in% eligible_cohort$PATIENT_ID)){
+    stop("Some patients in eligibility matrix file are not in elgibile cohort")
+  }
+  if (!all(case_selection$SAMPLE_IDS %in% eligible_cohort$SAMPLE_ID)){
+    stop("Some samples in eligibility matrix file are not in elgibile cohort")
+  }
+
+  if (!all(case_selection$PATIENT_ID %in% eligibility_matrix$PATIENT_ID)){
+    stop("Some patients in case selection file are not in eligibility matrix")
+  }
+  if (!all(case_selection_samples %in% eligibility_matrix$SAMPLE_ID)){
+    stop("Some samples in case selection file are not in eligibility matrix")
+  }
+
+
+  if (flag_additional) {
+    write.csv(added_sam, file = file_add, row.names = F)
+  } else {
+    write.csv(eligibility_matrix, file = file_matrix, row.names = F)
+    write.csv(case_selection, file = file_selection, row.names = F)
+  }
+
+  # close out ----------------------------
+
+  if (debug && flag_additional) {
+    print(glue("Summary:"))
+    print(glue("  Phase: {phase}"))
+    print(glue("  Cohort: {cohort}"))
+    print(glue("  Site: {site}"))
+    print(glue("  Total number of additional samples: {nrow(added_sam)}"))
+    print(glue("Outfile: {file_add}"))
+  } else {
+    print(glue("Summary:"))
+    print(glue("  Phase: {phase}"))
+    print(glue("  Cohort: {cohort}"))
+    print(glue("  Site: {site}"))
+    print(glue("  Total number of samples: {nrow(eligibility_data)}"))
+    print(glue("  Number of eligible patients: {nrow(eligible_cohort)}"))
+    print(glue("  Number of target cases: {get_production(config, phase, cohort, site)}"))
+    print(glue("  Number of pressure cases: {get_pressure(config, phase, cohort, site)}"))
+    print(glue("  Number of SDV cases (excluding pressure): {get_sdv(config, phase, cohort, site)}"))
+    print(glue("  Number of IRR cases: {get_irr(config, phase, cohort, site)}"))
+    print(glue("Outfiles: {file_matrix}, {file_selection}"))
+  }
+
+  toc = as.double(Sys.time())
+
+  print(glue("Runtime: {round(toc - tic)} s"))
 }
 
-# write locally -----------------------
-
-if (debug) {
-  print(glue("{now(timeOnly = T)}: writing eligibility matrix and case selection to file..."))
+if(sys.nframe() == 0) {
+  main()
 }
-
-case_selection_samples <- extract_sample_ids(case_selection$SAMPLE_IDS)
-selected_samples <- extract_sample_ids(eligible_cohort$SAMPLE_ID)
-
-n_unique_patients_eligible_matrix = length(unique(eligibility_matrix$PATIENT_ID))
-n_unique_samples_eligible_matrix = length(unique(eligibility_matrix$SAMPLE_ID))
-n_unique_patients_case_selection = length(unique(case_selection$PATIENT_ID))
-n_unique_samples_case_selection = length(unique(case_selection_samples))
-n_unique_selected_patients = length(unique(eligible_cohort$PATIENT_ID))
-n_unique_selected_samples = length(unique(selected_samples))
-
-if (debug) {
-  print("validation")
-  print(paste("eligibility matrix file N unique patients", n_unique_patients_eligible_matrix))
-  print(paste("eligibility matrix file N unique samples", n_unique_samples_eligible_matrix))
-  print(paste("case selection file N unique patients", n_unique_patients_case_selection))
-  print(paste("case selection file N unique samples", n_unique_samples_case_selection))
-  print(paste("N Unique selected patients", n_unique_selected_patients))
-  print(paste("N Unique selected samples", n_unique_selected_samples))
-}
-if (n_unique_samples_case_selection != n_unique_selected_samples){
-  stop("Number of unique samples in case selection file does not match number of selected samples")
-}
-if (n_unique_patients_case_selection != n_unique_selected_patients){
-  stop("Number of unique patients in case selection file does not match number of selected patients")
-}
-
-if (!all(case_selection$PATIENT_ID %in% eligible_cohort$PATIENT_ID)){
-  stop("Some patients in eligibility matrix file are not in elgibile cohort")
-}
-if (!all(case_selection$SAMPLE_IDS %in% eligible_cohort$SAMPLE_ID)){
-  stop("Some samples in eligibility matrix file are not in elgibile cohort")
-}
-
-if (!all(case_selection$PATIENT_ID %in% eligibility_matrix$PATIENT_ID)){
-  stop("Some patients in case selection file are not in eligibility matrix")
-}
-if (!all(case_selection_samples %in% eligibility_matrix$SAMPLE_ID)){
-  stop("Some samples in case selection file are not in eligibility matrix")
-}
-
-
-if (flag_additional) {
-  write.csv(added_sam, file = file_add, row.names = F)
-} else {
-  write.csv(eligibility_matrix, file = file_matrix, row.names = F)
-  write.csv(case_selection, file = file_selection, row.names = F)
-}
-
-# close out ----------------------------
-
-if (debug && flag_additional) {
-  print(glue("Summary:"))
-  print(glue("  Phase: {phase}"))
-  print(glue("  Cohort: {cohort}"))
-  print(glue("  Site: {site}"))
-  print(glue("  Total number of additional samples: {nrow(added_sam)}"))
-  print(glue("Outfile: {file_add}"))
-} else {
-  print(glue("Summary:"))
-  print(glue("  Phase: {phase}"))
-  print(glue("  Cohort: {cohort}"))
-  print(glue("  Site: {site}"))
-  print(glue("  Total number of samples: {nrow(eligibility_data)}"))
-  print(glue("  Number of eligible patients: {nrow(eligible_cohort)}"))
-  print(glue("  Number of target cases: {get_production(config, phase, cohort, site)}"))
-  print(glue("  Number of pressure cases: {get_pressure(config, phase, cohort, site)}"))
-  print(glue("  Number of SDV cases (excluding pressure): {get_sdv(config, phase, cohort, site)}"))
-  print(glue("  Number of IRR cases: {get_irr(config, phase, cohort, site)}"))
-  print(glue("Outfiles: {file_matrix}, {file_selection}"))
-}
-
-toc = as.double(Sys.time())
-
-print(glue("Runtime: {round(toc - tic)} s"))
