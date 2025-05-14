@@ -233,7 +233,18 @@ get_eligible_cohort <- function(x, randomize = T) {
   return(final)
 }
 
-create_selection_matrix <- function(eligible_cohort, n_prod, n_pressure, n_sdv, n_irr) {
+
+#' Create a matrix for categorized cohort
+#' 
+#' @param eligible_cohort Matrix of patient and sample ID pairs.  
+#' @param n_prod Production case number
+#' @param n_pressure Pressure case number
+#' @param n_irr IRR case number
+#' 
+#' @return Matrix of categorized cohort
+#' @example
+#'  create_selection_matrix(eligible_cohort, n_prod, n_pressure, n_irr)
+create_selection_matrix <- function(eligible_cohort, n_prod, n_pressure, n_irr) {
   
   n_eligible <- nrow(eligible_cohort)
   
@@ -248,7 +259,7 @@ create_selection_matrix <- function(eligible_cohort, n_prod, n_pressure, n_sdv, 
   col_sdv <- rep("", n_eligible)
   # all pressure cases are sdv cases
   col_sdv[1:n_pressure] <- "sdv"
-  # use binomial distribution to assign SDV flag (1 = selected, 0 = not) for non-pressure cases
+  # use binomial distribution to assign SDV flag (1 = selected, 0 = not) to non-pressure cases
   col_sdv[(n_pressure+1):n_prod] <- ifelse(rbinom(n_prod-n_pressure, 1, 0.2) == 1, "sdv", "")
   
   # get the index of sdv and non-pressure cases
@@ -259,11 +270,18 @@ create_selection_matrix <- function(eligible_cohort, n_prod, n_pressure, n_sdv, 
   idx_irr <- sample(setdiff((n_pressure+1):n_prod, idx_sdv), n_irr)
   col_irr[idx_irr] <- "irr"
   
+  # generate the category column
+  cor_category <- rep("", n_eligible)
+  # label production cases
+  cor_category[1:n_prod] <- "production"
+  # use binomial distribution to assign SDV flag (1 = selected, 0 = not) to extra cases
+  cor_category[(n_prod+1):n_eligible] <- ifelse(rbinom(n_eligible-n_prod, 1, 0.2) == 1, "sdv", "extra")
+
   categorized_cohort <- eligible_cohort %>%
     mutate(pressure = c(rep("pressure", n_pressure), rep("", n_eligible - n_pressure))) %>%
     mutate(sdv = col_sdv) %>%
     mutate(irr = col_irr) %>%
-    mutate(category = c(rep("production", n_prod), rep("extra", n_eligible - n_prod))) %>%
+    mutate(category = cor_category) %>%
     select(order, PATIENT_ID, SAMPLE_IDS, pressure, sdv, irr, category)
   return(categorized_cohort)
 }
@@ -409,7 +427,6 @@ main <- function() {
     case_selection <- create_selection_matrix(eligible_cohort = eligible_cohort,
                                               n_prod = get_production(config, phase, cohort, site), 
                                               n_pressure = get_pressure(config, phase, cohort, site), 
-                                              n_sdv = get_sdv(config, phase, cohort, site), 
                                               n_irr = get_irr(config, phase, cohort, site))
   }
 
@@ -485,7 +502,7 @@ main <- function() {
     print(glue("  Number of eligible patients: {nrow(eligible_cohort)}"))
     print(glue("  Number of target cases: {get_production(config, phase, cohort, site)}"))
     print(glue("  Number of pressure cases: {get_pressure(config, phase, cohort, site)}"))
-    print(glue("  Number of SDV cases (excluding pressure): {get_sdv(config, phase, cohort, site)}"))
+    print(glue("  Number of SDV cases (excluding pressure): {sum(case_selection$sdv == 'sdv') - get_pressure(config, phase, cohort, site)}"))
     print(glue("  Number of IRR cases: {get_irr(config, phase, cohort, site)}"))
     print(glue("Outfiles: {file_matrix}, {file_selection}"))
   }
