@@ -114,11 +114,12 @@ def _update_by_data_dictionary(data_dictionary, data_element_catalog, logger):
     vars_with_choices[['choices_num','max_len','choices_key']] = vars_with_choices['choices'].apply(_get_choices_info)
     # check for variables with choices that the max_len(choices) > synColSize
     # TODO: yesno can be changed to choices 
-    vars_to_update = vars_with_choices.query('max_len > synColSize')
+    vars_to_update = vars_with_choices.query('(max_len > synColSize) or synColSize.isna()')
     vars_to_update['synColSize'] = vars_to_update['max_len']
     # check for number of checkbox variables > numCols
+    # check for null values
     vars_checkbox = vars_with_choices[vars_with_choices['type']=='checkbox']
-    vars_checkbox_update = vars_checkbox.query('choices_num > numCols')
+    vars_checkbox_update = vars_checkbox.query('(choices_num > numCols) or numCols.isna()')
     vars_checkbox_update['numCols'] = vars_checkbox_update['choices_num']
     vars_checkbox_update['colLabels'] = vars_checkbox_update['choices_key']
     # combined variables for update
