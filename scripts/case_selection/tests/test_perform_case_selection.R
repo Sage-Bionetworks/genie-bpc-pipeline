@@ -44,4 +44,5 @@ test_that("create_selection_matrix correctly categorizes cases", {
   expect_equal(sum(categorized_cohort$pressure == "pressure"), n_pressure)
   expect_equal(sum(categorized_cohort$irr == "irr"), n_irr)
   expect_equal(sum(categorized_cohort$category == "production"), n_prod)
+  expect_equal(sum(categorized_cohort$category == "extra"), 50)
 })

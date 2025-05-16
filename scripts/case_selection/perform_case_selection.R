@@ -260,7 +260,9 @@ create_selection_matrix <- function(eligible_cohort, n_prod, n_pressure, n_irr) 
   # all pressure cases are sdv cases
   col_sdv[1:n_pressure] <- "sdv"
   # use binomial distribution to assign SDV flag (1 = selected, 0 = not) to non-pressure cases
-  col_sdv[(n_pressure+1):n_prod] <- ifelse(rbinom(n_prod-n_pressure, 1, 0.2) == 1, "sdv", "")
+  col_sdv[(n_pressure+1): n_prod] <- ifelse(rbinom(n_prod-n_pressure, 1, 0.2) == 1, "sdv", "")
+    # use binomial distribution to assign SDV flag (1 = selected, 0 = not) to extra cases
+  col_sdv[(n_prod+1): n_eligible] <- ifelse(rbinom(n_eligible-n_prod, 1, 0.2) == 1, "sdv", "")
   
   # get the index of sdv and non-pressure cases
   idx_sdv <- which(col_sdv == "sdv" & seq_along(col_sdv) > n_pressure)
@@ -274,8 +276,8 @@ create_selection_matrix <- function(eligible_cohort, n_prod, n_pressure, n_irr) 
   cor_category <- rep("", n_eligible)
   # label production cases
   cor_category[1:n_prod] <- "production"
-  # use binomial distribution to assign SDV flag (1 = selected, 0 = not) to extra cases
-  cor_category[(n_prod+1):n_eligible] <- ifelse(rbinom(n_eligible-n_prod, 1, 0.2) == 1, "sdv", "extra")
+  # label extra cases
+  cor_category[(n_prod+1):n_eligible] <- "extra"
 
   categorized_cohort <- eligible_cohort %>%
     mutate(pressure = c(rep("pressure", n_pressure), rep("", n_eligible - n_pressure))) %>%
