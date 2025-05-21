@@ -27,7 +27,7 @@ def create_synapse_column(name, col_type, max_size):
         new_column = Column(name=name,
                             columnType=col_type)
     else:
-        max_size = 100 if pandas.isna(max_size) else int(max_size)
+        max_size = 500 if pandas.isna(max_size) else int(max_size)
         new_column = Column(name=name,
                             columnType=col_type, 
                             maximumSize=max_size)
