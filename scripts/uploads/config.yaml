@@ -125,20 +125,20 @@ upload:
       data1: syn29418138
     MSK:
       data1: syn29418140
-    PROV:
-      data1: syn30821491
+    #PROV:
+    #  data1: syn30821491
     UCSF:
       data1: syn30821493
     UHN:
       data1: syn29418143
     JHU:
       data1: syn62015775
-    VHIO:
-      data1: syn62015776
-    WAKE:
-      data1: syn62015777
-    #VICC:
-    #  data1: syn29418146
+    #VHIO:
+    #  data1: syn62015776
+    #WAKE:
+    #  data1: syn62015777
+    VICC:
+      data1: syn29418146
   OVARIAN:
     DFCI:
       data1: syn29418091
