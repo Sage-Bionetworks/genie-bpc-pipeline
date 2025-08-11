@@ -512,12 +512,12 @@ phase:
         name: MELANOMA
         site: 
           DFCI:
-            production: 386
-            adjusted: 386
+            production: 391
+            adjusted: 391
             irr: 0
           MSK:
-            production: 584
-            adjusted: 584
+            production: 595
+            adjusted: 595
             irr: 0
           #PROV:
           #  production: 103
@@ -536,8 +536,8 @@ phase:
             adjusted: 75
             irr: 0
           JHU:
-            production: 177
-            adjusted: 177
+            production: 161
+            adjusted: 161
             irr: 0
           #VHIO:
           #  production: 0
