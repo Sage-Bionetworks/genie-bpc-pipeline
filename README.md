@@ -217,11 +217,21 @@ This workflow takes care of transferring files to and from Synapse. Hence, it re
 1. Generate a personal access token (PAT) on Synapse using [this dashboard](https://www.synapse.org/#!PersonalAccessTokens:). Make sure to enable the `view`, `download`, and `modify` scopes since this workflow both downloads and uploads to Synapse.
 2. Create a secret called `SYNAPSE_AUTH_TOKEN` containing a Synapse personal access token using the [Nextflow CLI](https://nextflow.io/docs/latest/secrets.html)
 
-### Commands
+### Running the pipeline
 
 You can visit [parameters](https://github.com/Sage-Bionetworks/genie-bpc-pipeline/blob/develop/main.nf#L2-L11) to see the list of currently available parameters/flags and their default values if you don't specify any.
 
-### Running nextflow using an EC2
+#### Running with docker locally
+
+Add `-with-docker <docker_image_name>` to every nextflow command to invoke docker in general to be used. See [docker-containers](https://www.nextflow.io/docs/latest/docker.html#docker-containers) for more details.
+
+Note that all the docker parameters have set default docker containers based on the **profile** you select. If you want to use a different default from what is available in the profiles, you must:
+
+1. Docker pull the container(s) you want to use in your local / ec2 instance
+2. Specify the parameter(s) in your command call below to be the container(s) you pulled
+
+
+#### Running nextflow locally or using an EC2
 
 1. For an ec2 instance with Linux and docker, see here for installing Java 11: [How do I install a software package from the Extras Library on an EC2 instance running Amazon Linux 2?](https://aws.amazon.com/premiumsupport/knowledge-center/ec2-install-extras-library-software/)
 
@@ -233,11 +243,14 @@ You can visit [parameters](https://github.com/Sage-Bionetworks/genie-bpc-pipelin
 nextflow secrets set SYNAPSE_AUTH_TOKEN “INSERT YOUR SYNAPSE TOKEN HERE”
 ```
 
-4. Run the pipeline with the default parameter settings
+#### *NEW* parameter `entry`
+Starting in `0.0.5`, we need to use a new parameter `entry` to specify what workflow we will be running via `--entry <entry_workflow_name>`.
 
-```bash
-nextflow main.nf
-```
+This is also available via the `profile` base nextflow parameter by using `-profile <profile_name>`. See available ones in `nextflow.config`. The profiles are mainly for Seqera platform for ease of just selecting the profile without having to type out the entry workflow name.
+
+#### Commands
+
+**BPC Pipeline**
 
 If you want to pass values to the parameter settings, you can use the help flag to see what parameters you can set:
 
@@ -245,16 +258,64 @@ If you want to pass values to the parameter settings, you can use the help flag 
 nextflow main.nf --help
 ```
 
-If you want to run the pipeline in production mode with the default parameter settings:
+Run the bpc processing pipeline with the default parameter settings
 
 ```bash
-nextflow main.nf --production
+nextflow main.nf \
+	--profile bpc_pipeline \
+	-with-docker sagebionetworks/genie-bpc-pipeline-table-updates:latest \
+	--references_docker sagebionetworks/genie-bpc-pipeline-references \
+	--uploads_docker sagebionetworks/genie-bpc-pipeline-uploads \
+	--table_updates_docker sagebionetworks/genie-bpc-pipeline-table-updates
+```
+
+Run the bpc processing pipeline for a specific pipeline step: table updates by specifying the `--step` flag like:
+
+```bash
+nextflow main.nf \
+	--step update_data_table \
+	--table_updates_docker sagebionetworks/genie-bpc-pipeline-table-updates \
+	--entry bpc_pipeline \
+	-with-docker sagebionetworks/genie-bpc-pipeline-table-updates:latest \
+	--table_updates_docker sagebionetworks/genie-bpc-pipeline-table-updates
+```
+
+If you want to run the pipeline in production mode with the default parameter settings, add a production flag:
+
+```bash
+nextflow main.nf <rest_of_command> --production
+```
+
+**Case Selection Workflow**
+
+If you want to pass values to the parameter settings, you can use the help flag to see what parameters you can set:
+
+```bash
+nextflow subworkflows/case_selection_workflow.nf  --help
+```
+
+To run case selection for CRC cohort:
+
+```bash
+nextflow run subworkflows/case_selection_workflow.nf 
+  --cohort CRC 
+  --entry case_selection
+  -with-docker sagebionetworks/genie-bpc-pipeline-case-selection:latest
+```
+
+To run export BPC cases:
+
+```bash
+nextflow run subworkflows/case_selection_workflow.nf 
+  --cohort CRC 
+  --entry export_bpc_cases
+  -with-docker sagebionetworks/genie-bpc-pipeline-case-selection:latest
 ```
 
 Note: you can also chose what version of nextflow to run with using:
 
 ```bash
-NXF_VER=<nextflow_version> nextflow main.nf
+NXF_VER=<nextflow_version> nextflow main.nf <rest_of_command>
 ```
 
 ## Citations
