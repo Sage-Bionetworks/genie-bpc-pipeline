@@ -44,6 +44,15 @@ if (params.help){
 // Validate input parameters
 NfcoreSchema.validateParameters(workflow, params, log)
 
+// entry validation
+valid_entry_points = ['bpc_pipeline', 'clinical_release']
+if (!params.entry) {
+    error "Entry point must be specified using --entry. Select one of: ${valid_entry_points.join(', ')}"
+}
+if (!valid_entry_points.contains(params.entry)) {
+    error "Invalid entry point: '${params.entry}'. Valid options are: ${valid_entry_points.join(', ')}"
+}
+
 // Check mandatory parameters
 if (params.cohort == null) { exit 1, 'cohort parameter not specified!' }
 if (params.comment == null) { exit 1, 'comment parameter not specified!' }
@@ -92,94 +101,100 @@ include { run_clinical_release } from './modules/run_clinical_release'
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-workflow BPC_PIPELINE {
-   ch_cohort = Channel.value(params.cohort)
-   ch_comment = Channel.value(params.comment)
+workflow {
+    if (params.entry == "bpc_pipeline"){
+        ch_cohort = Channel.value(params.cohort)
+        ch_comment = Channel.value(params.comment)
    
-   if (params.step == "update_potential_phi_fields_table") {
-    update_potential_phi_fields_table(ch_comment, params.production)
-    // validate_data.out.view()
-   } else if (params.step == "merge_and_uncode_rca_uploads"){
-    merge_and_uncode_rca_uploads(
-        "default", 
-        ch_cohort, 
-        ch_comment, 
-        params.production, 
-        params.use_grs
-    )
-   } else if (params.step == "update_data_table") {
-    update_data_table(
-        "default", 
-        ch_cohort, 
-        ch_comment, 
-        params.production,
-        params.replace_patient_tier1a,
-        params.replace_sample_tier1a
-    )
-   } else if (params.step == "genie_bpc_pipeline"){
-    update_potential_phi_fields_table(ch_comment, params.production)
+        if (params.step == "update_potential_phi_fields_table") {
+            update_potential_phi_fields_table(ch_comment, params.production)
+            // validate_data.out.view()
+        } else if (params.step == "merge_and_uncode_rca_uploads"){
+            merge_and_uncode_rca_uploads(
+                "default", 
+                ch_cohort, 
+                ch_comment, 
+                params.production, 
+                params.use_grs
+            )
+        } else if (params.step == "update_data_table") {
+            update_data_table(
+                "default", 
+                ch_cohort, 
+                ch_comment, 
+                params.production,
+                params.replace_patient_tier1a,
+                params.replace_sample_tier1a
+            )
+        } else if (params.step == "genie_bpc_pipeline"){
+            update_potential_phi_fields_table(ch_comment, params.production)
 
-    run_quac_upload_report_error(
-        update_potential_phi_fields_table.out, 
-        ch_cohort
-    )
+            run_quac_upload_report_error(
+                update_potential_phi_fields_table.out, 
+                ch_cohort
+            )
 
-    run_quac_upload_report_warning(
-        run_quac_upload_report_error.out, 
-        ch_cohort, 
-        params.production
-    )
+            run_quac_upload_report_warning(
+                run_quac_upload_report_error.out, 
+                ch_cohort, 
+                params.production
+            )
 
-    merge_and_uncode_rca_uploads(
-        run_quac_upload_report_warning.out, 
-        ch_cohort,
-        ch_comment, 
-        params.production, 
-        params.use_grs
-    )
-    // remove_patients_from_merged(merge_and_uncode_rca_uploads.out, ch_cohort, params.production)
-    update_data_table(
-        merge_and_uncode_rca_uploads.out, 
-        ch_cohort, 
-        ch_comment, 
-        params.production,
-        params.replace_patient_tier1a,
-        params.replace_sample_tier1a
-    )
+            merge_and_uncode_rca_uploads(
+                run_quac_upload_report_warning.out, 
+                ch_cohort,
+                ch_comment, 
+                params.production, 
+                params.use_grs
+            )
+            // remove_patients_from_merged(merge_and_uncode_rca_uploads.out, ch_cohort, params.production)
+            update_data_table(
+                merge_and_uncode_rca_uploads.out, 
+                ch_cohort, 
+                ch_comment, 
+                params.production,
+                params.replace_patient_tier1a,
+                params.replace_sample_tier1a
+            )
 
-    update_date_tracking_table(
-        update_data_table.out, 
-        ch_cohort, 
-        ch_comment, 
-        params.production
-    )
+            update_date_tracking_table(
+                update_data_table.out, 
+                ch_cohort, 
+                ch_comment, 
+                params.production
+            )
 
-    run_quac_table_report(
-        update_date_tracking_table.out, 
-        ch_cohort, 
-        params.production
-    )
+            run_quac_table_report(
+                update_date_tracking_table.out, 
+                ch_cohort, 
+                params.production
+            )
 
-    run_quac_comparison_report(
-        run_quac_table_report.out, 
-        ch_cohort, 
-        params.production
-    )
+            run_quac_comparison_report(
+                run_quac_table_report.out, 
+                ch_cohort, 
+                params.production
+            )
 
-    create_masking_report(
-        run_quac_comparison_report.out, 
-        ch_cohort, 
-        params.production
-    )
+            create_masking_report(
+                run_quac_comparison_report.out, 
+                ch_cohort, 
+                params.production
+            )
 
-    update_case_count_table(
-        create_masking_report.out, 
-        ch_comment, 
-        params.production
-    )
-   } else {
-    exit 1, 'step not supported'
-   }
+            update_case_count_table(
+                create_masking_report.out, 
+                ch_comment, 
+                params.production
+            )
+        } else {
+            exit 1, 'step not supported'
+        }
+    } else if (params.entry == "clinical_release"){
+        run_clinical_release('', params.cohort, params.production)
+    } else {
+        error "Invalid entry point: '${params.entry}'. Valid options are: '${valid_entry_points.join(', ')}'"
+    }
 }
 
 /*
@@ -187,7 +202,3 @@ workflow BPC_PIPELINE {
     THE END
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
-
-workflow CLINICAL_RELEASE {
-    run_clinical_release('', params.cohort, params.production)
-}

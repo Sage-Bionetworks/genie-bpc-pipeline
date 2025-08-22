@@ -60,7 +60,6 @@ class NfcoreSchema {
             'dump-channels',
             'dump-hashes',
             'E',
-            'entry',
             'latest',
             'lib',
             'main-script',
