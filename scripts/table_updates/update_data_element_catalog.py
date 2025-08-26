@@ -8,8 +8,7 @@ import re
 
 import pandas
 import synapseclient
-from synapseclient import Column
-from synapseclient.models import Table
+from synapseclient import Column, Table
 from utilities import *
 
 
@@ -258,6 +257,7 @@ def update_by_data_dictionary(args):
     if not dry_run:
         table_schema = syn.get(catalog_id)
         results = syn.tableQuery("select * from %s" % catalog_id)
+        saved_to_table = False
         if not vars_to_update_df.empty:
             vars_to_update_df = vars_to_update_df[
                 ["synColSize", "numCols", "colLabels"]
@@ -265,6 +265,8 @@ def update_by_data_dictionary(args):
             vars_to_update_df = syn.store(
                 Table(table_schema, vars_to_update_df, etag=results.etag)
             )
+            saved_to_table = True
+
         if not vars_to_add_df.empty:
             vars_to_add_df = _create_new_row(vars_to_add_df, cohort)
             # add the new cohort_dd column to the table schema
@@ -273,6 +275,9 @@ def update_by_data_dictionary(args):
                 table_schema.addColumn(new_col)
                 syn.store(table_schema)
             syn.store(Table(table_schema, vars_to_add_df))
+            saved_to_table = True
+
+        if saved_to_table:
             syn.create_snapshot_version(
                 table=catalog_id, comment="%s_%s" % (cohort, args.version)
             )
