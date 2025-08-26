@@ -269,7 +269,7 @@ def _update_table_schema(syn, form, curated_data_element, logger, dry_run):
 def update_table_schema(syn, logger, dry_run, TABLE_INFO):
     # get the data elements
     curated_data_element = download_synapse_table(
-        syn, table_id=TABLE_INFO["CATALOG_ID"], condition="dataType='curated'"
+        syn, table_id=TABLE_INFO["catalog_id"], condition="dataType='curated'"
     )
     curated_data_element = curated_data_element[
         [
@@ -327,12 +327,7 @@ def main():
     parser = argparse.ArgumentParser(
         description="Update table schema on Synapse Tables for BPC"
     )
-    parser.add_argument(
-        "-c",
-        "--synapse_config",
-        default=synapseclient.client.CONFIG_FILE,
-        help="Synapse credentials file",
-    )
+    parser.add_argument("--debug", action="store_true", help="Synapse Debug Feature")
     parser.add_argument("-d", "--dry_run", action="store_true", help="dry run flag")
     parser.add_argument(
         "-p",
@@ -344,7 +339,7 @@ def main():
     args = parser.parse_args()
     dry_run = args.dry_run
     # login to synapse
-    syn = synapse_login(args.synapse_config)
+    syn = synapse_login(debug=args.debug)
 
     # create logger
     logger_name = "staging" if dry_run else "production"
@@ -353,14 +348,14 @@ def main():
 
     if args.production:
         TABLE_INFO = {
-            "CATALOG_ID": "syn21431364",
+            "catalog_id": "syn21431364",
             "sage": ("syn23285911", "table_type='data'"),
             "bpc": ("syn21446696", "table_type='data' and double_curated is false"),
             "irr": ("syn21446696", "table_type='data' and double_curated is true"),
         }
     else:
         TABLE_INFO = {
-            "CATALOG_ID": "syn68893705",
+            "catalog_id": "syn68893705",
             "sage": ("syn63616766", "table_type='data'"),
             "bpc": ("syn63617582", "table_type='data' and double_curated is false"),
             "irr": ("syn63617582", "table_type='data' and double_curated is true"),
