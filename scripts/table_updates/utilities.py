@@ -2,11 +2,11 @@
 import builtins
 import logging
 import sys
-from typing import List, Tuple
+from typing import Boolean, List, Optional, Tuple
 
 import pandas
 import synapseclient
-from synapseclient import Schema, Table
+from synapseclient import Schema, Synapse, Table
 
 builtins.na_values = [
     "-1.#IND",
@@ -145,20 +145,28 @@ def setup_custom_logger(name):
     return logger
 
 
-def synapse_login(synapse_config):
-    """Log into Synapse
+def synapse_login(debug: Optional[bool] = False) -> Synapse:
+    """
+    Logs into Synapse if credentials are saved.
+    If not saved, then user is prompted username and auth token.
 
     Args:
-        synapse_config (String): File path to the Synapse config file
+        debug: Synapse debug feature. Defaults to False
 
     Returns:
-        Synapse object
+        Synapseclient object
     """
+    # If debug is True, then silent should be False
+    silent = False if debug else False
+    syn = synapseclient.Synapse(debug=debug, silent=silent)
     try:
-        syn = synapseclient.login(silent=True)
-    except Exception:
-        syn = synapseclient.Synapse(configPath=synapse_config, silent=True)
         syn.login()
+    except Exception:
+        raise ValueError(
+            "Please view https://help.synapse.org/docs/Client-Configuration.1985446156.html"
+            "to configure authentication to the client.  Configure a ~/.synapseConfig"
+            "or set the SYNAPSE_AUTH_TOKEN environmental variable."
+        )
     return syn
 
 
