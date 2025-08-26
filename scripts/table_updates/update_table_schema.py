@@ -19,7 +19,7 @@ def copy_table_schema(syn, from_table_id, to_table_id):
 
 def create_synapse_column(name, col_type, max_size):
     """
-    Create a new Synapse Column with given info. ??? may extend, string. use data element column types
+    Create a new Synapse Column with given info.
     """
     if col_type in ["INTEGER", "DOUBLE", "LARGETEXT"]:
         new_column = Column(name=name, columnType=col_type)
