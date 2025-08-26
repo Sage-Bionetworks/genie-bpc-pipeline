@@ -8,7 +8,8 @@ import re
 
 import pandas
 import synapseclient
-from synapseclient import Column, Table
+from synapseclient import Column
+from synapseclient.models import Table
 from utilities import *
 
 
