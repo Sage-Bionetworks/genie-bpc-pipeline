@@ -70,6 +70,9 @@ def _get_latest_table(form) -> str:
 
 
 def _update_table_schema(syn, form, curated_data_element, logger, dry_run):
+    import pdb
+
+    pdb.set_trace()
     form_name = form[0]
     form_df = form[1]
     form_name_list = form_name.split(", ")
