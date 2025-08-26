@@ -7,9 +7,19 @@ from synapseclient import Column
 from utilities import *
 
 
-def copy_table_schema(syn, from_table_id, to_table_id):
+def copy_table_schema(
+    syn: synapseclient.Synapse, from_table_id: str, to_table_id: str
+) -> synapseclient.table.Schema:
     """
     Copy table schema from one table to another
+
+    Args:
+        syn (synapseclient.Synapse): Synapse client object
+        from_table_id (str): Source table id
+        to_table_id (str): Target table id
+
+    Returns:
+        synapseclient.table.Schema: Updated schema of the target table
     """
     from_table_schema = syn.get(from_table_id)
     to_table_schema = syn.get(to_table_id)
@@ -17,9 +27,19 @@ def copy_table_schema(syn, from_table_id, to_table_id):
     return to_table_schema
 
 
-def create_synapse_column(name, col_type, max_size):
+def create_synapse_column(
+    name: str, col_type: str, max_size: int | float
+) -> synapseclient.table.Column:
     """
     Create a new Synapse Column with given info.
+
+    Args:
+        name (str): Column name
+        col_type (str): Column type
+        max_size (int or float): Maximum size for STRING type columns
+
+    Returns:
+        synapseclient.table.Column: A Synapse Column object
     """
     if col_type in ["INTEGER", "DOUBLE", "LARGETEXT"]:
         new_column = Column(name=name, columnType=col_type)
@@ -29,12 +49,13 @@ def create_synapse_column(name, col_type, max_size):
     return new_column
 
 
-def _expand_checkbox_vars(row):
-    """Expand checkbox variables into multiple columns
+def _expand_checkbox_vars(row: pandas.Series) -> pandas.DataFrame:
+    """
+    Expand checkbox variables in the GENIE BPC No PHI Data Elements Catalog table into multiple columns.
+    Each colLabel will be expanded into a separate column named as variable___label, such as ca_qatype___1.
 
     Args:
-        row (pd.Series): A row of the data element dataframe
-
+        row (pandas.Series): A row of the Data Elements Catalog dataframe
     Returns:
         pandas.DataFrame: A dataframe with expanded checkbox variables
     """
@@ -50,15 +71,16 @@ def _expand_checkbox_vars(row):
         return pandas.DataFrame(temp_df_list)
 
 
-def _get_latest_table(form) -> str:
-    """get the latest table for each form
+def _get_latest_table(form: tuple) -> str:
+    """
+    Get the synapse id of the latest table for each form
 
     Args:
-        form (tuple): the tuple of the form and the corresponding tables outputed by groupby
+        form (tuple): the tuple of the form and its corresponding tables outputed by pandas.DataFrame.groupby function, such as master_table_view.groupby("form").
         e.g. ["form_name": a dataframe contains basic informatiohn for tables associated with the form, including id, name, etc.]
 
     Returns:
-        string: the table id of the table with the latest numeric suffix
+        string: The synapse id of the table with the latest numeric suffix
     """
     if form[1].shape[0] == 1:
         return form[1]["id"].values[0]
@@ -69,7 +91,24 @@ def _get_latest_table(form) -> str:
         return latest_table["id"].values[0]
 
 
-def _update_table_schema(syn, form, curated_data_element, logger, dry_run):
+def _update_table_schema(
+    syn: synapseclient.Synapse,
+    form: tuple[str, pandas.DataFrame],
+    curated_data_element: pandas.DataFrame,
+    logger: logging,
+    dry_run: bool,
+) -> None:
+    """
+    Update the table schema for a given form based on the curated data element catalog.
+    It checks for new columns to add, existing columns to update, and columns to remove (TODO).
+    Args:
+        syn (synapseclient.Synapse): Synapse client object
+        form (tuple): the tuple of the form and its corresponding tables outputed by pandas.DataFrame.groupby function, such as master_table_view.groupby("form").
+        e.g. ["form_name": a dataframe contains basic informatiohn for tables associated with the form, including id, name, etc.]
+        curated_data_element (pandas.DataFrame): Dataframe of the curated data element catalog
+        logger (logging): Logger object for logging information
+        dry_run (bool): If True, do not save any changes to Synapse tables
+    """
     form_name = form[0]
     form_df = form[1]
     form_name_list = form_name.split(", ")
@@ -266,7 +305,12 @@ def _update_table_schema(syn, form, curated_data_element, logger, dry_run):
                 tbl_schema = syn.store(tbl_schema)
 
 
-def update_table_schema(syn, logger, dry_run, TABLE_INFO):
+def update_table_schema(
+    syn: synapseclient.Synapse,
+    logger: logging,
+    dry_run: bool,
+    TABLE_INFO: dict[str, tuple],
+) -> None:
     # get the data elements
     curated_data_element = download_synapse_table(
         syn, table_id=TABLE_INFO["catalog_id"], condition="dataType='curated'"
@@ -319,8 +363,8 @@ def update_table_schema(syn, logger, dry_run, TABLE_INFO):
         for _, row in master_table_view.iterrows():
             new_bpc_schema = copy_table_schema(syn, row["id"], row["id_bpc"])
             syn.store(new_bpc_schema)
-            #new_irr_schema = copy_table_schema(syn, row["id"], row["id_irr"])
-            #syn.store(new_irr_schema)
+            # new_irr_schema = copy_table_schema(syn, row["id"], row["id_irr"])
+            # syn.store(new_irr_schema)
 
 
 def main():
