@@ -1,13 +1,7 @@
 # !/usr/bin/python
 """
-Example 1: Update the data element catalog using the data dictionary:
-python update_data_element_catalog.py dd -v v3.1.1
+The script is used to synchronize the data element catalog with the latest data dictionary or scope of release file(no longer in use).
 
-Example 2: Update the data element catalog using the scope of release (not in use):
-python update_data_element_catalog.py sor
-
-Example 3: Dry run for data dictionary update:
-python update_data_element_catalog.py --dry_run dd -v v3.1.1
 """
 import argparse
 import re
@@ -29,26 +23,26 @@ def set_up(args: argparse.Namespace):
         list: dry run flag, synapse login, and logger
         syn: Synapse login object
         logger: logger for tracking
-        CATALOG_ID: Synapse ID of GENIE BPC No PHI Data Elements Catalog
-        SOR_ID: Synapse ID of Scope of Release file
+        catalog_id: Synapse ID of GENIE BPC No PHI Data Elements Catalog
+        sor_id: Synapse ID of Scope of Release file
     """
     dry_run = args.dry_run
     # login to synapse
-    syn = synapse_login(args.synapse_config)
+    syn = synapse_login(debug=args.debug)
 
     # create logger
     logger_name = "staging" if dry_run else "production"
     logger = setup_custom_logger(logger_name)
     logger.info("Updating BPC data element catalog!")
     if args.production:
-        CATALOG_ID = "syn21431364"
-        SOR_ID = "syn22294851"
+        catalog_id = "syn21431364"
+        sor_id = "syn22294851"
     else:
         # staging environment
-        CATALOG_ID = "syn68893705"
-        SOR_ID = "syn63611274"
+        catalog_id = "syn68893705"
+        sor_id = "syn63611274"
 
-    return dry_run, syn, logger, CATALOG_ID, SOR_ID
+    return dry_run, syn, logger, catalog_id, sor_id
 
 
 def _get_dd_info(syn: synapseclient.Synapse, version: str) -> tuple[str, str]:
@@ -237,7 +231,7 @@ def _update_by_data_dictionary(
 # combine the add/update/remove into one syn.store
 # determine the procedure for variables of removal
 def update_by_data_dictionary(args):
-    dry_run, syn, logger, CATALOG_ID, SOR_ID = set_up(args)
+    dry_run, syn, logger, catalog_id, sor_id = set_up(args)
     dd_syn_id, cohort = _get_dd_info(syn, args.version)
     # load data dictionary
     data_dictionary = pandas.read_csv(
@@ -250,7 +244,7 @@ def update_by_data_dictionary(args):
     curated_var_catalog = syn.tableQuery(
         "SELECT variable, synColSize, numCols \
         FROM %s WHERE dataType='curated'"
-        % CATALOG_ID
+        % catalog_id
     ).asDataFrame()
     curated_var_catalog.index = curated_var_catalog.index.map(str)
     curated_var_catalog["index"] = curated_var_catalog.index
@@ -262,8 +256,8 @@ def update_by_data_dictionary(args):
     # add: variable, instrument, dataType='curated', type, label, cohort-dd, synColType, synColSize, numCols
     # update: variable, synColSize, numCols
     if not dry_run:
-        table_schema = syn.get(CATALOG_ID)
-        results = syn.tableQuery("select * from %s" % CATALOG_ID)
+        table_schema = syn.get(catalog_id)
+        results = syn.tableQuery("select * from %s" % catalog_id)
         if not vars_to_update_df.empty:
             vars_to_update_df = vars_to_update_df[
                 ["synColSize", "numCols", "colLabels"]
@@ -280,23 +274,23 @@ def update_by_data_dictionary(args):
                 syn.store(table_schema)
             syn.store(Table(table_schema, vars_to_add_df))
             syn.create_snapshot_version(
-                table=CATALOG_ID, comment="%s_%s" % (cohort, args.version)
+                table=catalog_id, comment="%s_%s" % (cohort, args.version)
             )
 
 
-def download_bpc_sor(syn, logger, SOR_ID):
+def download_bpc_sor(syn, logger, sor_id):
     """Download the BPC Scope of Release File
 
     Args:
         syn (Object): Synapse Credential
         logger (Object): logger for tracking
-        SOR_ID: Synapse ID of Scope of Release file
+        sor_id: Synapse ID of Scope of Release file
 
     Returns:
         pandas.DataFrame: Scope of Release
     """
     logger.info("Downloading BPC Scope of Release...")
-    sor = pandas.read_excel(syn.get(SOR_ID).path, sheet_name="Data Dictionary")
+    sor = pandas.read_excel(syn.get(sor_id).path, sheet_name="Data Dictionary")
     # get the list of columns we need
     sor.columns = sor.columns.str.lower()
     sor = sor.filter(regex="^varname|^type|dataset|display name|shared|cbio")
@@ -473,21 +467,21 @@ def _update_by_release_scope(sor_formatted, data_element_catalog, logger):
 
 
 def update_by_release_scope(args):
-    dry_run, syn, logger, CATALOG_ID, SOR_ID = set_up(args)
-    sor = download_bpc_sor(syn, logger, SOR_ID)
+    dry_run, syn, logger, catalog_id, sor_id = set_up(args)
+    sor = download_bpc_sor(syn, logger, sor_id)
     release_info = syn.tableQuery(
         "SELECT cohort, release_version, release_type \
                                    FROM syn27628075 \
                                    WHERE current is true"
     ).asDataFrame()
     sor_formatted = format_bpc_sor(sor, release_info, logger)
-    data_element_catalog_query = syn.tableQuery("SELECT * FROM %s" % CATALOG_ID)
+    data_element_catalog_query = syn.tableQuery("SELECT * FROM %s" % catalog_id)
     data_element_catalog = data_element_catalog_query.asDataFrame()
     vars_to_add_df, vars_to_rm_df, vars_to_update_df = _update_by_release_scope(
         sor_formatted, data_element_catalog, logger
     )
     if not dry_run:
-        table_schema = syn.get(CATALOG_ID)
+        table_schema = syn.get(catalog_id)
         if not vars_to_update_df.empty:
             syn.store(
                 Table(
@@ -515,12 +509,7 @@ def main():
     parser_sor = subparsers.add_parser("sor", help="update by scope of release")
     parser_sor.set_defaults(func=update_by_release_scope)
     # general commands
-    parser.add_argument(
-        "-c",
-        "--synapse_config",
-        default=synapseclient.client.CONFIG_FILE,
-        help="Synapse credentials file",
-    )
+    parser.add_argument("--debug", action="store_true", help="Synapse Debug Feature")
     parser.add_argument("--dry_run", action="store_true", help="dry run flag")
     parser.add_argument(
         "-p",
