@@ -517,7 +517,6 @@ def update_tier1a(
         & (column_mapping_table["cohort"] == cohort),
     ]
     valid_col = subset_column_mapping_table.prissmm_element.tolist()
-    import pdb; pdb.set_trace()
     if not all(item in valid_col for item in bpc_column_list):
         raise ValueError(
             f"Invalid bpc_column_list. Column names should be matching {valid_col}."
@@ -871,7 +870,7 @@ def main():
     label_data["redacted"] = numpy.nan
 
     # update data tables
-    #store_data(syn, master_table, label_data, table_type, cohort, logger, dry_run)
+    store_data(syn, master_table, label_data, table_type, cohort, logger, dry_run)
     if not dry_run:
         if replace_patient_tier1a or replace_sample_tier1a:
             custom_fix_for_tier1a_variable(
