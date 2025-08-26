@@ -70,9 +70,6 @@ def _get_latest_table(form) -> str:
 
 
 def _update_table_schema(syn, form, curated_data_element, logger, dry_run):
-    import pdb
-
-    pdb.set_trace()
     form_name = form[0]
     form_df = form[1]
     form_name_list = form_name.split(", ")
@@ -322,8 +319,8 @@ def update_table_schema(syn, logger, dry_run, TABLE_INFO):
         for _, row in master_table_view.iterrows():
             new_bpc_schema = copy_table_schema(syn, row["id"], row["id_bpc"])
             syn.store(new_bpc_schema)
-            new_irr_schema = copy_table_schema(syn, row["id"], row["id_irr"])
-            syn.store(new_irr_schema)
+            #new_irr_schema = copy_table_schema(syn, row["id"], row["id_irr"])
+            #syn.store(new_irr_schema)
 
 
 def main():
