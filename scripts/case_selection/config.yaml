@@ -587,8 +587,8 @@ phase:
             pressure: 5
             irr: 0
           VHIO:
-            production: 49
-            adjusted: 49
+            production: 59
+            adjusted: 59
             pressure: 2
             irr: 0
           JHU: 
