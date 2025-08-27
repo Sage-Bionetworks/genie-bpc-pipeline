@@ -536,8 +536,8 @@ phase:
             adjusted: 75
             irr: 0
           JHU:
-            production: 161
-            adjusted: 161
+            production: 162
+            adjusted: 162
             irr: 0
           #VHIO:
           #  production: 0
@@ -572,8 +572,8 @@ phase:
             adjusted: 0
             irr: 0
           UCSF:
-            production: 45
-            adjusted: 45
+            production: 30
+            adjusted: 30
             pressure: 5
             irr: 0
           UHN:
@@ -587,8 +587,8 @@ phase:
             pressure: 5
             irr: 0
           VHIO:
-            production: 45
-            adjusted: 45
+            production: 49
+            adjusted: 49
             pressure: 2
             irr: 0
           JHU: 
