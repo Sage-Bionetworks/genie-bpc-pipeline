@@ -129,7 +129,7 @@ def _create_new_row(df: pandas.DataFrame, cohort: str) -> pandas.DataFrame:
         df.loc[non_checkbox_index, "synColSize"] = df_choices.loc[
             non_checkbox_index, "max_len"
         ]
-    # update numCols and colLabels for checkbox type
+    # update synColSize, numCols and colLabels for checkbox variables
     if len(checkbox_index) > 0:
         df.loc[checkbox_index, ["synColSize", "numCols", "colLabels"]] = df_choices.loc[
             checkbox_index, ["max_len", "choices_num", "choices_key"]
@@ -248,7 +248,6 @@ def update_by_data_dictionary(args):
     ).asDataFrame()
     curated_var_catalog.index = curated_var_catalog.index.map(str)
     curated_var_catalog["index"] = curated_var_catalog.index
-    #
     vars_to_add_df, vars_to_rm_df, vars_to_update_df = _update_by_data_dictionary(
         data_dictionary, curated_var_catalog, logger
     )
@@ -512,7 +511,9 @@ def main():
     )
     parser_dd.set_defaults(func=update_by_data_dictionary)
     # Create a sor subcommand
-    parser_sor = subparsers.add_parser("sor", help="update by scope of release")
+    parser_sor = subparsers.add_parser(
+        "sor", help="update by scope of release which is no longer in use"
+    )
     parser_sor.set_defaults(func=update_by_release_scope)
     # general commands
     parser.add_argument("--debug", action="store_true", help="Synapse Debug Feature")
