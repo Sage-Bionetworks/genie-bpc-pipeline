@@ -46,11 +46,15 @@ Prepare the Synapse tables to be updated
 ##### Step 1. Update the Data Catalog
 
 ###### Example 1: Update the data element catalog using the data dictionary:
+1. production mode
+```
+python update_data_element_catalog.py dd -v [prissmm_version_number] -p
+```
+2. staging mode
 ```
 python update_data_element_catalog.py dd -v [prissmm_version_number]
 ```
-
-###### Example 2: Update the data element catalog using the scope of release (not in use):
+###### Example 2: Update the data element catalog using the scope of release (DEPRECATED):
 ```
 python update_data_element_catalog.py sor
 ```
@@ -62,9 +66,18 @@ python update_data_element_catalog.py --dry_run dd -v v3.1.1
 ```
 
 ##### Step 2. Update the table schema
-
+###### Example 1: Update table schema
+1. production mode
+```
+python update_table_schema.py -p
+```
+2. staging mode
 ```
 python update_table_schema.py
+```
+###### Example 2: Update table schema dry run mode
+```
+python update_table_schema.py --dry_run
 ```
 
 # Update Data Table
