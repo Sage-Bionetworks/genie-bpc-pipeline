@@ -56,6 +56,7 @@ python update_data_element_catalog.py sor
 ```
 
 ###### Example 3: Dry run for data dictionary update:
+This skips the actual schema updates and only logs the intended changes. This is useful for testing.
 ```
 python update_data_element_catalog.py --dry_run dd -v v3.1.1
 ```
