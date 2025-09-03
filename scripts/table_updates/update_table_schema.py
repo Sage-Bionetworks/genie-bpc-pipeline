@@ -369,9 +369,6 @@ def update_table_schema(
     form_groups = master_table_view.groupby("form")
 
     for form in form_groups:
-        import pdb
-
-        pdb.set_trace()
         _update_table_schema(syn, form, curated_data_element, logger, dry_run)
     # copy the table schema to update the BPC Internal and IRR tables
     if not dry_run:
@@ -381,7 +378,6 @@ def update_table_schema(
             syn.store(new_bpc_schema)
             # new_irr_schema = copy_table_schema(syn, row["id"], row["id_irr"])
             # syn.store(new_irr_schema)
-
 
 def main():
     parser = argparse.ArgumentParser(
