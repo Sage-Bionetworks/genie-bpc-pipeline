@@ -61,13 +61,14 @@ def _get_dd_info(syn: synapseclient.Synapse, version: str) -> tuple[str, str]:
 
 def _get_choices_info(choices: pandas.Series) -> pandas.Series:
     """
-    Get the number of choices and max length of choices for given choices
+    Get the number of choices, max length of choices and keys of choices for given choice column. The choice column is
+    corresponding to the Choices, Calculations, OR Slider Labels column in the data dictionary file.
 
     Args:
         choices: pandas.Series of choices in the format of "key1, value1|key2, value2|..."
 
     Returns:
-        pandas.Series: a series with number of choices, max length of choices, and keys of choices
+        pandas.Series: a series with number of choices, max length of choices, and keys of choices (in the format of "key1,key2,...")
     """
     choices_list = choices.split("|")
     choices_keys, choices_list = map(
@@ -84,7 +85,7 @@ def _get_choices_info(choices: pandas.Series) -> pandas.Series:
 
 def _get_syn_col_type(var_type: str, validation: str) -> str:
     """
-    Get Synapse Table column type by variable type and validation
+    Get Synapse Table column type by variable type (Field Type column) and validation (Text Validation Type OR Show Slider Number column) from the data dictionary.
 
     Args:
         var_type: variable type
@@ -147,7 +148,15 @@ def _update_by_data_dictionary(
     logger: logging,
 ) -> tuple[pandas.DataFrame, pandas.DataFrame, pandas.DataFrame]:
     """
-    Compare data dictionary and data element catalog
+    Compare data dictionary and data element catalog to find variables to add, remove, and update(choice variables only).
+    1. Add variables that are in data dictionary but not in data element catalog.
+    2. Remove variables that are in data element catalog but not in data dictionary.
+    3. Update variables with choices (variables with the type values: dropdown", "radio", "checkbox") in data element catalog based on changes in data dictionary.
+        Update synColSize if max length of choices > synColSize or synColSize is empty for all choice variables.
+        Update synColSize, numCols and colLabels for checkbox type if number of choices > numCols or numCols is empty.
+
+    Notes:
+    We currently do not remove any variables since older data dictionaries might still be used for older data.
 
     Args:
         data_dictionary: pandas.DataFrame of data dictionary
@@ -155,7 +164,7 @@ def _update_by_data_dictionary(
         logger: logger for tracking
 
     Returns:
-        tuple: (vars_to_add_df, vars_to_rm_df, vars_to_update_df)
+        tuple: (vars_to_add_df, vars_to_rm_df, vars_to_update_df). DataFrames of variables to add, remove, and update.
     """
     # check for the variables that need to be added and removed
     dd_vars = data_dictionary["variable"]
@@ -173,6 +182,9 @@ def _update_by_data_dictionary(
     )
     # not removing any variables for now since older data dictionaries might still be used for older data
     # logger.info("Number of removed variables: %s \n" % len(vars_to_rm)+'\n'.join(vars_to_rm))
+
+    # GETTING VARIABLES TO UPDATE (choice variables only)
+    # TODO: yesno can be changed to choices
     # check for variables with choices to update in the data element catalog based on changes in the data dictionary
     vars_with_choices = data_dictionary[
         data_dictionary["type"].isin(["dropdown", "radio", "checkbox"])
@@ -183,14 +195,15 @@ def _update_by_data_dictionary(
     vars_with_choices[["choices_num", "max_len", "choices_key"]] = vars_with_choices[
         "choices"
     ].apply(_get_choices_info)
-    # check for variables with choices that the max_len(choices) > synColSize
-    # TODO: yesno can be changed to choices
+
+    # UPDATE VARIABLES (synColSize only)
     # update synColSize if any changes
     vars_to_update = vars_with_choices.query(
         "(max_len > synColSize) | (synColSize.isna())"
     )
     vars_to_update["synColSize"] = vars_to_update["max_len"]
 
+    # UPDATE CHECKBOX VARIABLES (synColSize, numCols, colLabels)
     # Update numCols and colLabels for checkbox type if any changes
     vars_checkbox_update = vars_with_choices.query(
         'type == "checkbox" and ((choices_num > numCols) | (numCols.isna()))'
@@ -199,7 +212,7 @@ def _update_by_data_dictionary(
     vars_checkbox_update["numCols"] = vars_checkbox_update["choices_num"]
     vars_checkbox_update["colLabels"] = vars_checkbox_update["choices_key"]
 
-    # Combine variables for update, avoiding duplicates
+    # COMBINING VARIABLES TO UPDATE (CHECKBOX + NON-CHECKBOX)
     vars_to_update_df = pandas.concat(
         [
             vars_to_update[

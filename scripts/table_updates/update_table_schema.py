@@ -85,7 +85,7 @@ def _get_latest_table(form: tuple) -> str:
     if form[1].shape[0] == 1:
         return form[1]["id"].values[0]
     else:
-        # get the table with latest numeric suffix
+        # get the table with latest numeric suffix. For example, for Prissmm Pathology tables, it will give 6 becasue Prissmm Pathology Part 6 has the largest Part number.
         latest_part_number = max(form[1]["name"].str.extract(r"(\d+)$")[0].astype(int))
         latest_table = form[1][form[1]["name"].str.contains(f" {latest_part_number}$")]
         return latest_table["id"].values[0]
@@ -309,11 +309,23 @@ def update_table_schema(
     syn: synapseclient.Synapse,
     logger: logging,
     dry_run: bool,
-    TABLE_INFO: dict[str, tuple],
+    table_info: dict[str, tuple],
 ) -> None:
+    """
+    Update the table schema for BPC and IRR tables based on the curated data element catalog and Sage Internal tables.
+
+    Notes:
+        Updating IRR tables is currently commented out in case it is needed for phase 3.
+
+    Args:
+        syn (synapseclient.Synapse): Synapse client object
+        logger (logging): Logger object for logging information
+        dry_run (bool): If True, do not save any changes to Synapse tables
+        table_info (dict): A dictionary containing Synapse table IDs and conditions for catalog, Sage, BPC, and IRR tables.
+    """
     # get the data elements
     curated_data_element = download_synapse_table(
-        syn, table_id=TABLE_INFO["catalog_id"], condition="dataType='curated'"
+        syn, table_id=table_info["catalog_id"], condition="dataType='curated'"
     )
     curated_data_element = curated_data_element[
         [
@@ -328,16 +340,16 @@ def update_table_schema(
     ]
     # create the master table
     sage_table_view = download_synapse_table(
-        syn, table_id=TABLE_INFO["sage"][0], condition=TABLE_INFO["sage"][1]
+        syn, table_id=table_info["sage"][0], condition=table_info["sage"][1]
     )
     sage_table_view.drop(columns="table_type", axis=1, inplace=True)
     bpc_table_view = download_synapse_table(
-        syn, table_id=TABLE_INFO["bpc"][0], condition=TABLE_INFO["bpc"][1]
+        syn, table_id=table_info["bpc"][0], condition=table_info["bpc"][1]
     )
     bpc_table_view = bpc_table_view[["id", "name"]]
     ## comment out irr for now in case it is needed for phase 3
     # irr_table_view = download_synapse_table(
-    #     syn, table_id=TABLE_INFO["irr"][0], condition=TABLE_INFO["irr"][1]
+    #     syn, table_id=table_info["irr"][0], condition=table_info["irr"][1]
     # )
     # irr_table_view = irr_table_view[["id", "name"]]
     # irr_table_view["name"] = irr_table_view["name"].apply(
@@ -355,11 +367,15 @@ def update_table_schema(
     # )
     # update table schema for Sage Internal tables. Grouping by form since some forms have multiple tables
     form_groups = master_table_view.groupby("form")
+
     for form in form_groups:
+        import pdb
+
+        pdb.set_trace()
         _update_table_schema(syn, form, curated_data_element, logger, dry_run)
     # copy the table schema to update the BPC Internal and IRR tables
     if not dry_run:
-        logger.info("Updating table schemas for BPC and IRR tables")
+        logger.info("Updating table schemas for BPC tables")
         for _, row in master_table_view.iterrows():
             new_bpc_schema = copy_table_schema(syn, row["id"], row["id_bpc"])
             syn.store(new_bpc_schema)
@@ -391,21 +407,21 @@ def main():
     logger.info("Updating BPC Synapse Table schemas!")
 
     if args.production:
-        TABLE_INFO = {
+        table_info = {
             "catalog_id": "syn21431364",
             "sage": ("syn23285911", "table_type='data'"),
             "bpc": ("syn21446696", "table_type='data' and double_curated is false"),
             "irr": ("syn21446696", "table_type='data' and double_curated is true"),
         }
     else:
-        TABLE_INFO = {
+        table_info = {
             "catalog_id": "syn68893705",
             "sage": ("syn63616766", "table_type='data'"),
             "bpc": ("syn63617582", "table_type='data' and double_curated is false"),
             "irr": ("syn63617582", "table_type='data' and double_curated is true"),
         }
 
-    update_table_schema(syn, logger, dry_run, TABLE_INFO)
+    update_table_schema(syn, logger, dry_run, table_info)
 
 
 if __name__ == "__main__":
