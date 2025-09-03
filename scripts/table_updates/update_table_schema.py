@@ -279,6 +279,7 @@ def _update_table_schema(
         if len(cols_to_add) != 0:
             # cols_to_add = syn.createColumns(cols_to_add)
             cols_to_add = [syn.store(i) for i in cols_to_add]
+            # the maximum number of columns in a Synapse table is 152 when the code was developed, so we keep it as is.
             if latest_table_col_ct + len(cols_to_add) <= 152:
                 tbl_schema = syn.get(latest_table_id)
                 cols_to_add_id = [col["id"] for col in cols_to_add]
@@ -378,6 +379,7 @@ def update_table_schema(
             syn.store(new_bpc_schema)
             # new_irr_schema = copy_table_schema(syn, row["id"], row["id_irr"])
             # syn.store(new_irr_schema)
+
 
 def main():
     parser = argparse.ArgumentParser(
