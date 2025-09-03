@@ -196,46 +196,40 @@ def _update_by_data_dictionary(
         "choices"
     ].apply(_get_choices_info)
 
-    # UPDATE VARIABLES (synColSize only)
-    # update synColSize if any changes
-    vars_to_update = vars_with_choices.query(
-        "(max_len > synColSize) | (synColSize.isna())"
+    # UPDATE NON-CHECKBOX VARIABLES (synColSize only)
+    vars_to_update_non_checkbox = vars_with_choices.query(
+        "type != 'checkbox' and (max_len > synColSize) | (synColSize.isna())"
     )
-    vars_to_update["synColSize"] = vars_to_update["max_len"]
+    vars_to_update_non_checkbox["synColSize"] = vars_to_update_non_checkbox["max_len"]
 
     # UPDATE CHECKBOX VARIABLES (synColSize, numCols, colLabels)
     # Update numCols and colLabels for checkbox type if any changes
-    vars_checkbox_update = vars_with_choices.query(
-        'type == "checkbox" and ((choices_num > numCols) | (numCols.isna()))'
+    vars_to_update_checkbox = vars_with_choices.query(
+        'type == "checkbox" and (((choices_num > numCols) | (numCols.isna())) or (max_len > synColSize) | (synColSize.isna()))'
     )
-    vars_checkbox_update["synColSize"] = vars_checkbox_update["max_len"]
-    vars_checkbox_update["numCols"] = vars_checkbox_update["choices_num"]
-    vars_checkbox_update["colLabels"] = vars_checkbox_update["choices_key"]
+    vars_to_update_checkbox["synColSize"] = vars_to_update_checkbox["max_len"]
+    vars_to_update_checkbox["numCols"] = vars_to_update_checkbox["choices_num"]
+    vars_to_update_checkbox["colLabels"] = vars_to_update_checkbox["choices_key"]
 
     # COMBINING VARIABLES TO UPDATE (CHECKBOX + NON-CHECKBOX)
     vars_to_update_df = pandas.concat(
         [
-            vars_to_update[
-                ~vars_to_update["variable"].isin(vars_checkbox_update["variable"])
-            ],
-            vars_checkbox_update,
+            vars_to_update_non_checkbox,
+            vars_to_update_checkbox,
         ]
-    )
-    both_size_number_index = list(
-        set(vars_to_update.index).intersection(set(vars_checkbox_update.index))
     )
     logger.info("Number of updated variables: %s" % vars_to_update_df.shape[0])
     logger.info(
-        "Updated Synapse column size: %s \n" % vars_to_update.shape[0]
-        + "\n".join(vars_to_update["variable"])
+        "Updated Synapse column size: %s \n" % vars_to_update_df.shape[0]
+        + "\n".join(vars_to_update_df["variable"])
     )
     logger.info(
-        "Updated Synapse column number only: %s \n" % vars_checkbox_update.shape[0]
-        + "\n".join(vars_checkbox_update["variable"])
+        "Updated Synapse column number only: %s \n" % vars_to_update_checkbox.shape[0]
+        + "\n".join(vars_to_update_checkbox["variable"])
     )
     logger.info(
-        "Updated both columns size and number: %s \n" % +len(both_size_number_index)
-        + "\n".join(vars_to_update.loc[both_size_number_index, "variable"])
+        "Updated both columns size and number: %s \n" % vars_to_update_checkbox.shape[0]
+        + "\n".join(vars_to_update_checkbox.loc[vars_to_update_checkbox, "variable"])
     )
     return vars_to_add_df, vars_to_rm_df, vars_to_update_df
 
@@ -243,7 +237,12 @@ def _update_by_data_dictionary(
 # TODO:
 # combine the add/update/remove into one syn.store
 # determine the procedure for variables of removal
-def update_by_data_dictionary(args):
+def update_by_data_dictionary(args: argparse.Namespace) -> None:
+    """Update the data element catalog by the data dictionary with specified version.
+
+    Args:
+        args (argparse.Namespace): Arguments from command line.
+    """
     dry_run, syn, logger, catalog_id, sor_id = set_up(args)
     dd_syn_id, cohort = _get_dd_info(syn, args.version)
     # load data dictionary
