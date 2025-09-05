@@ -27,15 +27,8 @@ import numpy
 import pandas
 import synapseclient
 import utilities
-from synapseclient import (
-    Column,
-    Row,
-    RowSet,
-    Schema,
-    Table,
-    as_table_columns,
-    build_table,
-)
+from synapseclient import (Column, Row, RowSet, Schema, Table,
+                           as_table_columns, build_table)
 
 TABLES = {
     "production": {
@@ -524,7 +517,6 @@ def update_tier1a(
         & (column_mapping_table["cohort"] == cohort),
     ]
     valid_col = subset_column_mapping_table.prissmm_element.tolist()
-
     if not all(item in valid_col for item in bpc_column_list):
         raise ValueError(
             f"Invalid bpc_column_list. Column names should be matching {valid_col}."
@@ -806,12 +798,6 @@ def main():
         choices=TABLES["production"].keys(),
     )
     parser.add_argument(
-        "-s",
-        "--synapse_config",
-        default=synapseclient.client.CONFIG_FILE,
-        help="Synapse credentials file",
-    )
-    parser.add_argument(
         "-p", "--project_config", default="config.json", help="Project config file"
     )
     parser.add_argument(
@@ -842,10 +828,10 @@ def main():
     )
     parser.add_argument("-m", "--message", default="", help="Version comment")
     parser.add_argument("-d", "--dry_run", action="store_true", help="dry run flag")
+    parser.add_argument("--debug", action="store_true", help="Synapse Debug Feature")
 
     args = parser.parse_args()
     table_type = args.table
-    synapse_config = args.synapse_config
     project_config = args.project_config
     cohort = args.cohort
     production = args.production
@@ -855,7 +841,7 @@ def main():
     dry_run = args.dry_run
 
     # login to synapse
-    syn = utilities.synapse_login(synapse_config)
+    syn = utilities.synapse_login(debug=args.debug)
 
     # create logger
     logger_name = "testing" if dry_run else "production"
