@@ -229,7 +229,7 @@ def _update_by_data_dictionary(
     )
     logger.info(
         "Updated both columns size and number: %s \n" % vars_to_update_checkbox.shape[0]
-        + "\n".join(vars_to_update_checkbox.loc[vars_to_update_checkbox, "variable"])
+        + "\n".join(vars_to_update_checkbox["variable"])
     )
     return vars_to_add_df, vars_to_rm_df, vars_to_update_df
 
