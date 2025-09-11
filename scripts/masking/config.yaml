@@ -100,9 +100,8 @@ cohort:
       - MSK
       - UHN
       - UCSF
-      - PROV
+      - VICC
       - JHU
-      - WAKE
   ESOPHAGO:
     sites:
       - DFCI

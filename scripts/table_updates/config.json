@@ -9,7 +9,8 @@
         "NSCLC2": "syn51318735",
         "CRC2": "syn52943208",
         "RENAL": "syn59474241",
-        "OVARIAN": "syn64042751"
+        "OVARIAN": "syn64042751",
+        "MELANOMA": "syn68715800"
     },
     "irr":{
         "BrCa": "syn24241519",
@@ -19,7 +20,8 @@
         "NSCLC2": "syn51318736",
         "CRC2": "syn52943210",
         "RENAL": "syn59474249",
-        "OVARIAN": "syn64042773"
+        "OVARIAN": "syn64042773",
+        "MELANOMA": "syn68715798"
     },
     "tier1a_replacement_mapping":{
         "patient_characteristics_tier1a_replacement_mapping_table": "syn65880480",
