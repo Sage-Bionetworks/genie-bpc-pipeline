@@ -223,7 +223,7 @@ def main():
             'sample_id': new_sample_from_form,
             'reason': 'retraction form'
         })
-        new_retracted_df_list.append(new_sample_from_form)
+        new_retracted_df_list.append(new_patient_from_bpc_form)
     
     new_retracted_df = pd.concat(new_retracted_df_list)
     
