@@ -117,6 +117,7 @@ def get_genie_id_list_from_bpc_form(syn, table_id, cohort, id_col_name):
     genie_id_list = []
     for col in cohort_columns:
         genie_id_list.extend(table.loc[table[col],id_col_name].dropna().unique().tolist())
+        genie_id_list = [s.strip() for s in genie_id_list]
     return genie_id_list
 
 def main():
