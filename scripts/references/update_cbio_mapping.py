@@ -1,10 +1,10 @@
 import argparse
 from datetime import datetime
-
 import pandas as pd
+import pytz
+
 import synapseclient
 from synapseclient import Table
-
 
 def now(time_only=False, tz="US/Pacific"):
     if time_only:
@@ -48,7 +48,9 @@ def main(save_to_synapse, comment, verbose):
     # Mapping
     if comment is None:
         utc_mod = entity.modifiedOn
-        pt_mod = utc_mod.replace(tzinfo=synapseclient.utils.from_tz_string("America/Los_Angeles"))
+        utc_datetime = datetime.fromisoformat(utc_mod[:-1]).replace(tzinfo=pytz.utc)
+        pt_timezone = pytz.timezone('US/Pacific')
+        pt_mod = utc_datetime.astimezone(pt_timezone)
         comment = f"mapping file update from {pt_mod.strftime('%Y-%m-%d')} PT ({file_id}.{entity.versionNumber})"
 
     if verbose:
