@@ -108,10 +108,9 @@ cohort:
       - MSK
       - UHN
       - UCSF
-      - PROV
       - JHU
-      - WAKE
       - VHIO
+      - VICC
 map:
   cohort_name:
     BLADDER: BLADDER

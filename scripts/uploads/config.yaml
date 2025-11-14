@@ -163,8 +163,8 @@ upload:
     #  data1: syn30821475
     MSK:
       data1: syn29418110
-    PROV:
-      data1: syn30821477
+    #PROV:
+    #  data1: syn30821477
     UCSF:
       data1: syn30821479
     UHN:
@@ -173,10 +173,10 @@ upload:
       data1: syn62015787
     VHIO:
       data1: syn62015794
-    WAKE:
-      data1: syn62015795
-    #VICC:
-    #  data1: syn29418117
+    #WAKE:
+    #  data1: syn62015795
+    VICC:
+      data1: syn29418117
 column_name:
   variable_name: "Variable / Field Name"
   form_name: "Form Name"
