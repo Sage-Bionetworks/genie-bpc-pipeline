@@ -173,8 +173,8 @@ upload:
       data1: syn62015787
     VHIO:
       data1: syn62015794
-    WAKE:
-      data1: syn62015795
+    #WAKE:
+    #  data1: syn62015795
     #VICC:
     #  data1: syn29418117
 column_name:
