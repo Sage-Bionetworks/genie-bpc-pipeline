@@ -28,7 +28,7 @@ def main(save_to_synapse, comment, verbose):
     # Parameters
     file_id = "syn25585554"
     tbl_id = "syn25712693"
-    cohorts = ["NSCLC", "CRC", "BrCa", "PANC", "Prostate", "BLADDER", "RENAL"]
+    cohorts = ["NSCLC", "CRC", "BrCa", "PANC", "Prostate", "BLADDER", "RENAL", "OVARIAN", "ESOPHAGO", "MELANOMA"]
     outfile = "cbio_mapping_table_update.csv"
 
     # Synapse login
