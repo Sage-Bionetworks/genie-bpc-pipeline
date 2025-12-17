@@ -48,7 +48,8 @@ def main(save_to_synapse, comment, verbose):
     # Mapping
     if comment is None:
         utc_mod = entity.modifiedOn
-        utc_datetime = datetime.fromisoformat(utc_mod[:-1]).replace(tzinfo=pytz.utc)
+        # Remove trailing 'Z' from ISO 8601 UTC timestamp (e.g., '2024-06-10T12:34:56Z')
+        utc_datetime = datetime.fromisoformat(utc_mod.rstrip('Z')).replace(tzinfo=pytz.utc)
         pt_timezone = pytz.timezone('US/Pacific')
         pt_mod = utc_datetime.astimezone(pt_timezone)
         comment = f"mapping file update from {pt_mod.strftime('%Y-%m-%d')} PT ({file_id}.{entity.versionNumber})"
