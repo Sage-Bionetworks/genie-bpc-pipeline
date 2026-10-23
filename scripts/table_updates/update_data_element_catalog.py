@@ -9,8 +9,9 @@ import re
 import pandas
 import synapseclient
 from synapseclient import Column
-from synapseclient.models import Table
 from utilities import *
+# Import Table from models AFTER utilities to override the legacy Table import
+from synapseclient.models import Table
 
 
 def set_up(args: argparse.Namespace):
@@ -49,9 +50,9 @@ def _get_dd_info(syn: synapseclient.Synapse, version: str) -> tuple[str, str]:
     """
     Get the PRISSMM non-PHI data dictionary Synapse ID and its associated cohort by version number
     """
-    prissmm_info = syn.tableQuery(
-        "SELECT id, name, cohort FROM syn22684834 WHERE name='%s'" % version
-    ).asDataFrame()
+    prissmm_info = Table(id="syn22684834").query(
+        query="SELECT id, name, cohort FROM syn22684834 WHERE name='%s'" % version
+    )
     # TODO: error message if the version does not exist
     for file_info in syn.getChildren(prissmm_info["id"][0]):
         if file_info["name"] == "Data Dictionary non-PHI":
@@ -253,11 +254,11 @@ def update_by_data_dictionary(args: argparse.Namespace) -> None:
         names=["variable", "instrument", "type", "label", "choices", "validation"],
     )
     # extract curated data from data element catalog table
-    curated_var_catalog = syn.tableQuery(
-        "SELECT variable, synColSize, numCols \
+    curated_var_catalog = Table(id=catalog_id).query(
+        query="SELECT variable, synColSize, numCols \
         FROM %s WHERE dataType='curated'"
         % catalog_id
-    ).asDataFrame()
+    )
     curated_var_catalog.index = curated_var_catalog.index.map(str)
     curated_var_catalog["index"] = curated_var_catalog.index
     vars_to_add_df, vars_to_rm_df, vars_to_update_df = _update_by_data_dictionary(
@@ -268,25 +269,33 @@ def update_by_data_dictionary(args: argparse.Namespace) -> None:
     # update: variable, synColSize, numCols
     if not dry_run:
         table_schema = syn.get(catalog_id)
-        results = syn.tableQuery("select * from %s" % catalog_id)
         saved_to_table = False
+
         if not vars_to_update_df.empty:
+            # Use upsert_rows with 'variable' as the primary key
+            # This will update existing rows based on the 'variable' column
             vars_to_update_df = vars_to_update_df[
                 ["synColSize", "numCols", "colLabels"]
             ]
-            vars_to_update_df = syn.store(
-                Table(table_schema, vars_to_update_df, etag=results.etag)
+            Table(id=catalog_id).upsert_rows(
+                values=vars_to_update_df,
+                primary_keys=["variable"]
             )
             saved_to_table = True
 
         if not vars_to_add_df.empty:
             vars_to_add_df = _create_new_row(vars_to_add_df, cohort)
             # add the new cohort_dd column to the table schema
-            if "%s_dd" % cohort not in results.asDataFrame().columns:
+            # Check if column exists by querying
+            existing_df = Table(id=catalog_id).query(
+                query="select * from %s limit 1" % catalog_id
+            )
+            if "%s_dd" % cohort not in existing_df.columns:
                 new_col = syn.store(Column(name="%s_dd" % cohort, columnType="BOOLEAN"))
                 table_schema.addColumn(new_col)
                 syn.store(table_schema)
-            syn.store(Table(table_schema, vars_to_add_df))
+            # Use store_rows for new rows
+            Table(id=catalog_id).store_rows(values=vars_to_add_df)
             saved_to_table = True
 
         if saved_to_table:
@@ -486,30 +495,30 @@ def _update_by_release_scope(sor_formatted, data_element_catalog, logger):
 def update_by_release_scope(args):
     dry_run, syn, logger, catalog_id, sor_id = set_up(args)
     sor = download_bpc_sor(syn, logger, sor_id)
-    release_info = syn.tableQuery(
-        "SELECT cohort, release_version, release_type \
+    release_info = Table(id="syn27628075").query(
+        query="SELECT cohort, release_version, release_type \
                                    FROM syn27628075 \
                                    WHERE current is true"
-    ).asDataFrame()
+    )
     sor_formatted = format_bpc_sor(sor, release_info, logger)
-    data_element_catalog_query = syn.tableQuery("SELECT * FROM %s" % catalog_id)
-    data_element_catalog = data_element_catalog_query.asDataFrame()
+    # Query the data element catalog using the new API
+    data_element_catalog = Table(id=catalog_id).query(
+        query="SELECT * FROM %s" % catalog_id
+    )
     vars_to_add_df, vars_to_rm_df, vars_to_update_df = _update_by_release_scope(
         sor_formatted, data_element_catalog, logger
     )
     if not dry_run:
-        table_schema = syn.get(catalog_id)
         if not vars_to_update_df.empty:
-            syn.store(
-                Table(
-                    table_schema,
-                    vars_to_update_df,
-                    etag=data_element_catalog_query.etag,
-                )
+            # Use upsert_rows with 'variable' as the primary key
+            Table(id=catalog_id).upsert_rows(
+                values=vars_to_update_df,
+                primary_keys=["variable"]
             )
         if not vars_to_add_df.empty:
             logger.info("Adding new variables to the data element catalog...")
-            syn.store(Table(table_schema, vars_to_add_df))
+            # Use store_rows for new rows
+            Table(id=catalog_id).store_rows(values=vars_to_add_df)
 
 
 def main():
