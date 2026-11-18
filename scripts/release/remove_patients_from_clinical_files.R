@@ -239,6 +239,8 @@ now <- function(timeOnly = F, tz = "US/Pacific") {
 
 status <- synLogin(auth = auth)
 
+PythonEmbedInR::pyExec("syn.multi_threaded = False")
+
 # read ----------------------------
 
 synid_file_children <- get_synapse_folder_children(synapse_id = synid_folder_input, 

@@ -161,6 +161,7 @@ def synapse_login(debug: Optional[bool] = False) -> Synapse:
     syn = synapseclient.Synapse(debug=debug, silent=silent)
     try:
         syn.login()
+        syn.multi_threaded = False
     except Exception:
         raise ValueError(
             "Please view https://help.synapse.org/docs/Client-Configuration.1985446156.html"
