@@ -128,6 +128,8 @@ store_file <- function(var,
 
 synLogin()
 
+PythonEmbedInR::pyExec("syn.multi_threaded = False")
+
 # read --------------------
 
 if (verbose) {

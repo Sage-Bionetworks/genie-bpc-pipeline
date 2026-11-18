@@ -265,6 +265,8 @@ copy_folder_and_contents <- function(synid_folder_input, synid_folder_output, ve
 
 status <- synLogin(auth=auth)
 
+PythonEmbedInR::pyExec("syn.multi_threaded = False")
+
 # read ---------------------
 
 synid_folder_children <- get_synapse_folder_children(synid_folder_input, 
