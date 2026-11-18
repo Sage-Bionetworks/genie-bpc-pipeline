@@ -785,6 +785,8 @@ main <- function(){
   }
   # synapse login
   status <- synLogin(auth = auth)
+  
+  PythonEmbedInR::pyExec("syn.multi_threaded = False")
 
   if (debug) {
     print(glue("{now(timeOnly = T)}: Reading global response set..."))
